@@ -136,9 +136,47 @@ nav{padding:20px 16px;flex:1;}
 
 /* Progress */
 .progress-wrap{margin:16px 0;}
-.progress-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
-.progress-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .4s ease;}
+.progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1);}
 .progress-row{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--muted);}
+
+/* ── Narration progress card ── */
+.narr-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:24px;}
+.narr-card-top{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
+.narr-waveform{display:flex;align-items:center;gap:3px;height:32px;flex-shrink:0;}
+.narr-waveform span{display:block;width:3px;background:var(--gold);border-radius:2px;animation:wave 1.2s ease-in-out infinite;}
+.narr-waveform span:nth-child(1){animation-delay:0s;   height:8px;}
+.narr-waveform span:nth-child(2){animation-delay:.1s;  height:18px;}
+.narr-waveform span:nth-child(3){animation-delay:.2s;  height:28px;}
+.narr-waveform span:nth-child(4){animation-delay:.3s;  height:20px;}
+.narr-waveform span:nth-child(5){animation-delay:.4s;  height:12px;}
+.narr-waveform span:nth-child(6){animation-delay:.15s; height:24px;}
+.narr-waveform span:nth-child(7){animation-delay:.25s; height:16px;}
+.narr-waveform.paused span{animation:none;height:4px !important;opacity:.4;}
+.narr-waveform.done span{animation:none;background:var(--green);}
+@keyframes wave{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
+.narr-info{flex:1;}
+.narr-status{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px;}
+.narr-step{font-size:12px;color:var(--muted);line-height:1.4;}
+.narr-pct-big{font-size:28px;font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1;}
+.narr-bar-wrap{margin-bottom:14px;}
+.narr-bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden;position:relative;}
+.narr-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold) 0%,var(--gold2) 100%);border-radius:4px;transition:width .8s cubic-bezier(.4,0,.2,1);position:relative;}
+.narr-bar-fill::after{content:'';position:absolute;top:0;right:0;bottom:0;width:40px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15));animation:shimmer 1.5s infinite;}
+@keyframes shimmer{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
+.narr-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px;}
+.narr-stat{background:var(--surface2);border-radius:8px;padding:10px 14px;}
+.narr-stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.narr-stat-value{font-size:15px;font-weight:500;color:var(--text);font-variant-numeric:tabular-nums;}
+.narr-stat-value.gold{color:var(--gold);}
+.narr-stat-value.green{color:var(--green);}
+.narr-chapter-list{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;max-height:180px;overflow-y:auto;}
+.narr-ch-row{display:flex;align-items:center;gap:10px;padding:6px 4px;font-size:12px;color:var(--muted);border-radius:6px;}
+.narr-ch-row.done{color:var(--green);}
+.narr-ch-row.active{color:var(--gold);background:var(--surface2);}
+.narr-ch-dot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0;}
+.narr-ch-row.done   .narr-ch-dot{background:var(--green);}
+.narr-ch-row.active .narr-ch-dot{background:var(--gold);box-shadow:0 0 6px var(--gold);}
 
 /* Player page */
 .player-wrap{max-width:700px;margin:0 auto;}
@@ -185,6 +223,43 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 .fadein{animation:fadein .3s ease forwards;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spin{animation:spin 1s linear infinite;display:inline-block;}
+
+/* ── Narration progress card ── */
+.narr-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:24px;}
+.narr-card-top{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
+.narr-waveform{display:flex;align-items:center;gap:3px;height:32px;flex-shrink:0;}
+.narr-waveform span{display:block;width:3px;background:var(--gold);border-radius:2px;animation:wave 1.2s ease-in-out infinite;}
+.narr-waveform span:nth-child(1){animation-delay:0s;height:8px;}
+.narr-waveform span:nth-child(2){animation-delay:.1s;height:18px;}
+.narr-waveform span:nth-child(3){animation-delay:.2s;height:28px;}
+.narr-waveform span:nth-child(4){animation-delay:.3s;height:20px;}
+.narr-waveform span:nth-child(5){animation-delay:.4s;height:12px;}
+.narr-waveform span:nth-child(6){animation-delay:.15s;height:24px;}
+.narr-waveform span:nth-child(7){animation-delay:.25s;height:16px;}
+.narr-waveform.paused span{animation:none;height:4px !important;opacity:.4;}
+.narr-waveform.done span{animation:none;background:var(--green);}
+@keyframes wave{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
+.narr-info{flex:1;}
+.narr-status{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px;}
+.narr-step{font-size:12px;color:var(--muted);line-height:1.4;}
+.narr-pct-big{font-size:28px;font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1;}
+.narr-bar-wrap{margin-bottom:14px;}
+.narr-bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden;position:relative;}
+.narr-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold) 0%,var(--gold2) 100%);border-radius:4px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+.narr-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px;}
+.narr-stat{background:var(--surface2);border-radius:8px;padding:10px 14px;}
+.narr-stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.narr-stat-value{font-size:15px;font-weight:500;color:var(--text);font-variant-numeric:tabular-nums;}
+.narr-stat-value.gold{color:var(--gold);}
+.narr-stat-value.green{color:var(--green);}
+.narr-chapter-list{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;max-height:180px;overflow-y:auto;}
+.narr-ch-row{display:flex;align-items:center;gap:10px;padding:6px 4px;font-size:12px;color:var(--muted);border-radius:6px;}
+.narr-ch-row.done{color:var(--green);}
+.narr-ch-row.active{color:var(--gold);background:var(--surface2);padding-left:8px;}
+.narr-ch-dot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0;}
+.narr-ch-row.done .narr-ch-dot{background:var(--green);}
+.narr-ch-row.active .narr-ch-dot{background:var(--gold);box-shadow:0 0 6px var(--gold);}
+
 </style>
 </head>
 <body>
@@ -266,13 +341,43 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
     </button>
     <div class="player-wrap">
       <div id="player-header"></div>
+      <!-- Narration Progress Card -->
       <div id="job-progress-wrap" style="display:none">
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:24px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-            <span style="font-size:13px;font-weight:500;" id="job-step-label">Processing...</span>
-            <span id="job-pct-label" style="font-size:12px;color:var(--gold);">0%</span>
+        <div class="narr-card">
+          <div class="narr-card-top">
+            <div class="narr-waveform" id="narr-wave">
+              <span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span>
+            </div>
+            <div class="narr-info">
+              <div class="narr-status" id="narr-status-label">Generating audio...</div>
+              <div class="narr-step"  id="job-step-label">Starting up...</div>
+            </div>
+            <div class="narr-pct-big" id="job-pct-label">0%</div>
           </div>
-          <div class="progress-bar"><div class="progress-fill" id="job-fill" style="width:0%"></div></div>
+
+          <div class="narr-bar-wrap">
+            <div class="narr-bar">
+              <div class="narr-bar-fill" id="job-fill" style="width:0%"></div>
+            </div>
+          </div>
+
+          <div class="narr-stats">
+            <div class="narr-stat">
+              <div class="narr-stat-label">Chunks done</div>
+              <div class="narr-stat-value" id="narr-chunks">0 / 0</div>
+            </div>
+            <div class="narr-stat">
+              <div class="narr-stat-label">Time elapsed</div>
+              <div class="narr-stat-value gold" id="narr-elapsed">0:00</div>
+            </div>
+            <div class="narr-stat">
+              <div class="narr-stat-label">Est. remaining</div>
+              <div class="narr-stat-value" id="narr-eta">Calculating...</div>
+            </div>
+          </div>
+
+          <div class="narr-chapter-list" id="narr-chapter-list"></div>
         </div>
       </div>
       <div class="chapter-list" id="chapter-list"></div>
@@ -653,33 +758,129 @@ async function submitNarrate() {
 }
 
 // ── Job polling ───────────────────────────────────────────────────────────────
+let _pollStart = null;
+let _lastPct   = 0;
+
 function startPolling(jobId) {
-  S.jobId = jobId;
+  S.jobId    = jobId;
+  _pollStart = Date.now();
+  _lastPct   = 0;
   document.getElementById('job-progress-wrap').style.display = 'block';
   if (S.pollTimer) clearInterval(S.pollTimer);
-  S.pollTimer = setInterval(() => pollJob(jobId), 3000);
+  // Start elapsed timer — updates every second
+  if (S._elapsedTimer) clearInterval(S._elapsedTimer);
+  S._elapsedTimer = setInterval(tickElapsed, 1000);
+  S.pollTimer = setInterval(() => pollJob(jobId), 2500);
   pollJob(jobId);
+}
+
+function tickElapsed() {
+  if (!_pollStart) return;
+  const sec = Math.floor((Date.now() - _pollStart) / 1000);
+  document.getElementById('narr-elapsed').textContent = fmtTime(sec);
+}
+
+function fmtETA(pct, elapsedMs) {
+  if (pct <= 1) return 'Calculating...';
+  const totalMs = elapsedMs / (pct / 100);
+  const remMs   = totalMs - elapsedMs;
+  const remSec  = Math.max(0, Math.floor(remMs / 1000));
+  if (remSec < 60)  return remSec + 's';
+  if (remSec < 3600) return Math.floor(remSec/60) + 'm ' + (remSec%60) + 's';
+  const h = Math.floor(remSec/3600);
+  const m = Math.floor((remSec%3600)/60);
+  return h + 'h ' + m + 'm';
+}
+
+function renderChapterProgress(job, chapters) {
+  const list = document.getElementById('narr-chapter-list');
+  if (!chapters || !chapters.length) { list.innerHTML = ''; return; }
+  const pct = job.percent || 0;
+
+  // Estimate which chapter is active based on progress
+  const perChapter = 100 / chapters.length;
+  const activeIdx  = Math.min(Math.floor(pct / perChapter), chapters.length - 1);
+
+  list.innerHTML = chapters.map((ch, i) => {
+    const isDone   = i < activeIdx || pct >= 100;
+    const isActive = i === activeIdx && pct < 100;
+    const cls = isDone ? 'done' : isActive ? 'active' : '';
+    const icon = isDone ? '✓' : isActive ? '▶' : (i+1);
+    return `<div class="narr-ch-row ${cls}">
+      <div class="narr-ch-dot"></div>
+      <span style="min-width:18px;text-align:center;font-size:10px;">${icon}</span>
+      <span>${esc(ch.title)}</span>
+    </div>`;
+  }).join('');
+
+  // Auto-scroll active chapter into view
+  const active = list.querySelector('.narr-ch-row.active');
+  if (active) active.scrollIntoView({block:'nearest',behavior:'smooth'});
 }
 
 async function pollJob(jobId) {
   try {
-    const job = await fetch(API+'/jobs/'+jobId).then(r=>r.json());
+    const job  = await fetch(API+'/jobs/'+jobId).then(r=>r.json());
+    const pct  = job.percent || 0;
+    const elapsed = Date.now() - _pollStart;
+
+    // Update progress bar + percentage
+    document.getElementById('job-fill').style.width    = pct + '%';
+    document.getElementById('job-pct-label').textContent = Math.round(pct) + '%';
     document.getElementById('job-step-label').textContent = job.current_step || '';
-    document.getElementById('job-fill').style.width = (job.percent||0)+'%';
-    document.getElementById('job-pct-label').textContent = (job.percent||0)+'%';
+    document.getElementById('narr-chunks').textContent =
+      (job.progress||0) + ' / ' + (job.total||0);
+
+    // ETA
+    document.getElementById('narr-eta').textContent = fmtETA(pct, elapsed);
+
+    // Waveform animation
+    const wave = document.getElementById('narr-wave');
+    if (job.status === 'complete') {
+      wave.className = 'narr-waveform done';
+    } else if (job.status === 'failed') {
+      wave.className = 'narr-waveform paused';
+    } else {
+      wave.className = 'narr-waveform';
+    }
+
+    // Chapter list
+    const chapters = S.currentBook?.chapters || [];
+    renderChapterProgress(job, chapters);
+
+    _lastPct = pct;
 
     if (job.status === 'complete') {
       clearInterval(S.pollTimer);
-      document.getElementById('job-progress-wrap').style.display = 'none';
-      toast('Audiobook ready! ');
-      const data = await fetch(API+'/books/'+S.currentBook.book.id).then(r=>r.json());
-      S.currentBook = data;
-      renderPlayer(data);
-      loadLibrary();
+      clearInterval(S._elapsedTimer);
+      document.getElementById('narr-status-label').textContent = 'Audiobook ready!';
+      document.getElementById('job-step-label').textContent = 'All chapters narrated successfully.';
+      document.getElementById('job-fill').style.width = '100%';
+      document.getElementById('job-pct-label').textContent = '100%';
+      document.getElementById('narr-eta').textContent = 'Done ✓';
+      document.getElementById('narr-eta').style.color = 'var(--green)';
+      toast('Audiobook ready!');
+
+      setTimeout(async () => {
+        document.getElementById('job-progress-wrap').style.display = 'none';
+        const data = await fetch(API+'/books/'+S.currentBook.book.id).then(r=>r.json());
+        S.currentBook = data;
+        renderPlayer(data);
+        loadLibrary();
+      }, 2000);
+
     } else if (job.status === 'failed') {
       clearInterval(S.pollTimer);
-      document.getElementById('job-step-label').textContent = 'Failed: '+(job.error||'Unknown error');
+      clearInterval(S._elapsedTimer);
+      document.getElementById('narr-status-label').textContent = 'Narration failed';
+      document.getElementById('job-step-label').textContent = job.error || 'Unknown error';
       toast('Narration failed');
+    } else {
+      document.getElementById('narr-status-label').textContent =
+        pct < 5  ? 'Starting up...' :
+        pct < 30 ? 'Generating audio...' :
+        pct < 70 ? 'Narrating chapters...' :
+        pct < 95 ? 'Almost there...' : 'Finishing up...';
     }
   } catch(e) {}
 }
