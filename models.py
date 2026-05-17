@@ -53,10 +53,6 @@ def init_db() -> None:
             finished_at  TEXT,
             created_at   TEXT NOT NULL
         );
-
-        -- Add missing columns to existing installs (safe no-ops if already exist)
-        ALTER TABLE books ADD COLUMN author   TEXT NOT NULL DEFAULT 'Unknown Author';
-        ALTER TABLE books ADD COLUMN category TEXT NOT NULL DEFAULT 'Other';
     """)
     conn.commit()
     conn.close()
