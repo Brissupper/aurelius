@@ -44,37 +44,8 @@ async def startup():
         init_db()
         log.info("Aurelius API started — database ready")
 
-        model_file  = Path("kokoro-v1.0.onnx")
-        voices_file = Path("voices-v1.0.bin")
-        r2_vars = ["CLOUDFLARE_R2_ENDPOINT", "CLOUDFLARE_R2_ACCESS_KEY",
-                   "CLOUDFLARE_R2_SECRET_KEY", "CLOUDFLARE_R2_BUCKET"]
-        has_r2 = all(os.environ.get(v) for v in r2_vars)
-
-        if not model_file.exists() or not voices_file.exists():
-            if has_r2:
-                log.info("Downloading Kokoro model files from R2...")
-                import boto3
-                s3 = boto3.client(
-                    "s3",
-                    endpoint_url          = os.environ["CLOUDFLARE_R2_ENDPOINT"],
-                    aws_access_key_id     = os.environ["CLOUDFLARE_R2_ACCESS_KEY"],
-                    aws_secret_access_key = os.environ["CLOUDFLARE_R2_SECRET_KEY"],
-                    region_name           = "auto",
-                )
-                bucket = os.environ["CLOUDFLARE_R2_BUCKET"]
-                if not model_file.exists():
-                    log.info("  Downloading kokoro-v1.0.onnx (~310 MB)...")
-                    s3.download_file(bucket, "models/kokoro-v1.0.onnx", "kokoro-v1.0.onnx")
-                    log.info("  kokoro-v1.0.onnx ✓")
-                if not voices_file.exists():
-                    log.info("  Downloading voices-v1.0.bin (~27 MB)...")
-                    s3.download_file(bucket, "models/voices-v1.0.bin", "voices-v1.0.bin")
-                    log.info("  voices-v1.0.bin ✓")
-                log.info("Kokoro model files ready.")
-            else:
-                log.warning("Kokoro model files not found — falling back to gTTS.")
-        else:
-            log.info("Kokoro model files already present.")
+        from tts_engine import detect_engine
+        log.info(f"TTS engine: {detect_engine()}")
 
         from storage import storage
         mode = "Cloudflare R2" if storage.is_cloud() else "Local disk"
