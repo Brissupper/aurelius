@@ -13,7 +13,6 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from models import get_db, init_db, now
-from storage import storage
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)-8s  %(message)s")
 log = logging.getLogger("aurelius.api")
@@ -37,8 +36,18 @@ CATEGORIES   = ["Fiction","Non-Fiction","Philosophy","Science","History",
 
 @app.on_event("startup")
 async def startup():
-    init_db()
-    log.info("Aurelius API started")
+    try:
+        init_db()
+        log.info("Aurelius API started — database ready")
+        # Log storage mode so we can see it in Render logs
+        from storage import storage
+        mode = "Cloudflare R2" if storage.is_cloud() else "Local disk"
+        log.info(f"Storage mode: {mode}")
+    except Exception as e:
+        log.error(f"Startup error: {e}")
+        import traceback
+        log.error(traceback.format_exc())
+        raise
 
 
 # ── Serve frontend ────────────────────────────────────────────────────────────

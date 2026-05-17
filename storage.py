@@ -159,4 +159,9 @@ def _create_storage():
 
 
 # Singleton — import this everywhere
-storage = _create_storage()
+# Wrapped in try/except so a bad config never crashes the whole app on startup
+try:
+    storage = _create_storage()
+except Exception as e:
+    log.error(f"Storage initialization failed: {e} — using local storage")
+    storage = LocalStorage()
