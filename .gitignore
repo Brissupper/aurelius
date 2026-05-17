@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+env/
+
+# Aurelius — never commit these
+uploads/
+output/
+logs/
+aurelius.db
+*.wav
+*.mp3
+
+# Kokoro model files (too large for GitHub)
+kokoro-v1.0.onnx
+voices-v1.0.bin
+
+# Piper model files
+piper-models/
+
+# API keys / secrets
+.env
+*.env
+secrets.py
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
