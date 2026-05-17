@@ -9,10 +9,9 @@ import uuid
 import logging
 import traceback
 from pathlib import Path
-from datetime import datetime
 
-from models import get_db, now
-from tts_engine import synthesize_chapter, count_chunks, detect_engine, engine_status
+from models import get_db, now, execute, fetchone, fetchall
+from tts_engine import synthesize_chapter, count_chunks, detect_engine
 from storage import storage
 
 log = logging.getLogger("aurelius.worker")
@@ -20,28 +19,27 @@ OUTPUT_DIR = Path("output")
 
 
 def update_job(job_id: str, **kwargs) -> None:
-    kwargs.pop("updated_at", None)
+    if not kwargs:
+        return
     set_clause = ", ".join(f"{k} = ?" for k in kwargs)
     values     = list(kwargs.values()) + [job_id]
     conn = get_db()
-    conn.execute(f"UPDATE jobs SET {set_clause} WHERE id = ?", values)
-    conn.commit()
+    execute(conn, f"UPDATE jobs SET {set_clause} WHERE id = ?", values)
     conn.close()
 
 
 def update_book_status(book_id: str, status: str) -> None:
     conn = get_db()
-    conn.execute(
+    execute(conn,
         "UPDATE books SET status = ?, updated_at = ? WHERE id = ?",
-        (status, now(), book_id)
-    )
-    conn.commit()
+        (status, now(), book_id))
     conn.close()
 
 
 # ── Text extraction ────────────────────────────────────────────────────────────
 
 def _clean_raw_text(text: str) -> str:
+    import re
     text = re.sub(r"-\n(\w)", r"\1", text)
     text = re.sub(r"\n+", " ", text)
     text = re.sub(r"\s{2,}", " ", text)
@@ -125,47 +123,53 @@ def process_book(job_id: str, book_id: str, pdf_path: str, voice: str) -> None:
     try:
         engine = detect_engine()
 
-        update_job(job_id,
-                   status="running",
-                   current_step=f"Starting ({engine} engine)",
-                   started_at=now())
+        conn = get_db()
+        execute(conn, """
+            UPDATE jobs SET status = ?, current_step = ?, started_at = ?
+            WHERE id = ?
+        """, ("running", f"Starting ({engine} engine)", now(), job_id))
+        conn.close()
         update_book_status(book_id, "processing")
 
         # ── Extract ──────────────────────────────────────────────────────────
-        update_job(job_id, current_step="Extracting text from PDF")
+        conn = get_db()
+        execute(conn, "UPDATE jobs SET current_step = ? WHERE id = ?",
+                ("Extracting text from PDF", job_id))
+        conn.close()
+
         book_title, chapters = extract_chapters(pdf_path)
         log.info(f"Extracted {len(chapters)} chapter(s)")
 
         conn = get_db()
-        conn.execute(
-            "UPDATE books SET title = ?, updated_at = ? WHERE id = ?",
-            (book_title, now(), book_id)
-        )
-        conn.commit()
+        execute(conn, "UPDATE books SET title = ?, updated_at = ? WHERE id = ?",
+                (book_title, now(), book_id))
         conn.close()
 
         # ── Save chapters to DB ───────────────────────────────────────────────
-        update_job(job_id, current_step="Detecting chapters")
         conn = get_db()
+        execute(conn, "UPDATE jobs SET current_step = ? WHERE id = ?",
+                ("Detecting chapters", job_id))
         for i, ch in enumerate(chapters):
             ch_id = str(uuid.uuid4())
-            conn.execute(
-                """INSERT OR IGNORE INTO chapters
+            execute(conn,
+                """INSERT INTO chapters
                    (id, book_id, number, title, char_count, created_at)
-                   VALUES (?, ?, ?, ?, ?, ?)""",
+                   VALUES (?, ?, ?, ?, ?, ?)
+                   ON CONFLICT (book_id, number) DO NOTHING""",
                 (ch_id, book_id, i + 1, ch["title"], len(ch["text"]), now())
             )
-        conn.commit()
-        rows = conn.execute(
+        rows = fetchall(conn,
             "SELECT id, number, title FROM chapters WHERE book_id = ? ORDER BY number",
-            (book_id,)
-        ).fetchall()
+            (book_id,))
         conn.close()
 
         # ── Count total chunks ────────────────────────────────────────────────
         total_chunks = sum(count_chunks(ch["text"], engine) for ch in chapters)
-        update_job(job_id, total=total_chunks, progress=0,
-                   current_step=f"Generating audio ({engine})")
+        conn = get_db()
+        execute(conn,
+            "UPDATE jobs SET total = ?, progress = ?, current_step = ? WHERE id = ?",
+            (total_chunks, 0, f"Generating audio ({engine})", job_id))
+        conn.close()
 
         chunks_done = 0
         book_slug   = re.sub(r"[^\w]", "_", Path(pdf_path).stem.lower())
@@ -182,36 +186,41 @@ def process_book(job_id: str, book_id: str, pdf_path: str, voice: str) -> None:
             audio_path = str(audio_dir / f"{ch_num:02d}_{safe}.mp3")
 
             log.info(f"  Chapter {ch_num}/{len(chapters)}: {ch_title}")
-            update_job(job_id,
-                       current_step=f"Narrating ch.{ch_num}/{len(chapters)}: {ch_title[:35]}")
+            conn = get_db()
+            execute(conn, "UPDATE jobs SET current_step = ? WHERE id = ?",
+                    (f"Narrating ch.{ch_num}/{len(chapters)}: {ch_title[:35]}", job_id))
+            conn.close()
 
             ch_chunk_count = count_chunks(chapter["text"], engine)
+            _chunks_done   = chunks_done  # capture for closure
 
-            def make_cb(offset, total):
-                def cb(done, _total):
-                    update_job(job_id, progress=offset + (done - offset))
-                return cb
+            def progress_cb(done, total, _offset=_chunks_done):
+                c = get_db()
+                execute(c, "UPDATE jobs SET progress = ? WHERE id = ?",
+                        (_offset + done, job_id))
+                c.close()
 
             actual_path = synthesize_chapter(
                 text         = chapter["text"],
                 output_path  = audio_path,
                 voice_id     = voice,
                 engine       = engine,
-                progress_cb  = make_cb(chunks_done, total_chunks),
+                progress_cb  = progress_cb,
                 chunk_offset = chunks_done,
                 total_chunks = total_chunks,
             )
 
             chunks_done += ch_chunk_count
 
-            # ── Upload to R2 (or keep local) ──────────────────────────────────
             if not actual_path or not Path(actual_path).exists():
                 actual_path = audio_path.replace(".mp3", ".wav")
 
-            update_job(job_id, current_step=f"Saving chapter {ch_num}...")
+            conn = get_db()
+            execute(conn, "UPDATE jobs SET current_step = ? WHERE id = ?",
+                    (f"Saving chapter {ch_num}...", job_id))
+            conn.close()
 
             if storage.is_cloud():
-                # Upload to R2, get back public URL
                 ext         = Path(actual_path).suffix
                 storage_key = f"audio/{book_id}/{ch_num:02d}_{safe}{ext}"
                 saved_ref   = storage.upload_file(actual_path, storage_key)
@@ -219,41 +228,38 @@ def process_book(job_id: str, book_id: str, pdf_path: str, voice: str) -> None:
                 saved_ref = actual_path
 
             conn = get_db()
-            conn.execute(
-                "UPDATE chapters SET audio_path = ? WHERE id = ?",
-                (saved_ref, ch_id)
-            )
-            conn.commit()
+            execute(conn, "UPDATE chapters SET audio_path = ? WHERE id = ?",
+                    (saved_ref, ch_id))
             conn.close()
 
-        # ── Upload PDF to R2 so it persists ───────────────────────────────────
+        # ── Upload PDF to R2 ──────────────────────────────────────────────────
         if storage.is_cloud() and Path(pdf_path).exists():
-            update_job(job_id, current_step="Saving book to cloud storage...")
-            pdf_key = f"pdfs/{book_id}.pdf"
+            conn = get_db()
+            execute(conn, "UPDATE jobs SET current_step = ? WHERE id = ?",
+                    ("Saving book to cloud storage...", job_id))
+            conn.close()
+            pdf_key   = f"pdfs/{book_id}.pdf"
             cloud_pdf = storage.upload_file(pdf_path, pdf_key)
             conn = get_db()
-            conn.execute(
-                "UPDATE books SET pdf_path = ?, updated_at = ? WHERE id = ?",
-                (cloud_pdf, now(), book_id)
-            )
-            conn.commit()
+            execute(conn, "UPDATE books SET pdf_path = ?, updated_at = ? WHERE id = ?",
+                    (cloud_pdf, now(), book_id))
             conn.close()
 
         # ── Done ──────────────────────────────────────────────────────────────
-        update_job(job_id,
-                   status="complete",
-                   progress=total_chunks,
-                   current_step="Done",
-                   finished_at=now())
+        conn = get_db()
+        execute(conn,
+            "UPDATE jobs SET status = ?, progress = ?, current_step = ?, finished_at = ? WHERE id = ?",
+            ("complete", total_chunks, "Done", now(), job_id))
+        conn.close()
         update_book_status(book_id, "ready")
         log.info(f"Job {job_id} complete!")
 
     except Exception as e:
         err = traceback.format_exc()
         log.error(f"Job {job_id} failed: {e}\n{err}")
-        update_job(job_id,
-                   status="failed",
-                   current_step="Failed",
-                   error=str(e),
-                   finished_at=now())
+        conn = get_db()
+        execute(conn,
+            "UPDATE jobs SET status = ?, current_step = ?, error = ?, finished_at = ? WHERE id = ?",
+            ("failed", "Failed", str(e), now(), job_id))
+        conn.close()
         update_book_status(book_id, "failed")

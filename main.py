@@ -12,7 +12,7 @@ from fastapi import FastAPI, UploadFile, File, BackgroundTasks, HTTPException, F
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from models import get_db, init_db, now
+from models import get_db, init_db, now, execute, fetchone, fetchall
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)-8s  %(message)s")
 log = logging.getLogger("aurelius.api")
@@ -35,7 +35,7 @@ CATEGORIES   = ["Fiction", "Non-Fiction", "Philosophy", "Science", "History",
 
 
 # =============================================================================
-#  STARTUP — download Kokoro model files from R2 if not present
+#  STARTUP
 # =============================================================================
 
 @app.on_event("startup")
@@ -44,21 +44,15 @@ async def startup():
         init_db()
         log.info("Aurelius API started — database ready")
 
-        # ── Download Kokoro model files from R2 if missing ───────────────────
         model_file  = Path("kokoro-v1.0.onnx")
         voices_file = Path("voices-v1.0.bin")
-
-        r2_vars = [
-            "CLOUDFLARE_R2_ENDPOINT",
-            "CLOUDFLARE_R2_ACCESS_KEY",
-            "CLOUDFLARE_R2_SECRET_KEY",
-            "CLOUDFLARE_R2_BUCKET",
-        ]
+        r2_vars = ["CLOUDFLARE_R2_ENDPOINT", "CLOUDFLARE_R2_ACCESS_KEY",
+                   "CLOUDFLARE_R2_SECRET_KEY", "CLOUDFLARE_R2_BUCKET"]
         has_r2 = all(os.environ.get(v) for v in r2_vars)
 
         if not model_file.exists() or not voices_file.exists():
             if has_r2:
-                log.info("Kokoro model files not found — downloading from R2...")
+                log.info("Downloading Kokoro model files from R2...")
                 import boto3
                 s3 = boto3.client(
                     "s3",
@@ -68,27 +62,20 @@ async def startup():
                     region_name           = "auto",
                 )
                 bucket = os.environ["CLOUDFLARE_R2_BUCKET"]
-
                 if not model_file.exists():
                     log.info("  Downloading kokoro-v1.0.onnx (~310 MB)...")
                     s3.download_file(bucket, "models/kokoro-v1.0.onnx", "kokoro-v1.0.onnx")
                     log.info("  kokoro-v1.0.onnx ✓")
-
                 if not voices_file.exists():
                     log.info("  Downloading voices-v1.0.bin (~27 MB)...")
                     s3.download_file(bucket, "models/voices-v1.0.bin", "voices-v1.0.bin")
                     log.info("  voices-v1.0.bin ✓")
-
-                log.info("Kokoro model files ready — using Kokoro TTS engine.")
+                log.info("Kokoro model files ready.")
             else:
-                log.warning(
-                    "Kokoro model files not found and R2 env vars not set. "
-                    "Falling back to gTTS engine."
-                )
+                log.warning("Kokoro model files not found — falling back to gTTS.")
         else:
-            log.info("Kokoro model files already present — using Kokoro TTS engine.")
+            log.info("Kokoro model files already present.")
 
-        # ── Log storage mode ─────────────────────────────────────────────────
         from storage import storage
         mode = "Cloudflare R2" if storage.is_cloud() else "Local disk"
         log.info(f"Storage mode: {mode}")
@@ -129,14 +116,11 @@ async def upload_book(
     author:   str        = Form(default="Unknown Author"),
     category: str        = Form(default="Other"),
 ):
-    """Upload a PDF and save it to the library. No audio generated yet."""
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(400, detail="Only PDF files are supported.")
 
     book_id  = str(uuid.uuid4())
-    pdf_name = f"{book_id}.pdf"
-    pdf_path = UPLOAD_DIR / pdf_name
-
+    pdf_path = UPLOAD_DIR / f"{book_id}.pdf"
     contents = await file.read()
     pdf_path.write_bytes(contents)
 
@@ -144,27 +128,22 @@ async def upload_book(
         title = file.filename.replace(".pdf", "").replace("_", " ").replace("-", " ").title()
 
     conn = get_db()
-    conn.execute(
+    execute(conn,
         """INSERT INTO books
            (id, title, author, category, filename, pdf_path, voice, status, created_at, updated_at)
            VALUES (?, ?, ?, ?, ?, ?, 'af_bella', 'stored', ?, ?)""",
         (book_id, title.strip(), author.strip(), category,
          file.filename, str(pdf_path), now(), now())
     )
-    conn.commit()
     conn.close()
 
     log.info(f"Book stored: '{title}' by {author} [{category}]")
-    return {
-        "book_id": book_id,
-        "title":   title,
-        "message": "Book saved to library. Select it and click Narrate when ready.",
-    }
+    return {"book_id": book_id, "title": title,
+            "message": "Book saved to library. Select it and click Narrate when ready."}
 
 
 @app.get("/api/books")
 def list_books(category: str = "", status: str = ""):
-    """List all books with optional filters."""
     conn  = get_db()
     query = """
         SELECT b.*,
@@ -184,30 +163,24 @@ def list_books(category: str = "", status: str = ""):
         query += " WHERE " + " AND ".join(conditions)
     query += " GROUP BY b.id ORDER BY b.created_at DESC"
 
-    rows = conn.execute(query, params).fetchall()
+    rows = fetchall(conn, query, params)
     conn.close()
-    return {"books": [dict(r) for r in rows]}
+    return {"books": rows}
 
 
 @app.get("/api/books/{book_id}")
 def get_book(book_id: str):
     conn     = get_db()
-    book     = conn.execute("SELECT * FROM books WHERE id = ?", (book_id,)).fetchone()
+    book     = fetchone(conn, "SELECT * FROM books WHERE id = ?", (book_id,))
     if not book:
         conn.close()
         raise HTTPException(404, detail="Book not found")
-    chapters = conn.execute(
-        "SELECT * FROM chapters WHERE book_id = ? ORDER BY number", (book_id,)
-    ).fetchall()
-    job = conn.execute(
-        "SELECT * FROM jobs WHERE book_id = ? ORDER BY created_at DESC LIMIT 1", (book_id,)
-    ).fetchone()
+    chapters = fetchall(conn,
+        "SELECT * FROM chapters WHERE book_id = ? ORDER BY number", (book_id,))
+    job = fetchone(conn,
+        "SELECT * FROM jobs WHERE book_id = ? ORDER BY created_at DESC LIMIT 1", (book_id,))
     conn.close()
-    return {
-        "book":     dict(book),
-        "chapters": [dict(c) for c in chapters],
-        "job":      dict(job) if job else None,
-    }
+    return {"book": book, "chapters": chapters, "job": job}
 
 
 @app.patch("/api/books/{book_id}")
@@ -218,9 +191,8 @@ async def update_book(
     category: str = Form(default=None),
     voice:    str = Form(default=None),
 ):
-    """Update book metadata."""
     conn = get_db()
-    book = conn.execute("SELECT * FROM books WHERE id = ?", (book_id,)).fetchone()
+    book = fetchone(conn, "SELECT * FROM books WHERE id = ?", (book_id,))
     if not book:
         conn.close()
         raise HTTPException(404, detail="Book not found")
@@ -235,8 +207,7 @@ async def update_book(
         updates.append("updated_at = ?")
         params.append(now())
         params.append(book_id)
-        conn.execute(f"UPDATE books SET {', '.join(updates)} WHERE id = ?", params)
-        conn.commit()
+        execute(conn, f"UPDATE books SET {', '.join(updates)} WHERE id = ?", params)
     conn.close()
     return {"message": "Updated"}
 
@@ -244,26 +215,24 @@ async def update_book(
 @app.delete("/api/books/{book_id}")
 def delete_book(book_id: str):
     conn = get_db()
-    book = conn.execute("SELECT * FROM books WHERE id = ?", (book_id,)).fetchone()
+    book = fetchone(conn, "SELECT * FROM books WHERE id = ?", (book_id,))
     if not book:
         conn.close()
         raise HTTPException(404, detail="Book not found")
 
-    chapters = conn.execute(
-        "SELECT audio_path FROM chapters WHERE book_id = ?", (book_id,)
-    ).fetchall()
+    chapters = fetchall(conn,
+        "SELECT audio_path FROM chapters WHERE book_id = ?", (book_id,))
     for ch in chapters:
-        if ch["audio_path"] and Path(ch["audio_path"]).exists():
+        if ch.get("audio_path") and Path(ch["audio_path"]).exists():
             Path(ch["audio_path"]).unlink(missing_ok=True)
 
     pdf = Path(book["pdf_path"])
     if pdf.exists():
         pdf.unlink(missing_ok=True)
 
-    conn.execute("DELETE FROM chapters WHERE book_id = ?", (book_id,))
-    conn.execute("DELETE FROM jobs     WHERE book_id = ?", (book_id,))
-    conn.execute("DELETE FROM books    WHERE id = ?",      (book_id,))
-    conn.commit()
+    execute(conn, "DELETE FROM chapters WHERE book_id = ?", (book_id,))
+    execute(conn, "DELETE FROM jobs     WHERE book_id = ?", (book_id,))
+    execute(conn, "DELETE FROM books    WHERE id = ?",      (book_id,))
     conn.close()
     return {"message": "Deleted"}
 
@@ -278,30 +247,26 @@ def narrate_book(
     background_tasks: BackgroundTasks,
     voice:            str = Form(default="af_bella"),
 ):
-    """Start audio generation for a book already in the library."""
     if voice not in VALID_VOICES:
         raise HTTPException(400, detail=f"Invalid voice. Choose: {VALID_VOICES}")
 
     conn = get_db()
-    book = conn.execute("SELECT * FROM books WHERE id = ?", (book_id,)).fetchone()
+    book = fetchone(conn, "SELECT * FROM books WHERE id = ?", (book_id,))
     if not book:
         conn.close()
         raise HTTPException(404, detail="Book not found")
 
-    conn.execute("DELETE FROM chapters WHERE book_id = ?", (book_id,))
-    conn.execute("DELETE FROM jobs     WHERE book_id = ?", (book_id,))
-    conn.execute(
+    execute(conn, "DELETE FROM chapters WHERE book_id = ?", (book_id,))
+    execute(conn, "DELETE FROM jobs     WHERE book_id = ?", (book_id,))
+    execute(conn,
         "UPDATE books SET status = 'pending', voice = ?, updated_at = ? WHERE id = ?",
-        (voice, now(), book_id)
-    )
+        (voice, now(), book_id))
 
     job_id = str(uuid.uuid4())
-    conn.execute(
+    execute(conn,
         """INSERT INTO jobs (id, book_id, status, progress, total, current_step, created_at)
            VALUES (?, ?, 'queued', 0, 0, 'Queued', ?)""",
-        (job_id, book_id, now())
-    )
-    conn.commit()
+        (job_id, book_id, now()))
     conn.close()
 
     from worker import process_book
@@ -318,15 +283,14 @@ def narrate_book(
 @app.get("/api/jobs/{job_id}")
 def get_job(job_id: str):
     conn = get_db()
-    job  = conn.execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()
+    job  = fetchone(conn, "SELECT * FROM jobs WHERE id = ?", (job_id,))
     conn.close()
     if not job:
         raise HTTPException(404, detail="Job not found")
-    job_dict = dict(job)
-    total    = job_dict.get("total", 0)
-    progress = job_dict.get("progress", 0)
-    job_dict["percent"] = round((progress / total * 100) if total > 0 else 0, 1)
-    return job_dict
+    total    = job.get("total", 0)
+    progress = job.get("progress", 0)
+    job["percent"] = round((progress / total * 100) if total > 0 else 0, 1)
+    return job
 
 
 # =============================================================================
@@ -339,12 +303,12 @@ def stream_audio(chapter_id: str):
     from fastapi.responses import RedirectResponse
 
     conn    = get_db()
-    chapter = conn.execute("SELECT * FROM chapters WHERE id = ?", (chapter_id,)).fetchone()
+    chapter = fetchone(conn, "SELECT * FROM chapters WHERE id = ?", (chapter_id,))
     conn.close()
     if not chapter:
         raise HTTPException(404, detail="Chapter not found")
 
-    audio_ref = chapter["audio_path"]
+    audio_ref = chapter.get("audio_path")
     if not audio_ref:
         raise HTTPException(404, detail="Audio not yet generated")
 
@@ -374,11 +338,9 @@ def list_voices():
         {"id": "bm_george",  "name": "George",  "accent": "British",  "gender": "Male",   "style": "Authoritative"},
     ]}
 
-
 @app.get("/api/categories")
 def list_categories():
     return {"categories": CATEGORIES}
-
 
 @app.get("/api/tts-status")
 def tts_status():

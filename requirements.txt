@@ -9,6 +9,9 @@ aiofiles>=23.0.0
 # PDF extraction
 PyMuPDF>=1.24.0
 
+# Database
+psycopg2-binary>=2.9.0
+
 # Cloud storage (Cloudflare R2)
 boto3>=1.28.0
 
