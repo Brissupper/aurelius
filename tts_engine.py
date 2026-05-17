@@ -1,19 +1,21 @@
 """
 Aurelius — tts_engine.py
 TTS abstraction layer. Tries Kokoro first, falls back to gTTS.
+kokoro-onnx is NOT in requirements.txt — it is installed at runtime
+after the Render build, because it needs libespeak-ng which is not
+available during the build step.
 """
 
-import os
 import re
 import sys
 import logging
-import numpy as np
+import subprocess
 from pathlib import Path
 
 log = logging.getLogger("aurelius.tts")
 
 CHUNK_SIZE = 150   # chars per Kokoro chunk
-GTTS_CHUNK = 2000  # chars per gTTS chunk (no real limit, but keep manageable)
+GTTS_CHUNK = 2000  # chars per gTTS chunk
 
 _kokoro_instance = None   # lazy singleton
 
@@ -21,6 +23,21 @@ _kokoro_instance = None   # lazy singleton
 # =============================================================================
 #  Engine detection
 # =============================================================================
+
+def _try_install_kokoro() -> bool:
+    """Attempt to pip-install kokoro-onnx at runtime. Returns True if success."""
+    try:
+        log.info("Installing kokoro-onnx at runtime...")
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "kokoro-onnx>=0.3.0", "--quiet"],
+            timeout=120,
+        )
+        log.info("kokoro-onnx installed successfully.")
+        return True
+    except Exception as e:
+        log.warning(f"Could not install kokoro-onnx: {e}")
+        return False
+
 
 def detect_engine() -> str:
     """Return 'kokoro' if model files exist and library loads, else 'gtts'."""
@@ -31,18 +48,26 @@ def detect_engine() -> str:
     try:
         import kokoro_onnx  # noqa: F401
         return "kokoro"
+    except ImportError:
+        if _try_install_kokoro():
+            try:
+                import kokoro_onnx  # noqa: F401
+                return "kokoro"
+            except Exception:
+                pass
+        return "gtts"
     except Exception:
         return "gtts"
 
 
 def engine_status() -> dict:
-    engine = detect_engine()
+    engine    = detect_engine()
     model_ok  = Path("kokoro-v1.0.onnx").exists()
     voices_ok = Path("voices-v1.0.bin").exists()
     return {
-        "engine":        engine,
-        "kokoro_model":  model_ok,
-        "kokoro_voices": voices_ok,
+        "engine":         engine,
+        "kokoro_model":   model_ok,
+        "kokoro_voices":  voices_ok,
         "gtts_available": _gtts_available(),
     }
 
@@ -102,17 +127,17 @@ def _get_kokoro():
 def _synthesize_kokoro(text: str, output_path: str, voice_id: str,
                         progress_cb=None, chunk_offset: int = 0,
                         total_chunks: int = 0) -> str:
+    import io as _io
+    import numpy as np
     import soundfile as sf
 
-    kokoro  = _get_kokoro()
-    chunks  = _split_chunks(text, CHUNK_SIZE)
-    audio   = []
-    sr      = 24000
-    failed  = 0
+    kokoro = _get_kokoro()
+    chunks = _split_chunks(text, CHUNK_SIZE)
+    audio  = []
+    sr     = 24000
 
     for i, chunk in enumerate(chunks):
         try:
-            import io as _io
             old_err    = sys.stderr
             sys.stderr = _io.StringIO()
             samples, sr = kokoro.create(chunk, voice=voice_id, speed=1.0, lang="en-us")
@@ -123,7 +148,6 @@ def _synthesize_kokoro(text: str, output_path: str, voice_id: str,
                 sys.stderr = old_err
             except Exception:
                 pass
-            failed += 1
             log.warning(f"Chunk {i} failed: {e}")
 
         if progress_cb:
@@ -136,7 +160,6 @@ def _synthesize_kokoro(text: str, output_path: str, voice_id: str,
     wav_path = output_path.replace(".mp3", ".wav")
     sf.write(wav_path, combined, sr)
 
-    # Try converting to MP3
     try:
         from pydub import AudioSegment
         AudioSegment.from_wav(wav_path).export(output_path, format="mp3", bitrate="128k")
@@ -150,7 +173,7 @@ def _synthesize_kokoro(text: str, output_path: str, voice_id: str,
                 Path(wav_path).rename(final)
             except Exception:
                 pass
-        log.info(f"  Saved WAV: {Path(final).name}  (install pydub+ffmpeg for MP3)")
+        log.info(f"  Saved WAV: {Path(final).name}")
         return final
 
 
@@ -163,7 +186,6 @@ def _synthesize_gtts(text: str, output_path: str,
                       total_chunks: int = 0) -> str:
     from gtts import gTTS
 
-    # gTTS can handle long text but we chunk it for progress reporting
     chunks = _split_chunks(text, GTTS_CHUNK)
     parts  = []
 
@@ -181,7 +203,6 @@ def _synthesize_gtts(text: str, output_path: str,
         log.info(f"  Saved MP3 (gTTS): {Path(output_path).name}")
         return output_path
 
-    # Concatenate parts
     try:
         from pydub import AudioSegment
         combined = sum(AudioSegment.from_mp3(p) for p in parts)
@@ -189,7 +210,6 @@ def _synthesize_gtts(text: str, output_path: str,
         for p in parts:
             Path(p).unlink(missing_ok=True)
     except Exception:
-        # Just return first part if concat fails
         Path(parts[0]).rename(output_path)
         for p in parts[1:]:
             Path(p).unlink(missing_ok=True)
@@ -199,21 +219,17 @@ def _synthesize_gtts(text: str, output_path: str,
 
 
 # =============================================================================
-#  Public API — used by worker.py
+#  Public API
 # =============================================================================
 
 def synthesize_chapter(text: str, output_path: str, voice_id: str,
                         engine: str = None, progress_cb=None,
                         chunk_offset: int = 0, total_chunks: int = 0) -> str:
-    """
-    Synthesize text to audio. Returns the actual path of the saved file.
-    engine: 'kokoro' | 'gtts' | None (auto-detect)
-    """
     if engine is None:
         engine = detect_engine()
 
     log.info(f"  TTS engine: {engine}  |  voice: {voice_id}  |  "
-             f"{len(text)} chars  →  {Path(output_path).name}")
+             f"{len(text)} chars  ->  {Path(output_path).name}")
 
     if engine == "kokoro":
         try:
