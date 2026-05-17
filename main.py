@@ -29,20 +29,70 @@ app.add_middleware(
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-VALID_VOICES = ["af_bella","af_sarah","am_adam","am_michael","bf_emma","bm_george"]
-CATEGORIES   = ["Fiction","Non-Fiction","Philosophy","Science","History",
-                 "Biography","Self-Help","Spirituality","Technology","Other"]
+VALID_VOICES = ["af_bella", "af_sarah", "am_adam", "am_michael", "bf_emma", "bm_george"]
+CATEGORIES   = ["Fiction", "Non-Fiction", "Philosophy", "Science", "History",
+                 "Biography", "Self-Help", "Spirituality", "Technology", "Other"]
 
+
+# =============================================================================
+#  STARTUP — download Kokoro model files from R2 if not present
+# =============================================================================
 
 @app.on_event("startup")
 async def startup():
     try:
         init_db()
         log.info("Aurelius API started — database ready")
-        # Log storage mode so we can see it in Render logs
+
+        # ── Download Kokoro model files from R2 if missing ───────────────────
+        model_file  = Path("kokoro-v1.0.onnx")
+        voices_file = Path("voices-v1.0.bin")
+
+        r2_vars = [
+            "CLOUDFLARE_R2_ENDPOINT",
+            "CLOUDFLARE_R2_ACCESS_KEY",
+            "CLOUDFLARE_R2_SECRET_KEY",
+            "CLOUDFLARE_R2_BUCKET",
+        ]
+        has_r2 = all(os.environ.get(v) for v in r2_vars)
+
+        if not model_file.exists() or not voices_file.exists():
+            if has_r2:
+                log.info("Kokoro model files not found — downloading from R2...")
+                import boto3
+                s3 = boto3.client(
+                    "s3",
+                    endpoint_url          = os.environ["CLOUDFLARE_R2_ENDPOINT"],
+                    aws_access_key_id     = os.environ["CLOUDFLARE_R2_ACCESS_KEY"],
+                    aws_secret_access_key = os.environ["CLOUDFLARE_R2_SECRET_KEY"],
+                    region_name           = "auto",
+                )
+                bucket = os.environ["CLOUDFLARE_R2_BUCKET"]
+
+                if not model_file.exists():
+                    log.info("  Downloading kokoro-v1.0.onnx (~310 MB)...")
+                    s3.download_file(bucket, "models/kokoro-v1.0.onnx", "kokoro-v1.0.onnx")
+                    log.info("  kokoro-v1.0.onnx ✓")
+
+                if not voices_file.exists():
+                    log.info("  Downloading voices-v1.0.bin (~27 MB)...")
+                    s3.download_file(bucket, "models/voices-v1.0.bin", "voices-v1.0.bin")
+                    log.info("  voices-v1.0.bin ✓")
+
+                log.info("Kokoro model files ready — using Kokoro TTS engine.")
+            else:
+                log.warning(
+                    "Kokoro model files not found and R2 env vars not set. "
+                    "Falling back to gTTS engine."
+                )
+        else:
+            log.info("Kokoro model files already present — using Kokoro TTS engine.")
+
+        # ── Log storage mode ─────────────────────────────────────────────────
         from storage import storage
         mode = "Cloudflare R2" if storage.is_cloud() else "Local disk"
         log.info(f"Storage mode: {mode}")
+
     except Exception as e:
         log.error(f"Startup error: {e}")
         import traceback
@@ -50,14 +100,18 @@ async def startup():
         raise
 
 
-# ── Serve frontend ────────────────────────────────────────────────────────────
+# =============================================================================
+#  FRONTEND
+# =============================================================================
 
 @app.get("/", response_class=HTMLResponse)
 def serve_frontend():
     return open("app.html", encoding="utf-8").read()
 
 
-# ── Health ────────────────────────────────────────────────────────────────────
+# =============================================================================
+#  HEALTH
+# =============================================================================
 
 @app.get("/api/health")
 def health():
@@ -86,7 +140,6 @@ async def upload_book(
     contents = await file.read()
     pdf_path.write_bytes(contents)
 
-    # Auto-detect title from filename if not provided
     if not title.strip():
         title = file.filename.replace(".pdf", "").replace("_", " ").replace("-", " ").title()
 
@@ -216,7 +269,7 @@ def delete_book(book_id: str):
 
 
 # =============================================================================
-#  NARRATION — start audio generation for a stored book
+#  NARRATION
 # =============================================================================
 
 @app.post("/api/books/{book_id}/narrate", status_code=202)
@@ -225,10 +278,7 @@ def narrate_book(
     background_tasks: BackgroundTasks,
     voice:            str = Form(default="af_bella"),
 ):
-    """
-    Start audio generation for a book that's already in the library.
-    Returns a job_id to poll for progress.
-    """
+    """Start audio generation for a book already in the library."""
     if voice not in VALID_VOICES:
         raise HTTPException(400, detail=f"Invalid voice. Choose: {VALID_VOICES}")
 
@@ -238,7 +288,6 @@ def narrate_book(
         conn.close()
         raise HTTPException(404, detail="Book not found")
 
-    # Reset if re-narrating
     conn.execute("DELETE FROM chapters WHERE book_id = ?", (book_id,))
     conn.execute("DELETE FROM jobs     WHERE book_id = ?", (book_id,))
     conn.execute(
@@ -299,12 +348,10 @@ def stream_audio(chapter_id: str):
     if not audio_ref:
         raise HTTPException(404, detail="Audio not yet generated")
 
-    # Cloud storage: redirect to R2 public URL
     if storage.is_cloud() or audio_ref.startswith("http"):
         url = storage.get_url(audio_ref) if not audio_ref.startswith("http") else audio_ref
         return RedirectResponse(url=url)
 
-    # Local storage: serve file directly
     if not Path(audio_ref).exists():
         raise HTTPException(404, detail="Audio file not found on disk")
     mime = "audio/mpeg" if str(audio_ref).endswith(".mp3") else "audio/wav"
@@ -319,17 +366,19 @@ def stream_audio(chapter_id: str):
 @app.get("/api/voices")
 def list_voices():
     return {"voices": [
-        {"id":"af_bella",   "name":"Bella",   "accent":"American","gender":"Female","style":"Warm, clear"},
-        {"id":"af_sarah",   "name":"Sarah",   "accent":"American","gender":"Female","style":"Bright"},
-        {"id":"am_adam",    "name":"Adam",    "accent":"American","gender":"Male",  "style":"Deep, steady"},
-        {"id":"am_michael", "name":"Michael", "accent":"American","gender":"Male",  "style":"Narration"},
-        {"id":"bf_emma",    "name":"Emma",    "accent":"British", "gender":"Female","style":"Elegant"},
-        {"id":"bm_george",  "name":"George",  "accent":"British", "gender":"Male",  "style":"Authoritative"},
+        {"id": "af_bella",   "name": "Bella",   "accent": "American", "gender": "Female", "style": "Warm, clear"},
+        {"id": "af_sarah",   "name": "Sarah",   "accent": "American", "gender": "Female", "style": "Bright"},
+        {"id": "am_adam",    "name": "Adam",    "accent": "American", "gender": "Male",   "style": "Deep, steady"},
+        {"id": "am_michael", "name": "Michael", "accent": "American", "gender": "Male",   "style": "Narration"},
+        {"id": "bf_emma",    "name": "Emma",    "accent": "British",  "gender": "Female", "style": "Elegant"},
+        {"id": "bm_george",  "name": "George",  "accent": "British",  "gender": "Male",   "style": "Authoritative"},
     ]}
+
 
 @app.get("/api/categories")
 def list_categories():
     return {"categories": CATEGORIES}
+
 
 @app.get("/api/tts-status")
 def tts_status():

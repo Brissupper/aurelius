@@ -2,7 +2,7 @@ services:
   - type: web
     name: aurelius
     runtime: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: apt-get install -y libespeak-ng1 espeak-ng-data && pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
