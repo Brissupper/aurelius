@@ -1,80 +1,52 @@
 """
 Aurelius — tts_engine.py
-TTS abstraction layer. Tries Kokoro first, falls back to gTTS.
-kokoro-onnx is NOT in requirements.txt — it is installed at runtime
-after the Render build, because it needs libespeak-ng which is not
-available during the build step.
+TTS abstraction layer using Edge TTS (primary) with gTTS fallback.
 """
 
 import re
 import sys
+import asyncio
 import logging
-import subprocess
 from pathlib import Path
 
 log = logging.getLogger("aurelius.tts")
 
-CHUNK_SIZE = 150   # chars per Kokoro chunk
-GTTS_CHUNK = 2000  # chars per gTTS chunk
-
-_kokoro_instance = None   # lazy singleton
+CHUNK_SIZE = 3000  # Edge TTS handles long text well
 
 
 # =============================================================================
 #  Engine detection
 # =============================================================================
 
-def _try_install_kokoro() -> bool:
-    """Attempt to pip-install kokoro-onnx at runtime. Returns True if success."""
-    try:
-        log.info("Installing kokoro-onnx at runtime...")
-        subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", "kokoro-onnx>=0.3.0", "--quiet"],
-            timeout=120,
-        )
-        log.info("kokoro-onnx installed successfully.")
-        return True
-    except Exception as e:
-        log.warning(f"Could not install kokoro-onnx: {e}")
-        return False
-
-
 def detect_engine() -> str:
-    """Return 'kokoro' if model files exist and library loads, else 'gtts'."""
-    model  = Path("kokoro-v1.0.onnx")
-    voices = Path("voices-v1.0.bin")
-    if not (model.exists() and voices.exists()):
-        return "gtts"
     try:
-        import kokoro_onnx  # noqa: F401
-        return "kokoro"
+        import edge_tts  # noqa: F401
+        return "edge_tts"
     except ImportError:
-        if _try_install_kokoro():
-            try:
-                import kokoro_onnx  # noqa: F401
-                return "kokoro"
-            except Exception:
-                pass
-        return "gtts"
-    except Exception:
         return "gtts"
 
 
 def engine_status() -> dict:
-    engine    = detect_engine()
-    model_ok  = Path("kokoro-v1.0.onnx").exists()
-    voices_ok = Path("voices-v1.0.bin").exists()
     return {
-        "engine":         engine,
-        "kokoro_model":   model_ok,
-        "kokoro_voices":  voices_ok,
+        "engine":         detect_engine(),
+        "kokoro_model":   Path("kokoro-v1.0.onnx").exists(),
+        "kokoro_voices":  Path("voices-v1.0.bin").exists(),
         "gtts_available": _gtts_available(),
+        "edge_available": _edge_available(),
     }
 
 
 def _gtts_available() -> bool:
     try:
         import gtts  # noqa: F401
+        return True
+    except Exception:
+        return False
+
+
+def _edge_available() -> bool:
+    try:
+        import edge_tts  # noqa: F401
         return True
     except Exception:
         return False
@@ -104,77 +76,78 @@ def _split_chunks(text: str, size: int) -> list:
 
 
 def count_chunks(text: str, engine: str = None) -> int:
-    if engine is None:
-        engine = detect_engine()
-    size = CHUNK_SIZE if engine == "kokoro" else GTTS_CHUNK
-    return max(1, len(_split_chunks(text, size)))
+    return max(1, len(_split_chunks(text, CHUNK_SIZE)))
 
 
 # =============================================================================
-#  Kokoro TTS
+#  Voice mapping — Aurelius voice IDs → Edge TTS voice names
 # =============================================================================
 
-def _get_kokoro():
-    global _kokoro_instance
-    if _kokoro_instance is None:
-        from kokoro_onnx import Kokoro
-        log.info("Loading Kokoro model...")
-        _kokoro_instance = Kokoro("kokoro-v1.0.onnx", "voices-v1.0.bin")
-        log.info("Kokoro ready.")
-    return _kokoro_instance
+EDGE_VOICE_MAP = {
+    "af_bella":   "en-US-AriaNeural",      # Warm, clear American female
+    "af_sarah":   "en-US-JennyNeural",     # Bright American female
+    "am_adam":    "en-US-GuyNeural",       # Deep American male
+    "am_michael": "en-US-ChristopherNeural", # Narration American male
+    "bf_emma":    "en-GB-SoniaNeural",     # Elegant British female
+    "bm_george":  "en-GB-RyanNeural",      # Authoritative British male
+}
+
+DEFAULT_EDGE_VOICE = "en-US-AriaNeural"
 
 
-def _synthesize_kokoro(text: str, output_path: str, voice_id: str,
-                        progress_cb=None, chunk_offset: int = 0,
-                        total_chunks: int = 0) -> str:
-    import io as _io
-    import numpy as np
-    import soundfile as sf
+# =============================================================================
+#  Edge TTS
+# =============================================================================
 
-    kokoro = _get_kokoro()
-    chunks = _split_chunks(text, CHUNK_SIZE)
-    audio  = []
-    sr     = 24000
+async def _edge_synthesize_chunk(text: str, voice: str, output_path: str) -> None:
+    import edge_tts
+    communicate = edge_tts.Communicate(text, voice)
+    await communicate.save(output_path)
+
+
+def _synthesize_edge(text: str, output_path: str, voice_id: str,
+                     progress_cb=None, chunk_offset: int = 0,
+                     total_chunks: int = 0) -> str:
+    edge_voice = EDGE_VOICE_MAP.get(voice_id, DEFAULT_EDGE_VOICE)
+    chunks     = _split_chunks(text, CHUNK_SIZE)
+    parts      = []
+
+    log.info(f"  Edge TTS: {len(chunks)} chunk(s), voice: {edge_voice}")
 
     for i, chunk in enumerate(chunks):
+        part_path = output_path.replace(".mp3", f"_part{i}.mp3")
         try:
-            old_err    = sys.stderr
-            sys.stderr = _io.StringIO()
-            samples, sr = kokoro.create(chunk, voice=voice_id, speed=1.0, lang="en-us")
-            sys.stderr = old_err
-            audio.append(samples)
+            asyncio.run(_edge_synthesize_chunk(chunk, edge_voice, part_path))
+            parts.append(part_path)
         except Exception as e:
-            try:
-                sys.stderr = old_err
-            except Exception:
-                pass
-            log.warning(f"Chunk {i} failed: {e}")
+            log.warning(f"  Chunk {i} failed: {e}")
 
         if progress_cb:
             progress_cb(chunk_offset + i + 1, total_chunks or len(chunks))
 
-    if not audio:
-        raise RuntimeError("Kokoro produced no audio")
+    if not parts:
+        raise RuntimeError("Edge TTS produced no audio")
 
-    combined = np.concatenate(audio)
-    wav_path = output_path.replace(".mp3", ".wav")
-    sf.write(wav_path, combined, sr)
+    if len(parts) == 1:
+        Path(parts[0]).rename(output_path)
+        log.info(f"  Saved MP3 (Edge TTS): {Path(output_path).name}")
+        return output_path
 
+    # Concatenate parts with pydub if available
     try:
         from pydub import AudioSegment
-        AudioSegment.from_wav(wav_path).export(output_path, format="mp3", bitrate="128k")
-        Path(wav_path).unlink(missing_ok=True)
-        log.info(f"  Saved MP3: {Path(output_path).name}")
-        return output_path
+        combined = sum(AudioSegment.from_mp3(p) for p in parts)
+        combined.export(output_path, format="mp3", bitrate="128k")
+        for p in parts:
+            Path(p).unlink(missing_ok=True)
     except Exception:
-        final = output_path.replace(".mp3", ".wav")
-        if wav_path != final:
-            try:
-                Path(wav_path).rename(final)
-            except Exception:
-                pass
-        log.info(f"  Saved WAV: {Path(final).name}")
-        return final
+        # Just use first part if pydub not available
+        Path(parts[0]).rename(output_path)
+        for p in parts[1:]:
+            Path(p).unlink(missing_ok=True)
+
+    log.info(f"  Saved MP3 (Edge TTS): {Path(output_path).name}")
+    return output_path
 
 
 # =============================================================================
@@ -182,25 +155,21 @@ def _synthesize_kokoro(text: str, output_path: str, voice_id: str,
 # =============================================================================
 
 def _synthesize_gtts(text: str, output_path: str,
-                      progress_cb=None, chunk_offset: int = 0,
-                      total_chunks: int = 0) -> str:
+                     progress_cb=None, chunk_offset: int = 0,
+                     total_chunks: int = 0) -> str:
     from gtts import gTTS
-
-    chunks = _split_chunks(text, GTTS_CHUNK)
+    chunks = _split_chunks(text, CHUNK_SIZE)
     parts  = []
 
     for i, chunk in enumerate(chunks):
         part_path = output_path.replace(".mp3", f"_part{i}.mp3")
-        tts = gTTS(text=chunk, lang="en", slow=False)
-        tts.save(part_path)
+        gTTS(text=chunk, lang="en", slow=False).save(part_path)
         parts.append(part_path)
-
         if progress_cb:
             progress_cb(chunk_offset + i + 1, total_chunks or len(chunks))
 
     if len(parts) == 1:
         Path(parts[0]).rename(output_path)
-        log.info(f"  Saved MP3 (gTTS): {Path(output_path).name}")
         return output_path
 
     try:
@@ -223,19 +192,19 @@ def _synthesize_gtts(text: str, output_path: str,
 # =============================================================================
 
 def synthesize_chapter(text: str, output_path: str, voice_id: str,
-                        engine: str = None, progress_cb=None,
-                        chunk_offset: int = 0, total_chunks: int = 0) -> str:
+                       engine: str = None, progress_cb=None,
+                       chunk_offset: int = 0, total_chunks: int = 0) -> str:
     if engine is None:
         engine = detect_engine()
 
     log.info(f"  TTS engine: {engine}  |  voice: {voice_id}  |  "
              f"{len(text)} chars  ->  {Path(output_path).name}")
 
-    if engine == "kokoro":
+    if engine == "edge_tts":
         try:
-            return _synthesize_kokoro(text, output_path, voice_id,
-                                       progress_cb, chunk_offset, total_chunks)
+            return _synthesize_edge(text, output_path, voice_id,
+                                    progress_cb, chunk_offset, total_chunks)
         except Exception as e:
-            log.warning(f"Kokoro failed ({e}), falling back to gTTS")
+            log.warning(f"Edge TTS failed ({e}), falling back to gTTS")
 
     return _synthesize_gtts(text, output_path, progress_cb, chunk_offset, total_chunks)
