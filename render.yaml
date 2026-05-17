@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: aurelius
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: CLOUDFLARE_R2_BUCKET
+        sync: false
+      - key: CLOUDFLARE_R2_ENDPOINT
+        sync: false
+      - key: CLOUDFLARE_R2_ACCESS_KEY
+        sync: false
+      - key: CLOUDFLARE_R2_SECRET_KEY
+        sync: false
+      - key: CLOUDFLARE_R2_PUBLIC_URL
+        sync: false
+      - key: GOOGLE_TTS_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false

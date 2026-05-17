@@ -13,6 +13,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from models import get_db, init_db, now
+from storage import storage
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)-8s  %(message)s")
 log = logging.getLogger("aurelius.api")
@@ -276,16 +277,29 @@ def get_job(job_id: str):
 
 @app.get("/api/audio/{chapter_id}")
 def stream_audio(chapter_id: str):
+    from storage import storage
+    from fastapi.responses import RedirectResponse
+
     conn    = get_db()
     chapter = conn.execute("SELECT * FROM chapters WHERE id = ?", (chapter_id,)).fetchone()
     conn.close()
     if not chapter:
         raise HTTPException(404, detail="Chapter not found")
-    audio_path = chapter["audio_path"]
-    if not audio_path or not Path(audio_path).exists():
+
+    audio_ref = chapter["audio_path"]
+    if not audio_ref:
         raise HTTPException(404, detail="Audio not yet generated")
-    mime = "audio/mpeg" if str(audio_path).endswith(".mp3") else "audio/wav"
-    return FileResponse(path=audio_path, media_type=mime,
+
+    # Cloud storage: redirect to R2 public URL
+    if storage.is_cloud() or audio_ref.startswith("http"):
+        url = storage.get_url(audio_ref) if not audio_ref.startswith("http") else audio_ref
+        return RedirectResponse(url=url)
+
+    # Local storage: serve file directly
+    if not Path(audio_ref).exists():
+        raise HTTPException(404, detail="Audio file not found on disk")
+    mime = "audio/mpeg" if str(audio_ref).endswith(".mp3") else "audio/wav"
+    return FileResponse(path=audio_ref, media_type=mime,
                         headers={"Accept-Ranges": "bytes"})
 
 

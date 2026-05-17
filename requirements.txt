@@ -1,7 +1,6 @@
 # Aurelius — Python dependencies
-# Install with: pip install -r requirements.txt
 
-# Core
+# Core API
 fastapi>=0.100.0
 uvicorn[standard]>=0.22.0
 python-multipart>=0.0.6
@@ -10,18 +9,17 @@ aiofiles>=23.0.0
 # PDF extraction
 PyMuPDF>=1.24.0
 
-# TTS engines (install at least one)
-gTTS>=2.5.0                  # Google TTS — fallback, no setup needed
-kokoro-onnx>=0.3.0            # High quality local TTS (needs model files)
-soundfile>=0.12.0             # Required by Kokoro
-numpy>=1.24.0                 # Required by Kokoro
+# Cloud storage (Cloudflare R2)
+boto3>=1.28.0
 
-# Optional — faster TTS
-# piper-tts>=1.2.0            # Fast local TTS (needs model files from HuggingFace)
-# google-cloud-texttospeech   # Cloud TTS — fastest (~30s/book, needs API key)
-
-# Optional — MP3 conversion
-# pydub>=0.25.0               # Needs ffmpeg installed separately
+# TTS engines
+gTTS>=2.5.0
+kokoro-onnx>=0.3.0
+soundfile>=0.12.0
+numpy>=1.24.0
 
 # AI text cleanup (optional)
 anthropic>=0.28.0
+
+# HTTP requests
+requests>=2.31.0
