@@ -11,7 +11,7 @@ from pathlib import Path
 
 log = logging.getLogger("aurelius.tts")
 
-CHUNK_SIZE = 3000  # Edge TTS handles long text well
+CHUNK_SIZE = 500   # Edge TTS silently truncates long chunks — keep small
 
 
 # =============================================================================

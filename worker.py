@@ -86,7 +86,7 @@ def extract_chapters(pdf_path: str) -> tuple:
                     if len(text) > 200:
                         chapters.append({"title": current_title, "text": text})
                 current_title, current_text, is_heading, found_any = (
-                    stripped.title(), [], True, True)
+                    stripped, [], True, True)
                 break
         if not is_heading and stripped:
             current_text.append(stripped)
@@ -104,7 +104,7 @@ def extract_chapters(pdf_path: str) -> tuple:
                 text = _clean_raw_text(" ".join(current_text))
                 if len(text) > 300:
                     chapters.append({"title": current_title, "text": text})
-            current_title, current_text, found_any = stripped.title(), [], True
+            current_title, current_text, found_any = stripped, [], True
         elif stripped:
             current_text.append(stripped)
     if current_text:
