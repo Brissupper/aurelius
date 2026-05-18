@@ -1,17 +1,17 @@
 """
 Aurelius — tts_engine.py
-TTS abstraction layer using Edge TTS (primary) with gTTS fallback.
+TTS using Edge TTS (primary) with gTTS fallback.
+Audio concatenation done with simple binary append — no pydub needed.
 """
 
 import re
-import sys
 import asyncio
 import logging
 from pathlib import Path
 
 log = logging.getLogger("aurelius.tts")
 
-CHUNK_SIZE = 500   # Edge TTS silently truncates long chunks — keep small
+CHUNK_SIZE = 500  # chars — Edge TTS silently truncates longer chunks
 
 
 # =============================================================================
@@ -80,29 +80,48 @@ def count_chunks(text: str, engine: str = None) -> int:
 
 
 # =============================================================================
-#  Voice mapping — Aurelius voice IDs → Edge TTS voice names
+#  Voice mapping
 # =============================================================================
 
 EDGE_VOICE_MAP = {
-    "af_bella":   "en-US-AriaNeural",      # Warm, clear American female
-    "af_sarah":   "en-US-JennyNeural",     # Bright American female
-    "am_adam":    "en-US-GuyNeural",       # Deep American male
-    "am_michael": "en-US-ChristopherNeural", # Narration American male
-    "bf_emma":    "en-GB-SoniaNeural",     # Elegant British female
-    "bm_george":  "en-GB-RyanNeural",      # Authoritative British male
+    "af_bella":   "en-US-AriaNeural",
+    "af_sarah":   "en-US-JennyNeural",
+    "am_adam":    "en-US-GuyNeural",
+    "am_michael": "en-US-ChristopherNeural",
+    "bf_emma":    "en-GB-SoniaNeural",
+    "bm_george":  "en-GB-RyanNeural",
 }
-
 DEFAULT_EDGE_VOICE = "en-US-AriaNeural"
+
+
+# =============================================================================
+#  Binary MP3 concatenation — no pydub needed
+# =============================================================================
+
+def _concat_mp3s(parts: list, output_path: str) -> None:
+    """Concatenate MP3 files by simple binary append. Works without ffmpeg/pydub."""
+    with open(output_path, "wb") as out:
+        for part in parts:
+            p = Path(part)
+            if p.exists():
+                out.write(p.read_bytes())
+                p.unlink()
 
 
 # =============================================================================
 #  Edge TTS
 # =============================================================================
 
-async def _edge_synthesize_chunk(text: str, voice: str, output_path: str) -> None:
-    import edge_tts
-    communicate = edge_tts.Communicate(text, voice)
-    await communicate.save(output_path)
+async def _edge_chunk(text: str, voice: str, path: str) -> bool:
+    """Synthesize one chunk. Returns True on success."""
+    try:
+        import edge_tts
+        communicate = edge_tts.Communicate(text, voice)
+        await communicate.save(path)
+        return Path(path).exists() and Path(path).stat().st_size > 0
+    except Exception as e:
+        log.warning(f"  Edge TTS chunk failed: {e}")
+        return False
 
 
 def _synthesize_edge(text: str, output_path: str, voice_id: str,
@@ -115,38 +134,23 @@ def _synthesize_edge(text: str, output_path: str, voice_id: str,
     log.info(f"  Edge TTS: {len(chunks)} chunk(s), voice: {edge_voice}")
 
     for i, chunk in enumerate(chunks):
-        part_path = output_path.replace(".mp3", f"_part{i}.mp3")
-        try:
-            asyncio.run(_edge_synthesize_chunk(chunk, edge_voice, part_path))
+        part_path = output_path.replace(".mp3", f"_part{i:04d}.mp3")
+        ok = asyncio.run(_edge_chunk(chunk, edge_voice, part_path))
+        if ok:
             parts.append(part_path)
-        except Exception as e:
-            log.warning(f"  Chunk {i} failed: {e}")
+        else:
+            log.warning(f"  Skipping chunk {i} — no audio produced")
 
         if progress_cb:
             progress_cb(chunk_offset + i + 1, total_chunks or len(chunks))
 
     if not parts:
-        raise RuntimeError("Edge TTS produced no audio")
+        raise RuntimeError("Edge TTS produced no audio for any chunk")
 
-    if len(parts) == 1:
-        Path(parts[0]).rename(output_path)
-        log.info(f"  Saved MP3 (Edge TTS): {Path(output_path).name}")
-        return output_path
-
-    # Concatenate parts with pydub if available
-    try:
-        from pydub import AudioSegment
-        combined = sum(AudioSegment.from_mp3(p) for p in parts)
-        combined.export(output_path, format="mp3", bitrate="128k")
-        for p in parts:
-            Path(p).unlink(missing_ok=True)
-    except Exception:
-        # Just use first part if pydub not available
-        Path(parts[0]).rename(output_path)
-        for p in parts[1:]:
-            Path(p).unlink(missing_ok=True)
-
-    log.info(f"  Saved MP3 (Edge TTS): {Path(output_path).name}")
+    # Concatenate all parts into one MP3
+    _concat_mp3s(parts, output_path)
+    size_kb = Path(output_path).stat().st_size // 1024
+    log.info(f"  Saved MP3 (Edge TTS): {Path(output_path).name} ({size_kb} KB, {len(parts)} parts)")
     return output_path
 
 
@@ -162,28 +166,21 @@ def _synthesize_gtts(text: str, output_path: str,
     parts  = []
 
     for i, chunk in enumerate(chunks):
-        part_path = output_path.replace(".mp3", f"_part{i}.mp3")
-        gTTS(text=chunk, lang="en", slow=False).save(part_path)
-        parts.append(part_path)
+        part_path = output_path.replace(".mp3", f"_part{i:04d}.mp3")
+        try:
+            gTTS(text=chunk, lang="en", slow=False).save(part_path)
+            parts.append(part_path)
+        except Exception as e:
+            log.warning(f"  gTTS chunk {i} failed: {e}")
         if progress_cb:
             progress_cb(chunk_offset + i + 1, total_chunks or len(chunks))
 
-    if len(parts) == 1:
-        Path(parts[0]).rename(output_path)
-        return output_path
+    if not parts:
+        raise RuntimeError("gTTS produced no audio")
 
-    try:
-        from pydub import AudioSegment
-        combined = sum(AudioSegment.from_mp3(p) for p in parts)
-        combined.export(output_path, format="mp3", bitrate="128k")
-        for p in parts:
-            Path(p).unlink(missing_ok=True)
-    except Exception:
-        Path(parts[0]).rename(output_path)
-        for p in parts[1:]:
-            Path(p).unlink(missing_ok=True)
-
-    log.info(f"  Saved MP3 (gTTS): {Path(output_path).name}")
+    _concat_mp3s(parts, output_path)
+    size_kb = Path(output_path).stat().st_size // 1024
+    log.info(f"  Saved MP3 (gTTS): {Path(output_path).name} ({size_kb} KB)")
     return output_path
 
 
