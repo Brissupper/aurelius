@@ -67,10 +67,11 @@ def extract_chapters(pdf_path: str) -> tuple:
     book_title = doc.metadata.get("title", Path(pdf_path).stem)
     doc.close()
 
+    # Match chapter headings but NOT table-of-contents lines (which have dot fills)
     standard_patterns = [
-        r"^(CHAPTER\s+[IVXLC\d]+[\.\:]?\s*.*)$",
-        r"^(Chapter\s+\d+[\.\:]?\s*.*)$",
-        r"^(PART\s+[IVXLC\d]+[\.\:]?\s*.*)$",
+        r"^(CHAPTER\s+[IVXLC\d]+[\.\:]?(?:\s+[^.…]{2,})?)$",
+        r"^(Chapter\s+[IVXLC\d]+[\.\:]?(?:\s+[^.…]{2,})?)$",
+        r"^(PART\s+[IVXLC\d]+[\.\:]?(?:\s+[^.…]{2,})?)$",
     ]
     full_text = "\n".join(pages_text)
     lines     = full_text.split("\n")
