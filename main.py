@@ -317,3 +317,152 @@ def list_categories():
 def tts_status():
     from tts_engine import engine_status
     return engine_status()
+
+
+# =============================================================================
+#  GUTENBERG IMPORT
+# =============================================================================
+
+from pydantic import BaseModel
+
+class GutenbergImport(BaseModel):
+    title: str
+    author: str
+    category: str
+    text_url: str
+    gutenberg_id: int
+
+@app.post("/api/gutenberg/import", status_code=201)
+async def gutenberg_import(data: GutenbergImport, background_tasks: BackgroundTasks):
+    """Download a Gutenberg plain-text book and add it to the library."""
+    import httpx
+
+    book_id = str(uuid.uuid4())
+    log.info(f"Importing Gutenberg book #{data.gutenberg_id}: {data.title}")
+
+    # Download the plain text
+    try:
+        async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+            r = await client.get(data.text_url)
+            r.raise_for_status()
+            text_content = r.text
+    except Exception as e:
+        raise HTTPException(400, detail=f"Could not download book: {e}")
+
+    if len(text_content) < 500:
+        raise HTTPException(400, detail="Book text too short or empty")
+
+    # Save as a text file (we'll handle .txt in worker)
+    txt_path = UPLOAD_DIR / f"{book_id}.txt"
+    txt_path.write_text(text_content, encoding="utf-8", errors="ignore")
+
+    conn = get_db()
+    execute(conn,
+        """INSERT INTO books
+           (id, title, author, category, filename, pdf_path, voice, status, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, 'af_bella', 'pending', ?, ?)""",
+        (book_id, data.title, data.author, data.category,
+         f"{data.title}.txt", str(txt_path), now(), now())
+    )
+
+    # Create job
+    job_id = str(uuid.uuid4())
+    execute(conn,
+        """INSERT INTO jobs (id, book_id, status, progress, total, current_step, created_at)
+           VALUES (?, ?, 'queued', 0, 0, 'Queued', ?)""",
+        (job_id, book_id, now())
+    )
+    conn.close()
+
+    from worker import process_gutenberg_book
+    background_tasks.add_task(process_gutenberg_book, job_id, book_id, str(txt_path), 'af_bella')
+
+    return {"book_id": book_id, "job_id": job_id, "message": "Book imported, narration starting"}
+
+
+# =============================================================================
+#  INTERNET ARCHIVE IMPORT
+# =============================================================================
+
+class ArchiveImport(BaseModel):
+    title: str
+    author: str
+    category: str
+    archive_id: str
+
+@app.post("/api/archive/import", status_code=201)
+async def archive_import(data: ArchiveImport, background_tasks: BackgroundTasks):
+    """Fetch a plain-text file from Internet Archive and add to library."""
+    import httpx
+
+    log.info(f"Importing Archive item: {data.archive_id} — {data.title}")
+
+    # Get item metadata to find best text file
+    meta_url = f"https://archive.org/metadata/{data.archive_id}"
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            meta = await client.get(meta_url)
+            meta.raise_for_status()
+            meta_json = meta.json()
+    except Exception as e:
+        raise HTTPException(400, detail=f"Could not fetch Archive metadata: {e}")
+
+    # Find best text file — prefer plain text over other formats
+    files = meta_json.get("files", [])
+    text_url = None
+    formats_priority = ["DjVuTXT", "Plain Text", "Stripped Text"]
+
+    for fmt in formats_priority:
+        for f in files:
+            if f.get("format") == fmt and f.get("name","").endswith(".txt"):
+                text_url = f"https://archive.org/download/{data.archive_id}/{f['name']}"
+                break
+        if text_url:
+            break
+
+    # Fallback: any .txt file
+    if not text_url:
+        for f in files:
+            if f.get("name","").endswith(".txt") and "meta" not in f.get("name","").lower():
+                text_url = f"https://archive.org/download/{data.archive_id}/{f['name']}"
+                break
+
+    if not text_url:
+        raise HTTPException(400, detail="No plain text file found for this item. Try a different edition.")
+
+    # Download text
+    try:
+        async with httpx.AsyncClient(timeout=120, follow_redirects=True) as client:
+            r = await client.get(text_url)
+            r.raise_for_status()
+            text_content = r.text
+    except Exception as e:
+        raise HTTPException(400, detail=f"Could not download text: {e}")
+
+    if len(text_content) < 500:
+        raise HTTPException(400, detail="Text content too short or empty.")
+
+    book_id  = str(uuid.uuid4())
+    txt_path = UPLOAD_DIR / f"{book_id}.txt"
+    txt_path.write_text(text_content, encoding="utf-8", errors="ignore")
+
+    conn = get_db()
+    execute(conn,
+        """INSERT INTO books
+           (id, title, author, category, filename, pdf_path, voice, status, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, 'af_bella', 'pending', ?, ?)""",
+        (book_id, data.title, data.author, data.category,
+         f"{data.title}.txt", str(txt_path), now(), now())
+    )
+    job_id = str(uuid.uuid4())
+    execute(conn,
+        """INSERT INTO jobs (id, book_id, status, progress, total, current_step, created_at)
+           VALUES (?, ?, 'queued', 0, 0, 'Queued', ?)""",
+        (job_id, book_id, now()))
+    conn.close()
+
+    from worker import process_gutenberg_book
+    background_tasks.add_task(process_gutenberg_book, job_id, book_id, str(txt_path), "af_bella")
+
+    log.info(f"Archive import queued: {data.archive_id} → book {book_id}")
+    return {"book_id": book_id, "job_id": job_id, "message": "Item imported, narration starting"}

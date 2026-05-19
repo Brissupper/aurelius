@@ -165,14 +165,18 @@ def process_book(job_id: str, book_id: str, pdf_path: str, voice: str) -> None:
         conn.close()
 
         # ── Count total chunks ────────────────────────────────────────────────
+        # Pre-calculate total so progress bar has a denominator
         total_chunks = sum(count_chunks(ch["text"], engine) for ch in chapters)
+        # Add 20% buffer so we never exceed 100% if actual chunks differ slightly
+        total_chunks_display = max(total_chunks, 1)
         conn = get_db()
         execute(conn,
             "UPDATE jobs SET total = ?, progress = ?, current_step = ? WHERE id = ?",
-            (total_chunks, 0, f"Generating audio ({engine})", job_id))
+            (total_chunks_display, 0, f"Generating audio ({engine})", job_id))
         conn.close()
 
         chunks_done = 0
+        actual_chunks_done = 0
         book_slug   = re.sub(r"[^\w]", "_", Path(pdf_path).stem.lower())
         audio_dir   = OUTPUT_DIR / book_slug / "audio"
         audio_dir.mkdir(parents=True, exist_ok=True)
@@ -196,9 +200,11 @@ def process_book(job_id: str, book_id: str, pdf_path: str, voice: str) -> None:
             _chunks_done   = chunks_done  # capture for closure
 
             def progress_cb(done, total, _offset=_chunks_done):
+                # Cap progress at total to never exceed 100%
+                progress = min(_offset + done, total_chunks_display)
                 c = get_db()
-                execute(c, "UPDATE jobs SET progress = ? WHERE id = ?",
-                        (_offset + done, job_id))
+                execute(c, "UPDATE jobs SET progress = ?, total = ? WHERE id = ?",
+                        (progress, total_chunks_display, job_id))
                 c.close()
 
             actual_path = synthesize_chapter(
@@ -208,7 +214,7 @@ def process_book(job_id: str, book_id: str, pdf_path: str, voice: str) -> None:
                 engine       = engine,
                 progress_cb  = progress_cb,
                 chunk_offset = chunks_done,
-                total_chunks = total_chunks,
+                total_chunks = total_chunks_display,
             )
 
             chunks_done += ch_chunk_count
@@ -250,7 +256,7 @@ def process_book(job_id: str, book_id: str, pdf_path: str, voice: str) -> None:
         conn = get_db()
         execute(conn,
             "UPDATE jobs SET status = ?, progress = ?, current_step = ?, finished_at = ? WHERE id = ?",
-            ("complete", total_chunks, "Done", now(), job_id))
+            ("complete", total_chunks_display, "Done", now(), job_id))
         conn.close()
         update_book_status(book_id, "ready")
         log.info(f"Job {job_id} complete!")
@@ -264,3 +270,178 @@ def process_book(job_id: str, book_id: str, pdf_path: str, voice: str) -> None:
             ("failed", "Failed", str(e), now(), job_id))
         conn.close()
         update_book_status(book_id, "failed")
+
+
+# =============================================================================
+#  GUTENBERG TEXT PROCESSING
+# =============================================================================
+
+def extract_chapters_from_text(text: str, book_title: str) -> list:
+    """Extract chapters from plain text (Gutenberg format)."""
+    # Strip Gutenberg header/footer
+    start_markers = ['*** START OF', '***START OF', '*END*THE SMALL PRINT']
+    end_markers   = ['*** END OF', '***END OF', 'End of the Project Gutenberg']
+
+    lines = text.split('\n')
+    start_idx, end_idx = 0, len(lines)
+
+    for i, line in enumerate(lines):
+        for m in start_markers:
+            if m in line.upper():
+                start_idx = i + 1
+        for m in end_markers:
+            if m in line.upper() and i > len(lines) // 2:
+                end_idx = i
+
+    lines = lines[start_idx:end_idx]
+    text  = '\n'.join(lines)
+
+    # Try chapter detection
+    standard_patterns = [
+        r'^(CHAPTER\s+[IVXLC\d]+[\.\:]?(?:\s+[^.…]{2,})?)$',
+        r'^(Chapter\s+[IVXLC\d]+[\.\:]?(?:\s+[^.…]{2,})?)$',
+        r'^(PART\s+[IVXLC\d]+[\.\:]?(?:\s+[^.…]{2,})?)$',
+        r'^(BOOK\s+[IVXLC\d]+[\.\:]?(?:\s+[^.…]{2,})?)$',
+    ]
+
+    chapters, current_title, current_text, found_any = [], book_title, [], False
+
+    for line in lines:
+        stripped = line.strip()
+        is_heading = False
+        for pat in standard_patterns:
+            if re.match(pat, stripped, re.MULTILINE) and len(stripped) < 80:
+                if current_text:
+                    t = _clean_raw_text(' '.join(current_text))
+                    if len(t) > 300:
+                        chapters.append({'title': current_title, 'text': t})
+                current_title, current_text, is_heading, found_any = stripped, [], True, True
+                break
+        if not is_heading and stripped:
+            current_text.append(stripped)
+
+    if current_text:
+        t = _clean_raw_text(' '.join(current_text))
+        if t:
+            chapters.append({'title': current_title, 'text': t})
+
+    if not found_any or len(chapters) <= 1:
+        # Single chapter fallback
+        full = _clean_raw_text(text)
+        return [{'title': book_title, 'text': full}]
+
+    log.info(f"Extracted {len(chapters)} chapter(s) from text")
+    return chapters
+
+
+def process_gutenberg_book(job_id: str, book_id: str, txt_path: str, voice: str) -> None:
+    """Process a Gutenberg plain-text book — same pipeline as PDF but reads .txt."""
+    log.info(f"Gutenberg job {job_id} starting")
+    try:
+        engine = detect_engine()
+        conn = get_db()
+        execute(conn, "UPDATE jobs SET status=?, current_step=?, started_at=? WHERE id=?",
+                ("running", f"Starting ({engine} engine)", now(), job_id))
+        execute(conn, "UPDATE books SET status=?, updated_at=? WHERE id=?",
+                ("processing", now(), book_id))
+        conn.close()
+
+        # Read text
+        conn = get_db()
+        execute(conn, "UPDATE jobs SET current_step=? WHERE id=?",
+                ("Reading book text", job_id))
+        book_row = fetchone(conn, "SELECT * FROM books WHERE id=?", (book_id,))
+        conn.close()
+
+        text = Path(txt_path).read_text(encoding='utf-8', errors='ignore')
+        book_title = book_row['title'] if book_row else Path(txt_path).stem
+        chapters = extract_chapters_from_text(text, book_title)
+
+        # Save chapters to DB
+        conn = get_db()
+        for i, ch in enumerate(chapters):
+            ch_id = str(uuid.uuid4())
+            execute(conn,
+                """INSERT INTO chapters (id, book_id, number, title, char_count, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (book_id, number) DO NOTHING""",
+                (ch_id, book_id, i+1, ch['title'], len(ch['text']), now()))
+        rows = fetchall(conn,
+            "SELECT id, number, title FROM chapters WHERE book_id=? ORDER BY number",
+            (book_id,))
+        conn.close()
+
+        total_chunks = sum(count_chunks(ch['text'], engine) for ch in chapters)
+        total_chunks_display = max(total_chunks, 1)
+        conn = get_db()
+        execute(conn, "UPDATE jobs SET total=?, progress=?, current_step=? WHERE id=?",
+                (total_chunks_display, 0, f"Generating audio ({engine})", job_id))
+        conn.close()
+
+        chunks_done = 0
+        audio_dir = OUTPUT_DIR / f"gutenberg_{book_id}" / "audio"
+        audio_dir.mkdir(parents=True, exist_ok=True)
+
+        for db_row, chapter in zip(rows, chapters):
+            ch_id    = db_row['id']
+            ch_num   = db_row['number']
+            ch_title = db_row['title']
+            safe     = re.sub(r'[^\w\s-]', '', ch_title)[:40].strip()
+            audio_path = str(audio_dir / f"{ch_num:02d}_{safe}.mp3")
+
+            log.info(f"  Chapter {ch_num}/{len(chapters)}: {ch_title}")
+            conn = get_db()
+            execute(conn, "UPDATE jobs SET current_step=? WHERE id=?",
+                    (f"Narrating ch.{ch_num}/{len(chapters)}: {ch_title[:35]}", job_id))
+            conn.close()
+
+            _offset = chunks_done
+            def progress_cb(done, total, _off=_offset):
+                progress = min(_off + done, total_chunks_display)
+                c = get_db()
+                execute(c, "UPDATE jobs SET progress=?, total=? WHERE id=?",
+                        (progress, total_chunks_display, job_id))
+                c.close()
+
+            actual_path = synthesize_chapter(
+                text=chapter['text'], output_path=audio_path,
+                voice_id=voice, engine=engine,
+                progress_cb=progress_cb,
+                chunk_offset=chunks_done, total_chunks=total_chunks_display,
+            )
+
+            chunks_done += count_chunks(chapter['text'], engine)
+
+            if not actual_path or not Path(actual_path).exists():
+                actual_path = audio_path.replace('.mp3', '.wav')
+
+            if storage.is_cloud():
+                ext = Path(actual_path).suffix
+                key = f"audio/{book_id}/{ch_num:02d}_{safe}{ext}"
+                saved_ref = storage.upload_file(actual_path, key)
+            else:
+                saved_ref = actual_path
+
+            conn = get_db()
+            execute(conn, "UPDATE chapters SET audio_path=? WHERE id=?", (saved_ref, ch_id))
+            conn.close()
+
+        # Done
+        conn = get_db()
+        execute(conn,
+            "UPDATE jobs SET status=?, progress=?, current_step=?, finished_at=? WHERE id=?",
+            ("complete", total_chunks_display, "Done", now(), job_id))
+        execute(conn, "UPDATE books SET status=?, updated_at=? WHERE id=?",
+                ("ready", now(), book_id))
+        conn.close()
+        log.info(f"Gutenberg job {job_id} complete!")
+
+    except Exception as e:
+        err = traceback.format_exc()
+        log.error(f"Gutenberg job {job_id} failed: {e}\n{err}")
+        conn = get_db()
+        execute(conn,
+            "UPDATE jobs SET status=?, current_step=?, error=?, finished_at=? WHERE id=?",
+            ("failed", "Failed", str(e), now(), job_id))
+        execute(conn, "UPDATE books SET status=?, updated_at=? WHERE id=?",
+                ("failed", now(), book_id))
+        conn.close()
