@@ -614,10 +614,11 @@ async def create_request(data: BookRequestCreate, request: FastAPIRequest):
     conn.close()
     log.info(f"Book requested: '{data.title}' by {data.author}")
 
-    # Auto-search Gutenberg if it might exist there
+    # Auto-search Gutenberg in background
     from worker import auto_source_request
-    import asyncio
-    asyncio.create_task(auto_source_request(req_id, data.title, data.author))
+    background_tasks.add_task(
+        lambda: __import__('asyncio').run(auto_source_request(req_id, data.title, data.author))
+    )
 
     return {"message": "Request submitted!", "request_id": req_id}
 

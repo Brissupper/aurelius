@@ -1291,5 +1291,399 @@ function renderChapterProgress(job,chapters){
   if(active)active.scrollIntoView({block:'nearest',behavior:'smooth'});
 }
 
+
 function fmtETA(pct,elapsedMs){
-  if(pct<=1)return'Calculat
+  if(pct<=1)return'Calculating...';
+  const totalMs=elapsedMs/(pct/100);
+  const remSec=Math.max(0,Math.floor((totalMs-elapsedMs)/1000));
+  if(remSec<60)return remSec+'s';
+  if(remSec<3600)return Math.floor(remSec/60)+'m '+remSec%60+'s';
+  return Math.floor(remSec/3600)+'h '+Math.floor(remSec%3600/60)+'m';
+}
+
+// ── Upload modal ──────────────────────────────────────────────────────────────
+function openUploadModal(){document.getElementById('upload-modal').classList.remove('hidden');}
+function closeUploadModal(e){
+  if(e&&e.target!==document.getElementById('upload-modal'))return;
+  document.getElementById('upload-modal').classList.add('hidden');
+}
+function onFileSelected(input){
+  const file=input.files[0];if(!file)return;
+  S.selFile=file;
+  document.getElementById('file-name-label').textContent=file.name;
+  document.getElementById('file-pill').style.display='inline-flex';
+  document.getElementById('upload-btn').disabled=false;
+  if(!document.getElementById('book-title').value)
+    document.getElementById('book-title').value=file.name.replace('.pdf','').replace(/[_-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+}
+const dz=document.getElementById('drop-zone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{
+  e.preventDefault();dz.classList.remove('drag');
+  const file=e.dataTransfer.files[0];
+  if(file?.name.endsWith('.pdf')){
+    S.selFile=file;
+    document.getElementById('file-name-label').textContent=file.name;
+    document.getElementById('file-pill').style.display='inline-flex';
+    document.getElementById('upload-btn').disabled=false;
+  }else toast('Please drop a PDF file');
+});
+async function submitUpload(){
+  if(!S.selFile)return;
+  const btn=document.getElementById('upload-btn');
+  btn.disabled=true;btn.textContent='Saving...';
+  const form=new FormData();
+  form.append('file',S.selFile);
+  form.append('title',document.getElementById('book-title').value);
+  form.append('author',document.getElementById('book-author').value||'Unknown Author');
+  form.append('category',document.getElementById('book-category').value);
+  try{
+    const r=await fetch(API+'/books/upload',{method:'POST',body:form});
+    const data=await r.json();
+    if(!r.ok)throw new Error(data.detail||'Upload failed');
+    closeUploadModal();toast(`"${data.title}" added to library`);resetUploadForm();loadLibrary();
+  }catch(e){toast('Error: '+e.message);}
+  finally{btn.disabled=false;btn.textContent='Save to Library';}
+}
+function resetUploadForm(){
+  S.selFile=null;
+  document.getElementById('file-input').value='';
+  document.getElementById('file-pill').style.display='none';
+  document.getElementById('book-title').value='';
+  document.getElementById('book-author').value='';
+  document.getElementById('upload-btn').disabled=true;
+}
+async function deleteBook(id,title){
+  if(!confirm(`Delete "${title}" and all its audio files?`))return;
+  await fetch(API+'/books/'+id,{method:'DELETE'});
+  toast('Book deleted');loadLibrary();
+}
+
+// ── Audio player ──────────────────────────────────────────────────────────────
+function playChapter(id,title,bookTitle){
+  audio.src=API+'/audio/'+id;
+  audio.load();audio.play().catch(()=>toast('Could not play audio'));
+  document.getElementById('now-title').textContent=title;
+  document.getElementById('now-book').textContent=bookTitle;
+  document.getElementById('audio-bar').classList.add('visible');
+  document.querySelectorAll('.chapter-row').forEach(r=>r.classList.remove('playing'));
+  const row=document.getElementById('chrow-'+id);
+  if(row)row.classList.add('playing');
+  playIcon(true);
+}
+function togglePlay(){audio.paused?audio.play():audio.pause();}
+function skipBack(){audio.currentTime=Math.max(0,audio.currentTime-15);}
+function skipFwd(){audio.currentTime=Math.min(audio.duration||0,audio.currentTime+30);}
+function setSpeed(v){audio.playbackRate=parseFloat(v);}
+function seekTo(v){if(audio.duration)audio.currentTime=(v/100)*audio.duration;}
+function fmtTime(s){if(!s||isNaN(s))return'0:00';return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');}
+function playIcon(p){document.getElementById('play-icon').innerHTML=p?'<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>':'<path d="M8 5v14l11-7z"/>';}
+audio.addEventListener('timeupdate',()=>{
+  const p=audio.duration?(audio.currentTime/audio.duration*100):0;
+  document.getElementById('seeker').value=p;
+  document.getElementById('time-cur').textContent=fmtTime(audio.currentTime);
+  document.getElementById('time-dur').textContent=fmtTime(audio.duration);
+});
+audio.addEventListener('play',()=>playIcon(true));
+audio.addEventListener('pause',()=>playIcon(false));
+audio.addEventListener('ended',()=>playIcon(false));
+
+// ══════════════════════════════════════════════════════════════════════════════
+// INTERNET ARCHIVE
+// ══════════════════════════════════════════════════════════════════════════════
+const ARCHIVE_API='https://archive.org';
+let archiveState={type:'texts',subject:'',page:1,query:'',totalPages:1};
+let archiveLoaded=false;
+
+function onShowArchive(){
+  if(!archiveLoaded){archiveLoaded=true;loadFeaturedArchive();}
+}
+async function loadFeaturedArchive(){
+  archiveState.query='';archiveState.page=1;
+  document.getElementById('archive-section-title').textContent='Featured from Archive';
+  await fetchArchive();
+}
+async function searchArchive(){
+  const q=document.getElementById('archive-search').value.trim();
+  archiveState.query=q;archiveState.page=1;
+  document.getElementById('archive-section-title').textContent=q?`Results for "${q}"`:'Featured from Archive';
+  await fetchArchive();
+}
+function selectArchiveType(el,type){
+  document.querySelectorAll('#archive-type-pills .cat-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');archiveState.type=type;archiveState.page=1;fetchArchive();
+}
+function selectArchiveSubject(el,subject){
+  document.querySelectorAll('#archive-subject-pills .cat-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');archiveState.subject=subject;archiveState.page=1;fetchArchive();
+}
+async function fetchArchive(){
+  const container=document.getElementById('archive-results');
+  container.innerHTML='<div class="result-loading"><span class="spin">⟳</span> Searching archive...</div>';
+  const{type,subject,page,query}=archiveState;
+  const rows=20,start=(page-1)*rows;
+  let q=`mediatype:${type}`;
+  if(query) q+=` AND (title:(${query}) OR creator:(${query}))`;
+  if(subject) q+=` AND subject:(${subject})`;
+  q+=' AND language:English AND -access-restricted-item:true';
+  const url=`${ARCHIVE_API}/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier,title,creator,year,description,subject,mediatype,format&sort[]=downloads+desc&rows=${rows}&start=${start}&output=json`;
+  try{
+    const data=await fetch(url).then(r=>r.json());
+    const docs=data.response?.docs||[];
+    const total=data.response?.numFound||0;
+    archiveState.totalPages=Math.ceil(total/rows);
+    if(!docs.length){
+      container.innerHTML='<div class="result-empty"><div class="result-empty-icon">📭</div><p style="color:var(--muted);font-size:13px;">No results found.</p></div>';
+      document.getElementById('archive-pagination').innerHTML='';return;
+    }
+    renderArchiveResults(docs,container);renderArchivePagination();
+  }catch(e){
+    container.innerHTML='<div class="result-empty"><div class="result-empty-icon">⚠️</div><p style="color:var(--muted);font-size:13px;">Could not reach Internet Archive.</p></div>';
+  }
+}
+function renderArchiveResults(docs,container){
+  const grid=document.createElement('div');grid.className='results-grid';
+  grid.innerHTML=docs.map(doc=>{
+    const title=doc.title||'Untitled';
+    const creator=Array.isArray(doc.creator)?doc.creator[0]:(doc.creator||'Unknown');
+    const year=doc.year||'';
+    const subjects=(Array.isArray(doc.subject)?doc.subject.join(' '):(doc.subject||'')).toLowerCase();
+    const coverClass=getCoverClass(subjects);
+    const emoji=getArchiveEmoji(doc.mediatype,subjects);
+    const thumbUrl=`${ARCHIVE_API}/services/img/${doc.identifier}`;
+    return`<div class="shelf-card fadein" onclick="openArchiveModal(${JSON.stringify(doc).replace(/"/g,'&quot;')})">
+      <div class="shelf-cover ${coverClass}">
+        <div class="shelf-cover-spine"></div>
+        <img class="shelf-cover-img" src="${thumbUrl}" alt="" onerror="this.style.display='none';this.parentNode.querySelector('.shelf-cover-placeholder').style.display='flex'">
+        <div class="shelf-cover-placeholder" style="display:none"><div class="shelf-cover-emoji">${emoji}</div><div class="shelf-cover-title">${esc(title)}</div></div>
+        ${year?`<div class="shelf-badge">${year}</div>`:''}
+      </div>
+      <div class="shelf-title">${esc(title)}</div>
+      <div class="shelf-author">${esc(creator)}</div>
+    </div>`;
+  }).join('');
+  container.innerHTML='';container.appendChild(grid);
+}
+function getArchiveEmoji(mediatype,subjects){
+  if(mediatype==='magazines')return'📰';
+  if(mediatype==='newspapers')return'🗞️';
+  return getCoverEmoji(subjects);
+}
+function renderArchivePagination(){
+  const{page,totalPages}=archiveState;
+  const el=document.getElementById('archive-pagination');
+  if(totalPages<=1){el.innerHTML='';return;}
+  let html='';
+  if(page>1)html+=`<button class="btn btn-ghost btn-sm" onclick="archivePage(${page-1})">← Prev</button>`;
+  html+=`<span style="font-size:12px;color:var(--muted);padding:6px 12px;">Page ${page} of ${totalPages}</span>`;
+  if(page<totalPages)html+=`<button class="btn btn-ghost btn-sm" onclick="archivePage(${page+1})">Next →</button>`;
+  el.innerHTML=html;
+}
+function archivePage(p){archiveState.page=p;fetchArchive();window.scrollTo(0,0);}
+let currentArchiveItem=null;
+function openArchiveModal(item){
+  if(typeof item==='string')item=JSON.parse(item);
+  currentArchiveItem=item;
+  const title=item.title||'Untitled';
+  const creator=Array.isArray(item.creator)?item.creator[0]:(item.creator||'Unknown');
+  const year=item.year||'';
+  const desc=Array.isArray(item.description)?item.description[0]:(item.description||'');
+  const subjects=(Array.isArray(item.subject)?item.subject.join(' '):(item.subject||'')).toLowerCase();
+  const emoji=getArchiveEmoji(item.mediatype,subjects);
+  const thumb=`${ARCHIVE_API}/services/img/${item.identifier}`;
+  const coverEl=document.getElementById('am-cover');
+  coverEl.innerHTML=`<img src="${thumb}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.parentNode.textContent='${emoji}'">`;
+  document.getElementById('am-title').textContent=title;
+  document.getElementById('am-creator').textContent='by '+creator;
+  document.getElementById('am-year').textContent=year?`Published: ${year}`:'';
+  document.getElementById('am-desc').textContent=desc.replace(/<[^>]+>/g,'').slice(0,200)+(desc.length>200?'…':'');
+  document.getElementById('archive-modal').classList.remove('hidden');
+}
+function closeArchiveModal(e){
+  if(e&&e.target!==document.getElementById('archive-modal'))return;
+  document.getElementById('archive-modal').classList.add('hidden');
+}
+function populateArchiveCategory(){
+  const sel=document.getElementById('am-category');
+  if(!sel)return;
+  sel.innerHTML='<option value="Other">Other</option>';
+  S.categories.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+}
+async function addArchiveItem(){
+  const item=currentArchiveItem;if(!item)return;
+  const btn=document.getElementById('am-add-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spin">⟳</span> Fetching...';
+  const title=item.title||'Untitled';
+  const creator=Array.isArray(item.creator)?item.creator[0]:(item.creator||'Unknown Author');
+  const category=document.getElementById('am-category').value||'Other';
+  try{
+    const r=await fetch(API+'/archive/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,author:creator,category,archive_id:item.identifier})});
+    const data=await r.json();
+    if(!r.ok)throw new Error(data.detail||'Failed to import');
+    closeArchiveModal();toast(`"${title}" added! Starting narration...`);
+    showPage('library');await openBook(data.book_id);
+    if(data.job_id)startPolling(data.job_id);
+  }catch(e){toast('Error: '+e.message);}
+  finally{btn.disabled=false;btn.innerHTML='<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg> Add & Narrate';}
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PHASE 4 — BOOK REQUESTS + DMCA
+// ══════════════════════════════════════════════════════════════════════════════
+let requestsState={status:'',sort:'votes'};
+
+function populateRequestCategory(){
+  const sel=document.getElementById('req-category');
+  if(!sel)return;
+  sel.innerHTML='<option value="Other">Other</option>';
+  S.categories.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+}
+function populateArchiveCategoryModal(){
+  populateArchiveCategory();
+}
+function populateDmcaBookSelect(){
+  const sel=document.getElementById('dmca-book-select');
+  if(!sel)return;
+  sel.innerHTML='<option value="">Select a book...</option>';
+  S.books.forEach(b=>{const o=document.createElement('option');o.value=b.id;o.textContent=b.title+(b.author?' — '+b.author:'');sel.appendChild(o);});
+}
+function populateGutenbergCategory(){
+  const sel=document.getElementById('gm-category');
+  if(!sel)return;
+  sel.innerHTML='<option value="Other">Other</option>';
+  S.categories.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+}
+
+async function loadRequests(){
+  const container=document.getElementById('requests-container');
+  if(!container)return;
+  container.innerHTML='<div class="result-loading"><span class="spin">⟳</span> Loading requests...</div>';
+  const{status,sort}=requestsState;
+  let url=API+'/requests?sort='+sort;
+  if(status)url+='&status='+status;
+  try{
+    const data=await fetch(url).then(r=>r.json());
+    const reqs=data.requests||[];
+    const badge=document.getElementById('requests-count');
+    if(badge){badge.textContent=reqs.length;badge.style.display=reqs.length>0?'inline':'none';}
+    if(!reqs.length){
+      container.innerHTML='<div class="empty"><div class="empty-icon">📋</div><h3>No requests yet</h3><p>Be the first to request a book!</p></div>';return;
+    }
+    renderRequests(reqs,container);
+  }catch(e){
+    container.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><h3>Could not load requests</h3></div>';
+  }
+}
+
+function renderRequests(reqs,container){
+  const statusColors={
+    requested:{bg:'rgba(122,120,144,.1)',color:'var(--muted)',label:'🔍 Searching sources'},
+    sourced:{bg:'rgba(76,175,138,.1)',color:'var(--green)',label:'✅ Source found'},
+    available:{bg:'rgba(212,168,67,.1)',color:'var(--gold)',label:'🎧 Available in library'},
+  };
+  container.innerHTML=`<div class="book-list">${reqs.map(req=>{
+    const s=statusColors[req.status]||statusColors.requested;
+    const isAvail=req.status==='available'&&req.book_id;
+    return`<div class="book-row fadein" style="align-items:flex-start;gap:16px;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;padding-top:2px;">
+        <button onclick="voteRequest('${req.id}',this)" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;padding:6px 10px;font-size:16px;line-height:1;transition:all .2s;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">▲</button>
+        <div id="votes-${req.id}" style="font-size:15px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;">${req.votes}</div>
+        <div style="font-size:9px;color:var(--muted2);letter-spacing:.06em;">VOTES</div>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:3px;">${esc(req.title)}</div>
+        <div style="font-size:12px;color:var(--muted);">by ${esc(req.author)} · ${esc(req.category)}</div>
+        ${req.description?`<div style="font-size:12px;color:var(--muted2);margin-top:5px;line-height:1.5;">${esc(req.description)}</div>`:''}
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+          <span style="font-size:10px;padding:3px 9px;border-radius:20px;background:${s.bg};color:${s.color};font-weight:500;">${s.label}</span>
+          <span style="font-size:10px;color:var(--muted2);">${formatDate(req.created_at)}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-shrink:0;align-items:flex-start;">
+        ${isAvail?`<button class="btn btn-gold btn-sm" onclick="openBook('${req.book_id}')">▶ Listen</button>`:req.status==='sourced'?`<button class="btn btn-violet btn-sm" onclick="addFromRequest('${req.id}','${esc(req.title)}','${esc(req.author)}','${esc(req.source_url||'')}')">+ Add</button>`:''}
+        <button class="btn btn-danger btn-sm" onclick="deleteRequest('${req.id}','${esc(req.title)}')">✕</button>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function formatDate(iso){
+  if(!iso)return'';
+  const d=new Date(iso);
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+function setRequestTab(el,status){
+  document.querySelectorAll('[id^="req-tab-"]').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');requestsState.status=status;loadRequests();
+}
+function setRequestSort(sort){requestsState.sort=sort;loadRequests();}
+async function voteRequest(reqId,btn){
+  try{
+    const r=await fetch(API+'/requests/'+reqId+'/vote',{method:'POST'});
+    const data=await r.json();
+    document.getElementById('votes-'+reqId).textContent=data.votes;
+    btn.style.color='var(--gold)';btn.style.borderColor='var(--gold)';
+    toast(data.message||'Vote counted!');
+  }catch(e){toast('Could not cast vote');}
+}
+async function deleteRequest(id,title){
+  if(!confirm(`Remove request for "${title}"?`))return;
+  await fetch(API+'/requests/'+id,{method:'DELETE'});
+  toast('Request removed');loadRequests();
+}
+async function addFromRequest(reqId,title,author,sourceUrl){
+  if(!sourceUrl){toast('No source URL available');return;}
+  toast('Adding book from found source...');
+  try{
+    const r=await fetch(API+'/gutenberg/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,author,category:'Other',text_url:sourceUrl,gutenberg_id:0})});
+    const data=await r.json();
+    if(!r.ok)throw new Error(data.detail||'Failed');
+    await fetch(API+'/requests/'+reqId,{method:'DELETE'});
+    toast(`"${title}" added to library!`);showPage('library');
+    await openBook(data.book_id);if(data.job_id)startPolling(data.job_id);
+  }catch(e){toast('Error: '+e.message);}
+}
+function openRequestModal(){populateRequestCategory();document.getElementById('request-modal').classList.remove('hidden');}
+function closeRequestModal(e){if(e&&e.target!==document.getElementById('request-modal'))return;document.getElementById('request-modal').classList.add('hidden');}
+async function submitRequest(){
+  const title=document.getElementById('req-title').value.trim();
+  const author=document.getElementById('req-author').value.trim();
+  if(!title||!author){toast('Please fill in title and author');return;}
+  const btn=document.getElementById('req-submit-btn');btn.disabled=true;btn.textContent='Submitting...';
+  try{
+    const r=await fetch(API+'/requests',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,author,category:document.getElementById('req-category').value||'Other',description:document.getElementById('req-desc').value.trim()||null})});
+    const data=await r.json();if(!r.ok)throw new Error(data.detail||'Failed');
+    closeRequestModal();
+    document.getElementById('req-title').value='';document.getElementById('req-author').value='';document.getElementById('req-desc').value='';
+    toast(data.already_existed?'Already requested — your vote has been counted!':'📋 Request submitted!');
+    loadRequests();
+  }catch(e){toast('Error: '+e.message);}
+  finally{btn.disabled=false;btn.textContent='Submit Request';}
+}
+function openDmcaModal(bookId){
+  populateDmcaBookSelect();
+  if(bookId)document.getElementById('dmca-book-select').value=bookId;
+  document.getElementById('dmca-modal').classList.remove('hidden');
+}
+function closeDmcaModal(e){if(e&&e.target!==document.getElementById('dmca-modal'))return;document.getElementById('dmca-modal').classList.add('hidden');}
+async function submitDmca(){
+  const bookId=document.getElementById('dmca-book-select').value;
+  const reason=document.getElementById('dmca-reason').value.trim();
+  if(!bookId){toast('Please select a book');return;}
+  if(!reason||reason.length<30){toast('Please provide a detailed reason (at least 30 characters)');return;}
+  const btn=document.getElementById('dmca-submit-btn');btn.disabled=true;btn.textContent='Filing...';
+  try{
+    const r=await fetch(API+'/dmca/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({book_id:bookId,reason})});
+    const data=await r.json();if(!r.ok)throw new Error(data.detail||'Failed');
+    closeDmcaModal();document.getElementById('dmca-reason').value='';
+    toast('⚖️ Takedown report filed. The book has been hidden pending review.');loadLibrary();
+  }catch(e){toast('Error: '+e.message);}
+  finally{btn.disabled=false;btn.textContent='File Takedown Report';}
+}
+
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
+</script>
+</body>
+</html>
