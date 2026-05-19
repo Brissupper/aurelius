@@ -338,6 +338,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
       Upload Book
     </button>
+    <button class="nav-btn" onclick="showPage('requests')" id="nav-requests">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/></svg>
+      Request a Book
+      <span class="nav-badge" id="requests-count" style="display:none"></span>
+    </button>
     <button class="nav-btn" onclick="showPage('player')" id="nav-player" style="display:none">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg>
       Now Playing
@@ -527,6 +532,47 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
     <div class="chapter-list" id="chapter-list"></div>
   </div>
 </div>
+<!-- ═══════════════════════════════ REQUESTS PAGE ═══════════════════════════════ -->
+<div class="page" id="page-requests">
+  <div class="page-header">
+    <div class="page-header-left">
+      <h2>Request a Book</h2>
+      <p>Can't find what you're looking for? Request it and the community votes it up.</p>
+    </div>
+    <button class="btn btn-gold" onclick="openRequestModal()">
+      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+      Request a Book
+    </button>
+  </div>
+
+  <!-- DMCA notice -->
+  <div style="margin:0 48px 24px;padding:14px 18px;background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.15);border-radius:12px;font-size:12px;color:var(--muted);line-height:1.7;">
+    <strong style="color:var(--gold2);">⚖️ DMCA Safe Harbor</strong> — Aurelius operates under DMCA safe harbor provisions.
+    All uploaded content is user-submitted. If you believe a book infringes your copyright,
+    <span style="color:var(--gold);cursor:pointer;text-decoration:underline;" onclick="openDmcaModal()">file a takedown report</span>.
+    We respond to all valid requests within 48 hours.
+  </div>
+
+  <!-- Filter tabs -->
+  <div style="padding:0 48px 20px;display:flex;gap:8px;">
+    <div class="cat-pill active" id="req-tab-all" onclick="setRequestTab(this,'')">All Requests</div>
+    <div class="cat-pill" id="req-tab-requested" onclick="setRequestTab(this,'requested')">🔍 Searching</div>
+    <div class="cat-pill" id="req-tab-sourced" onclick="setRequestTab(this,'sourced')">✅ Found</div>
+    <div class="cat-pill" id="req-tab-available" onclick="setRequestTab(this,'available')">🎧 Available</div>
+    <div class="spacer"></div>
+    <select class="filter-select" onchange="setRequestSort(this.value)">
+      <option value="votes">Most Voted</option>
+      <option value="date">Newest</option>
+    </select>
+  </div>
+
+  <div class="books-wrap">
+    <div id="requests-container">
+      <div class="result-loading"><span class="spin">⟳</span> Loading requests...</div>
+    </div>
+  </div>
+</div>
+
 </main>
 </div>
 
@@ -658,6 +704,61 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
   </div>
 </div>
 
+<!-- Request Modal -->
+<div class="modal-overlay hidden" id="request-modal" onclick="closeRequestModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><h3>Request a Book</h3><button class="modal-close" onclick="closeRequestModal()">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6;">
+        Tell us what book you'd like to hear. We'll search our sources automatically and notify the community.
+      </p>
+      <div class="form-group"><label class="form-label">Book Title *</label><input class="form-input" id="req-title" type="text" placeholder="e.g. Thinking, Fast and Slow"></div>
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:0"><label class="form-label">Author *</label><input class="form-input" id="req-author" type="text" placeholder="e.g. Daniel Kahneman"></div>
+        <div class="form-group" style="margin-bottom:0"><label class="form-label">Category</label><select class="form-select" id="req-category"></select></div>
+      </div>
+      <div class="form-group" style="margin-top:14px;"><label class="form-label">Why do you want this book? (optional)</label><textarea class="form-input" id="req-desc" rows="2" placeholder="Brief description or reason..." style="resize:vertical;"></textarea></div>
+      <div style="font-size:12px;color:var(--muted);padding:10px 12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);margin-top:4px;line-height:1.6;">
+        ✅ By submitting, you confirm you are requesting this book in good faith. We will only source books from legal, public domain or licensed sources.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeRequestModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="submitRequest()" id="req-submit-btn">Submit Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- DMCA Report Modal -->
+<div class="modal-overlay hidden" id="dmca-modal" onclick="closeDmcaModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><h3>⚖️ DMCA Takedown Request</h3><button class="modal-close" onclick="closeDmcaModal()">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6;">
+        If you are the copyright holder or authorized agent and believe this content infringes your rights,
+        please complete this form. We will remove the content within 48 hours of a valid request.
+      </p>
+      <div class="form-group">
+        <label class="form-label">Select Book *</label>
+        <select class="form-select" id="dmca-book-select"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reason *</label>
+        <textarea class="form-input" id="dmca-reason" rows="3"
+          placeholder="Describe your copyright claim. Include the original work title, your ownership, and how this infringes your rights."
+          style="resize:vertical;"></textarea>
+      </div>
+      <div style="font-size:12px;color:var(--muted);padding:10px 12px;background:rgba(229,115,115,.06);border-radius:10px;border:1px solid rgba(229,115,115,.15);line-height:1.6;">
+        ⚠️ Filing a false DMCA claim is a criminal offense under 17 U.S.C. § 512(f). By submitting, you declare under penalty of perjury that your claim is accurate and made in good faith.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeDmcaModal()">Cancel</button>
+      <button class="btn btn-danger" onclick="submitDmca()" id="dmca-submit-btn">File Takedown Report</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 <audio id="player"></audio>
 
@@ -706,6 +807,7 @@ async function loadMeta(){
     populateUploadCategory();
     populateGutenbergCategory();
     populateArchiveCategory();
+    populateRequestCategory();
   }catch(e){}
 }
 
@@ -729,6 +831,7 @@ function showPage(name){
   if(nb)nb.classList.add('active');
   if(name==='library') loadLibrary();
   if(name==='archive') onShowArchive();
+  if(name==='requests') { populateDmcaBookSelect(); loadRequests(); }
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -996,6 +1099,7 @@ function renderList(books,container){
           ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openBook('${b.id}')">▶ Listen</button>`
           :`<button class="btn btn-ghost btn-sm" disabled><span class="spin">⟳</span></button>`
         }
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openDmcaModal('${b.id}')" title="Report DMCA" style="color:var(--muted);font-size:10px;">⚖️</button>
         <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteBook('${b.id}','${esc(b.title)}')">✕</button>
       </div>
     </div>`).join('')}</div>`;

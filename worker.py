@@ -445,3 +445,38 @@ def process_gutenberg_book(job_id: str, book_id: str, txt_path: str, voice: str)
         execute(conn, "UPDATE books SET status=?, updated_at=? WHERE id=?",
                 ("failed", now(), book_id))
         conn.close()
+
+
+# =============================================================================
+#  AUTO-SOURCE — search Gutenberg when a book is requested
+# =============================================================================
+
+async def auto_source_request(req_id: str, title: str, author: str) -> None:
+    """Search Gutenberg for a requested book and update status if found."""
+    try:
+        import httpx
+        query = f"{title} {author}"
+        url   = f"https://gutendex.com/books?search={query.replace(' ', '%20')}&languages=en&mime_type=text/plain&page_size=5"
+
+        async with httpx.AsyncClient(timeout=15) as client:
+            r    = await client.get(url)
+            data = r.json()
+
+        books = data.get("results", [])
+        for book in books:
+            book_title  = book.get("title","").lower()
+            if title.lower()[:10] in book_title:
+                text_url = (book.get("formats",{}).get("text/plain; charset=utf-8")
+                            or book.get("formats",{}).get("text/plain"))
+                if text_url:
+                    conn = get_db()
+                    execute(conn,
+                        "UPDATE book_requests SET status='sourced', source_url=?, updated_at=? WHERE id=?",
+                        (text_url, now(), req_id))
+                    conn.close()
+                    log.info(f"Auto-sourced request {req_id}: found on Gutenberg")
+                    return
+
+        log.info(f"Auto-source: '{title}' not found on Gutenberg")
+    except Exception as e:
+        log.warning(f"Auto-source failed for {req_id}: {e}")

@@ -151,3 +151,73 @@ def fetchall(conn, sql: str, params=None):
     else:
         rows = conn.execute(sql, params or []).fetchall()
         return [dict(r) for r in rows]
+
+
+def init_phase4_tables() -> None:
+    """Create Phase 4 tables — book requests and DMCA takedowns."""
+    conn = get_db()
+    if USE_POSTGRES:
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS book_requests (
+                id          TEXT PRIMARY KEY,
+                title       TEXT NOT NULL,
+                author      TEXT NOT NULL,
+                category    TEXT NOT NULL DEFAULT 'Other',
+                description TEXT,
+                votes       INTEGER NOT NULL DEFAULT 1,
+                status      TEXT NOT NULL DEFAULT 'requested',
+                source_url  TEXT,
+                book_id     TEXT,
+                created_at  TEXT NOT NULL,
+                updated_at  TEXT NOT NULL
+            )
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS request_votes (
+                id         TEXT PRIMARY KEY,
+                request_id TEXT NOT NULL REFERENCES book_requests(id),
+                voter_ip   TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(request_id, voter_ip)
+            )
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS dmca_reports (
+                id          TEXT PRIMARY KEY,
+                book_id     TEXT NOT NULL REFERENCES books(id),
+                reporter_ip TEXT NOT NULL,
+                reason      TEXT NOT NULL,
+                status      TEXT NOT NULL DEFAULT 'pending',
+                created_at  TEXT NOT NULL
+            )
+        """)
+        # Add dmca_flagged column to books if not exists
+        try:
+            cur.execute("ALTER TABLE books ADD COLUMN dmca_flagged BOOLEAN DEFAULT FALSE")
+        except Exception:
+            pass
+        conn.commit()
+        cur.close()
+    else:
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS book_requests (
+                id TEXT PRIMARY KEY, title TEXT NOT NULL, author TEXT NOT NULL,
+                category TEXT NOT NULL DEFAULT 'Other', description TEXT,
+                votes INTEGER NOT NULL DEFAULT 1, status TEXT NOT NULL DEFAULT 'requested',
+                source_url TEXT, book_id TEXT,
+                created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS request_votes (
+                id TEXT PRIMARY KEY, request_id TEXT NOT NULL REFERENCES book_requests(id),
+                voter_ip TEXT NOT NULL, created_at TEXT NOT NULL,
+                UNIQUE(request_id, voter_ip)
+            );
+            CREATE TABLE IF NOT EXISTS dmca_reports (
+                id TEXT PRIMARY KEY, book_id TEXT NOT NULL REFERENCES books(id),
+                reporter_ip TEXT NOT NULL, reason TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'pending', created_at TEXT NOT NULL
+            );
+        """)
+        conn.commit()
+    conn.close()

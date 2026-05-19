@@ -42,6 +42,8 @@ CATEGORIES   = ["Fiction", "Non-Fiction", "Philosophy", "Science", "History",
 async def startup():
     try:
         init_db()
+        from models import init_phase4_tables
+        init_phase4_tables()
         log.info("Aurelius API started — database ready")
 
         from tts_engine import detect_engine
@@ -466,3 +468,217 @@ async def archive_import(data: ArchiveImport, background_tasks: BackgroundTasks)
 
     log.info(f"Archive import queued: {data.archive_id} → book {book_id}")
     return {"book_id": book_id, "job_id": job_id, "message": "Item imported, narration starting"}
+
+
+# =============================================================================
+#  PHASE 4 — DMCA SAFE HARBOR + BOOK REQUESTS
+# =============================================================================
+
+from fastapi import Request as FastAPIRequest
+from typing import Optional
+
+# ── DMCA Takedown ─────────────────────────────────────────────────────────────
+
+class DMCAReport(BaseModel):
+    book_id: str
+    reason: str
+
+@app.post("/api/dmca/report")
+async def dmca_report(data: DMCAReport, request: FastAPIRequest):
+    """Flag a book for DMCA review. Immediately hides it pending review."""
+    conn = get_db()
+    book = fetchone(conn, "SELECT * FROM books WHERE id = ?", (data.book_id,))
+    if not book:
+        conn.close()
+        raise HTTPException(404, detail="Book not found")
+
+    reporter_ip = request.client.host or "unknown"
+    report_id   = str(uuid.uuid4())
+
+    # Check if already reported by this IP
+    existing = fetchone(conn,
+        "SELECT id FROM dmca_reports WHERE book_id = ? AND reporter_ip = ?",
+        (data.book_id, reporter_ip))
+    if existing:
+        conn.close()
+        return {"message": "Already reported"}
+
+    execute(conn,
+        """INSERT INTO dmca_reports (id, book_id, reporter_ip, reason, status, created_at)
+           VALUES (?, ?, ?, ?, 'pending', ?)""",
+        (report_id, data.book_id, reporter_ip, data.reason[:1000], now()))
+
+    # Hide book immediately pending review
+    execute(conn,
+        "UPDATE books SET status = 'dmca_flagged', updated_at = ? WHERE id = ?",
+        (now(), data.book_id))
+    conn.close()
+
+    log.warning(f"DMCA report filed for book {data.book_id} by {reporter_ip}")
+    return {"message": "Report received. The book has been hidden pending review. Thank you."}
+
+
+@app.get("/api/dmca/reports")
+def list_dmca_reports():
+    """List all pending DMCA reports (admin view)."""
+    conn = get_db()
+    reports = fetchall(conn, """
+        SELECT r.*, b.title as book_title, b.author as book_author
+        FROM dmca_reports r
+        JOIN books b ON b.id = r.book_id
+        WHERE r.status = 'pending'
+        ORDER BY r.created_at DESC
+    """)
+    conn.close()
+    return {"reports": reports}
+
+
+@app.post("/api/dmca/resolve/{report_id}")
+async def resolve_dmca(report_id: str, action: str = "dismiss"):
+    """
+    Resolve a DMCA report.
+    action='dismiss' → restore book, mark report dismissed
+    action='remove'  → permanently delete book and audio
+    """
+    conn = get_db()
+    report = fetchone(conn, "SELECT * FROM dmca_reports WHERE id = ?", (report_id,))
+    if not report:
+        conn.close()
+        raise HTTPException(404, detail="Report not found")
+
+    if action == "remove":
+        # Permanently delete the book
+        book_id = report["book_id"]
+        chapters = fetchall(conn, "SELECT audio_path FROM chapters WHERE book_id = ?", (book_id,))
+        for ch in chapters:
+            if ch.get("audio_path") and Path(ch["audio_path"]).exists():
+                Path(ch["audio_path"]).unlink(missing_ok=True)
+        execute(conn, "DELETE FROM chapters WHERE book_id = ?", (book_id,))
+        execute(conn, "DELETE FROM jobs     WHERE book_id = ?", (book_id,))
+        execute(conn, "DELETE FROM books    WHERE id = ?",      (book_id,))
+        execute(conn, "UPDATE dmca_reports SET status = 'removed' WHERE id = ?", (report_id,))
+        log.info(f"DMCA: book {book_id} permanently removed")
+    else:
+        # Dismiss — restore book
+        execute(conn,
+            "UPDATE books SET status = 'ready', updated_at = ? WHERE id = ?",
+            (now(), report["book_id"]))
+        execute(conn,
+            "UPDATE dmca_reports SET status = 'dismissed' WHERE id = ?", (report_id,))
+        log.info(f"DMCA report {report_id} dismissed")
+
+    conn.close()
+    return {"message": f"Report {action}ed successfully"}
+
+
+# ── Book Requests ─────────────────────────────────────────────────────────────
+
+class BookRequestCreate(BaseModel):
+    title: str
+    author: str
+    category: str = "Other"
+    description: Optional[str] = None
+
+@app.post("/api/requests", status_code=201)
+async def create_request(data: BookRequestCreate, request: FastAPIRequest):
+    """Submit a book request."""
+    conn = get_db()
+
+    # Check for duplicate (same title+author)
+    existing = fetchone(conn,
+        "SELECT id, votes FROM book_requests WHERE LOWER(title) = LOWER(?) AND LOWER(author) = LOWER(?)",
+        (data.title.strip(), data.author.strip()))
+    if existing:
+        conn.close()
+        return {"message": "This book has already been requested. Your vote has been counted.",
+                "request_id": existing["id"], "already_existed": True}
+
+    req_id = str(uuid.uuid4())
+    execute(conn,
+        """INSERT INTO book_requests
+           (id, title, author, category, description, votes, status, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, 1, 'requested', ?, ?)""",
+        (req_id, data.title.strip(), data.author.strip(), data.category,
+         data.description, now(), now()))
+
+    # Auto-vote from requester
+    voter_ip = request.client.host or "unknown"
+    vote_id  = str(uuid.uuid4())
+    try:
+        execute(conn,
+            "INSERT INTO request_votes (id, request_id, voter_ip, created_at) VALUES (?, ?, ?, ?)",
+            (vote_id, req_id, voter_ip, now()))
+    except Exception:
+        pass
+
+    conn.close()
+    log.info(f"Book requested: '{data.title}' by {data.author}")
+
+    # Auto-search Gutenberg if it might exist there
+    from worker import auto_source_request
+    import asyncio
+    asyncio.create_task(auto_source_request(req_id, data.title, data.author))
+
+    return {"message": "Request submitted!", "request_id": req_id}
+
+
+@app.get("/api/requests")
+def list_requests(status: str = "", sort: str = "votes"):
+    """List book requests sorted by votes or date."""
+    conn  = get_db()
+    query = "SELECT * FROM book_requests"
+    params = []
+    if status:
+        query += " WHERE status = ?"
+        params.append(status)
+    if sort == "votes":
+        query += " ORDER BY votes DESC, created_at DESC"
+    else:
+        query += " ORDER BY created_at DESC"
+    query += " LIMIT 100"
+    rows = fetchall(conn, query, params)
+    conn.close()
+    return {"requests": rows}
+
+
+@app.post("/api/requests/{req_id}/vote")
+async def vote_request(req_id: str, request: FastAPIRequest):
+    """Upvote a book request. One vote per IP per request."""
+    voter_ip = request.client.host or "unknown"
+    conn = get_db()
+
+    req = fetchone(conn, "SELECT * FROM book_requests WHERE id = ?", (req_id,))
+    if not req:
+        conn.close()
+        raise HTTPException(404, detail="Request not found")
+
+    existing = fetchone(conn,
+        "SELECT id FROM request_votes WHERE request_id = ? AND voter_ip = ?",
+        (req_id, voter_ip))
+    if existing:
+        conn.close()
+        return {"message": "Already voted", "votes": req["votes"]}
+
+    vote_id = str(uuid.uuid4())
+    execute(conn,
+        "INSERT INTO request_votes (id, request_id, voter_ip, created_at) VALUES (?, ?, ?, ?)",
+        (vote_id, req_id, voter_ip, now()))
+    execute(conn,
+        "UPDATE book_requests SET votes = votes + 1, updated_at = ? WHERE id = ?",
+        (now(), req_id))
+
+    updated = fetchone(conn, "SELECT votes FROM book_requests WHERE id = ?", (req_id,))
+    conn.close()
+
+    new_votes = updated["votes"] if updated else req["votes"] + 1
+    log.info(f"Vote cast for request {req_id} — now {new_votes} votes")
+    return {"message": "Vote counted!", "votes": new_votes}
+
+
+@app.delete("/api/requests/{req_id}")
+def delete_request(req_id: str):
+    conn = get_db()
+    execute(conn, "DELETE FROM request_votes WHERE request_id = ?", (req_id,))
+    execute(conn, "DELETE FROM book_requests WHERE id = ?", (req_id,))
+    conn.close()
+    return {"message": "Deleted"}
