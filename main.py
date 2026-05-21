@@ -13,6 +13,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from models import get_db, init_db, now, execute, fetchone, fetchall
+from auth import create_jwt, get_current_user, get_optional_user, verify_google_token
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)-8s  %(message)s")
 log = logging.getLogger("aurelius.api")
@@ -48,6 +49,15 @@ async def startup():
 
         from tts_engine import detect_engine
         log.info(f"TTS engine: {detect_engine()}")
+
+        # Migration: add user_id to books if not exists
+        try:
+            conn = get_db()
+            execute(conn, "ALTER TABLE books ADD COLUMN user_id TEXT REFERENCES users(id)")
+            conn.close()
+            log.info("Migration: added user_id to books")
+        except Exception:
+            pass  # Column already exists
 
         from storage import storage
         mode = "Cloudflare R2" if storage.is_cloud() else "Local disk"
@@ -683,3 +693,249 @@ def delete_request(req_id: str):
     execute(conn, "DELETE FROM book_requests WHERE id = ?", (req_id,))
     conn.close()
     return {"message": "Deleted"}
+
+
+# =============================================================================
+#  AUTH ENDPOINTS
+# =============================================================================
+
+from pydantic import BaseModel as PydanticBase
+
+class GoogleAuthRequest(PydanticBase):
+    id_token: str
+
+@app.post("/auth/google")
+async def google_auth(data: GoogleAuthRequest):
+    """Verify Google ID token, create/update user, return JWT."""
+    user_info = await verify_google_token(data.id_token)
+
+    conn = get_db()
+    user = fetchone(conn,
+        "SELECT * FROM users WHERE google_id = ?",
+        (user_info["google_id"],))
+
+    if user:
+        # Update name/avatar if changed
+        execute(conn,
+            "UPDATE users SET name=?, avatar=?, updated_at=? WHERE google_id=?",
+            (user_info["name"], user_info["avatar"], now(), user_info["google_id"]))
+        user_id = user["id"]
+    else:
+        # Create new user
+        user_id = str(uuid.uuid4())
+        execute(conn,
+            """INSERT INTO users (id, google_id, email, name, avatar, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (user_id, user_info["google_id"], user_info["email"],
+             user_info["name"], user_info["avatar"], now(), now()))
+        log.info(f"New user: {user_info['email']}")
+
+    conn.close()
+
+    token = create_jwt(
+        user_id=user_id,
+        email=user_info["email"],
+        name=user_info["name"],
+        avatar=user_info["avatar"],
+    )
+    return {
+        "token": token,
+        "user": {
+            "id":     user_id,
+            "email":  user_info["email"],
+            "name":   user_info["name"],
+            "avatar": user_info["avatar"],
+        }
+    }
+
+
+@app.get("/auth/me")
+def get_me(user: dict = Depends(get_current_user)):
+    """Return current user info from JWT."""
+    return {"user": user}
+
+
+@app.get("/auth/logout")
+def logout():
+    """Client just deletes token — nothing to do server-side."""
+    return {"message": "Logged out"}
+
+
+# =============================================================================
+#  PATCH BOOKS ENDPOINTS TO BE USER-SCOPED
+# =============================================================================
+
+@app.get("/api/my/books")
+def my_books(
+    category: str = "",
+    status: str = "",
+    user: dict = Depends(get_current_user)
+):
+    """List books belonging to the current user only."""
+    conn  = get_db()
+    query = """
+        SELECT b.*,
+               COUNT(c.id) AS chapter_count,
+               SUM(CASE WHEN c.audio_path IS NOT NULL THEN 1 ELSE 0 END) AS audio_ready
+        FROM books b
+        LEFT JOIN chapters c ON c.book_id = b.id
+        WHERE b.user_id = ?
+    """
+    params = [user["sub"]]
+    if category:
+        query += " AND b.category = ?"
+        params.append(category)
+    if status:
+        query += " AND b.status = ?"
+        params.append(status)
+    query += " GROUP BY b.id ORDER BY b.created_at DESC"
+    rows = fetchall(conn, query, params)
+    conn.close()
+    return {"books": rows}
+
+
+@app.post("/api/my/books/upload", status_code=201)
+async def my_upload_book(
+    file:     UploadFile = File(...),
+    title:    str        = Form(default=""),
+    author:   str        = Form(default="Unknown Author"),
+    category: str        = Form(default="Other"),
+    user:     dict       = Depends(get_current_user),
+):
+    """Upload a PDF to the current user's library."""
+    if not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(400, detail="Only PDF files are supported.")
+
+    book_id  = str(uuid.uuid4())
+    pdf_path = UPLOAD_DIR / f"{book_id}.pdf"
+    contents = await file.read()
+    pdf_path.write_bytes(contents)
+
+    if not title.strip():
+        title = file.filename.replace(".pdf","").replace("_"," ").replace("-"," ").title()
+
+    conn = get_db()
+    execute(conn,
+        """INSERT INTO books
+           (id, user_id, title, author, category, filename, pdf_path, voice, status, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'af_bella', 'stored', ?, ?)""",
+        (book_id, user["sub"], title.strip(), author.strip(), category,
+         file.filename, str(pdf_path), now(), now()))
+    conn.close()
+
+    log.info(f"Book uploaded by {user['email']}: '{title}'")
+    return {"book_id": book_id, "title": title,
+            "message": "Book saved. Click Narrate when ready."}
+
+
+@app.post("/api/my/gutenberg/import", status_code=201)
+async def my_gutenberg_import(
+    data: GutenbergImport,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(get_current_user),
+):
+    """Import a Gutenberg book into the current user's library."""
+    import httpx
+    book_id = str(uuid.uuid4())
+    log.info(f"Gutenberg import by {user['email']}: {data.title}")
+
+    try:
+        async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+            r = await client.get(data.text_url)
+            r.raise_for_status()
+            text_content = r.text
+    except Exception as e:
+        raise HTTPException(400, detail=f"Could not download book: {e}")
+
+    if len(text_content) < 500:
+        raise HTTPException(400, detail="Book text too short or empty")
+
+    txt_path = UPLOAD_DIR / f"{book_id}.txt"
+    txt_path.write_text(text_content, encoding="utf-8", errors="ignore")
+
+    conn = get_db()
+    execute(conn,
+        """INSERT INTO books
+           (id, user_id, title, author, category, filename, pdf_path, voice, status, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'af_bella', 'pending', ?, ?)""",
+        (book_id, user["sub"], data.title, data.author, data.category,
+         f"{data.title}.txt", str(txt_path), now(), now()))
+    job_id = str(uuid.uuid4())
+    execute(conn,
+        """INSERT INTO jobs (id, book_id, status, progress, total, current_step, created_at)
+           VALUES (?, ?, 'queued', 0, 0, 'Queued', ?)""",
+        (job_id, book_id, now()))
+    conn.close()
+
+    from worker import process_gutenberg_book
+    background_tasks.add_task(process_gutenberg_book, job_id, book_id, str(txt_path), "af_bella")
+    return {"book_id": book_id, "job_id": job_id}
+
+
+@app.post("/api/my/archive/import", status_code=201)
+async def my_archive_import(
+    data: ArchiveImport,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(get_current_user),
+):
+    """Import an Archive.org item into the current user's library."""
+    import httpx
+    log.info(f"Archive import by {user['email']}: {data.archive_id}")
+
+    meta_url = f"https://archive.org/metadata/{data.archive_id}"
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            meta = await client.get(meta_url)
+            meta_json = meta.json()
+    except Exception as e:
+        raise HTTPException(400, detail=f"Could not fetch Archive metadata: {e}")
+
+    files = meta_json.get("files", [])
+    text_url = None
+    for fmt in ["DjVuTXT", "Plain Text", "Stripped Text"]:
+        for f in files:
+            if f.get("format") == fmt and f.get("name","").endswith(".txt"):
+                text_url = f"https://archive.org/download/{data.archive_id}/{f['name']}"
+                break
+        if text_url:
+            break
+    if not text_url:
+        for f in files:
+            if f.get("name","").endswith(".txt") and "meta" not in f.get("name","").lower():
+                text_url = f"https://archive.org/download/{data.archive_id}/{f['name']}"
+                break
+    if not text_url:
+        raise HTTPException(400, detail="No plain text file found for this item.")
+
+    try:
+        async with httpx.AsyncClient(timeout=120, follow_redirects=True) as client:
+            r = await client.get(text_url)
+            r.raise_for_status()
+            text_content = r.text
+    except Exception as e:
+        raise HTTPException(400, detail=f"Could not download text: {e}")
+
+    if len(text_content) < 500:
+        raise HTTPException(400, detail="Text content too short or empty.")
+
+    book_id  = str(uuid.uuid4())
+    txt_path = UPLOAD_DIR / f"{book_id}.txt"
+    txt_path.write_text(text_content, encoding="utf-8", errors="ignore")
+
+    conn = get_db()
+    execute(conn,
+        """INSERT INTO books
+           (id, user_id, title, author, category, filename, pdf_path, voice, status, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'af_bella', 'pending', ?, ?)""",
+        (book_id, user["sub"], data.title, data.author, data.category,
+         f"{data.title}.txt", str(txt_path), now(), now()))
+    job_id = str(uuid.uuid4())
+    execute(conn,
+        """INSERT INTO jobs (id, book_id, status, progress, total, current_step, created_at)
+           VALUES (?, ?, 'queued', 0, 0, 'Queued', ?)""",
+        (job_id, book_id, now()))
+    conn.close()
+
+    from worker import process_gutenberg_book
+    background_tasks.add_task(process_gutenberg_book, job_id, book_id, str(txt_path), "af_bella")
+    return {"book_id": book_id, "job_id": job_id}

@@ -34,8 +34,20 @@ def init_db() -> None:
     if USE_POSTGRES:
         cur = conn.cursor()
         cur.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id         TEXT PRIMARY KEY,
+                google_id  TEXT UNIQUE NOT NULL,
+                email      TEXT UNIQUE NOT NULL,
+                name       TEXT NOT NULL,
+                avatar     TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        """)
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS books (
                 id          TEXT PRIMARY KEY,
+                user_id     TEXT REFERENCES users(id),
                 title       TEXT NOT NULL,
                 author      TEXT NOT NULL DEFAULT 'Unknown Author',
                 category    TEXT NOT NULL DEFAULT 'Other',
@@ -80,8 +92,15 @@ def init_db() -> None:
         log.info("PostgreSQL schema ready.")
     else:
         conn.executescript("""
+            CREATE TABLE IF NOT EXISTS users (
+                id TEXT PRIMARY KEY, google_id TEXT UNIQUE NOT NULL,
+                email TEXT UNIQUE NOT NULL, name TEXT NOT NULL,
+                avatar TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+            );
             CREATE TABLE IF NOT EXISTS books (
-                id TEXT PRIMARY KEY, title TEXT NOT NULL,
+                id TEXT PRIMARY KEY, user_id TEXT REFERENCES users(id),
+                title TEXT NOT NULL,
                 author TEXT NOT NULL DEFAULT 'Unknown Author',
                 category TEXT NOT NULL DEFAULT 'Other',
                 filename TEXT NOT NULL, pdf_path TEXT NOT NULL,

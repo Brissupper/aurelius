@@ -27,3 +27,7 @@ anthropic>=0.28.0
 # HTTP requests
 requests>=2.31.0
 httpx>=0.27.0
+# Auth
+python-jose[cryptography]>=3.3.0
+passlib>=1.7.4
+httpx>=0.27.0

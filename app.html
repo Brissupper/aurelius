@@ -4,110 +4,126 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aurelius — World Library</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg:#080810; --surface:#0f0f1a; --surface2:#161625; --surface3:#1e1e30;
-  --border:#ffffff0f; --border2:#ffffff18;
-  --gold:#d4a843; --gold2:#f0c96a; --gold3:#b8922e;
-  --violet:#7c5cbf; --violet2:#9b7de0;
-  --text:#f0ede6; --muted:#7a7890; --muted2:#5a5870;
-  --green:#4caf8a; --red:#e57373;
-  --radius:14px;
-  --glow: 0 0 40px rgba(212,168,67,.12);
+:root{
+  --bg:#080810;--surface:#0f0f1a;--surface2:#161625;--surface3:#1e1e30;
+  --border:#ffffff0f;--border2:#ffffff18;
+  --gold:#d4a843;--gold2:#f0c96a;--gold3:#b8922e;
+  --violet:#7c5cbf;--violet2:#9b7de0;
+  --text:#f0ede6;--muted:#7a7890;--muted2:#5a5870;
+  --green:#4caf8a;--red:#e57373;
+  --radius:14px;--sidebar:240px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
 body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden;}
-
-/* Animated background */
 .bg-orbs{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
-.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.18;animation:drift 20s ease-in-out infinite;}
-.orb1{width:600px;height:600px;background:radial-gradient(circle,#7c5cbf,transparent);top:-200px;left:-100px;animation-delay:0s;}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.15;animation:drift 20s ease-in-out infinite;}
+.orb1{width:600px;height:600px;background:radial-gradient(circle,#7c5cbf,transparent);top:-200px;left:-100px;}
 .orb2{width:500px;height:500px;background:radial-gradient(circle,#d4a843,transparent);bottom:-150px;right:-100px;animation-delay:-7s;}
 .orb3{width:400px;height:400px;background:radial-gradient(circle,#4c6abf,transparent);top:40%;left:40%;animation-delay:-13s;}
 @keyframes drift{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(40px,-30px) scale(1.05);}66%{transform:translate(-20px,40px) scale(.95);}}
-
-/* Noise overlay */
 body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1;opacity:.4;}
-
 /* Layout */
 .shell{display:flex;min-height:100vh;position:relative;z-index:2;}
-aside{width:240px;min-height:100vh;background:rgba(10,10,20,.85);backdrop-filter:blur(20px);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;}
-main{margin-left:240px;flex:1;min-height:100vh;}
+aside{width:var(--sidebar);min-height:100vh;background:rgba(10,10,20,.9);backdrop-filter:blur(20px);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .3s ease;}
+aside.collapsed{transform:translateX(-100%);}
+main{margin-left:var(--sidebar);flex:1;transition:margin-left .3s ease;}
+main.expanded{margin-left:0;}
 .page{display:none;min-height:100vh;}
 .page.active{display:block;}
-
+/* Sidebar toggle */
+.sidebar-toggle{position:fixed;top:16px;left:16px;z-index:200;background:rgba(10,10,20,.85);backdrop-filter:blur(10px);border:1px solid var(--border2);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;color:var(--muted);}
+.sidebar-toggle:hover{border-color:rgba(212,168,67,.3);color:var(--gold);}
 /* Sidebar */
-.logo{padding:28px 24px 20px;}
+.logo{padding:28px 24px 16px;}
 .logo-mark{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
 .logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--gold3),var(--gold2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
-.logo h1{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--gold2);letter-spacing:.06em;}
+.logo h1{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--gold2);letter-spacing:.06em;white-space:nowrap;}
 .logo p{font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;padding-left:42px;}
-.sidebar-divider{height:1px;background:var(--border);margin:0 16px 16px;}
-nav{padding:8px 12px;flex:1;}
-.nav-section{font-size:9px;color:var(--muted2);letter-spacing:.14em;text-transform:uppercase;padding:12px 8px 6px;}
-.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;background:none;border:none;border-radius:10px;color:var(--muted);font-family:'Outfit',sans-serif;font-size:13px;font-weight:400;cursor:pointer;transition:all .2s;text-align:left;position:relative;}
+.sidebar-divider{height:1px;background:var(--border);margin:0 16px 12px;}
+nav{padding:8px 12px;flex:1;overflow-y:auto;}
+.nav-section{font-size:9px;color:var(--muted2);letter-spacing:.14em;text-transform:uppercase;padding:10px 8px 5px;}
+.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;background:none;border:none;border-radius:10px;color:var(--muted);font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;text-align:left;white-space:nowrap;}
 .nav-btn:hover{background:var(--surface2);color:var(--text);}
 .nav-btn.active{background:linear-gradient(135deg,rgba(212,168,67,.12),rgba(124,92,191,.08));color:var(--gold2);border:1px solid rgba(212,168,67,.2);}
 .nav-btn svg{width:15px;height:15px;flex-shrink:0;opacity:.7;}
 .nav-btn.active svg{opacity:1;}
 .nav-badge{margin-left:auto;background:var(--gold3);color:#000;font-size:9px;font-weight:600;padding:2px 6px;border-radius:20px;}
-.sidebar-footer{padding:16px 12px;border-top:1px solid var(--border);}
-.engine-pill{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);}
+.sidebar-footer{padding:14px 12px;border-top:1px solid var(--border);}
+.engine-pill{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);margin-bottom:10px;}
 .engine-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);flex-shrink:0;}
 .engine-text{font-size:11px;color:var(--muted);}
 .engine-text span{color:var(--gold2);font-weight:500;}
-
-/* ── DISCOVER PAGE ── */
-.discover-hero{padding:60px 48px 40px;position:relative;overflow:hidden;}
-.discover-hero::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(124,92,191,.06) 0%,rgba(212,168,67,.04) 100%);pointer-events:none;}
-.discover-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent);}
-.hero-eyebrow{font-size:10px;color:var(--gold);letter-spacing:.2em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-.hero-eyebrow::before{content:'';width:24px;height:1px;background:var(--gold);opacity:.5;}
-.hero-title{font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:300;line-height:1.1;margin-bottom:16px;background:linear-gradient(135deg,var(--text) 0%,var(--gold2) 60%,var(--text) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-.hero-subtitle{font-size:14px;color:var(--muted);max-width:520px;line-height:1.7;margin-bottom:32px;}
-.hero-search{display:flex;gap:10px;max-width:620px;}
-.hero-search-wrap{flex:1;position:relative;}
-.hero-search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;}
-.hero-search-input{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border2);color:var(--text);border-radius:12px;padding:13px 14px 13px 42px;font-size:14px;font-family:'Outfit',sans-serif;outline:none;transition:all .2s;backdrop-filter:blur(10px);}
-.hero-search-input:focus{border-color:rgba(212,168,67,.4);background:rgba(255,255,255,.07);box-shadow:0 0 0 3px rgba(212,168,67,.08);}
-.hero-search-input::placeholder{color:var(--muted2);}
-.btn-search{background:linear-gradient(135deg,var(--gold3),var(--gold));color:#0a0a10;border:none;border-radius:12px;padding:13px 24px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;}
-.btn-search:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(212,168,67,.25);}
-
-/* Stats bar */
-.stats-bar{display:flex;gap:32px;padding:20px 48px;border-bottom:1px solid var(--border);}
-.stat-item{display:flex;flex-direction:column;gap:2px;}
-.stat-num{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:var(--gold2);}
-.stat-label{font-size:11px;color:var(--muted);letter-spacing:.06em;}
-
-/* Category pills */
-.section-wrap{padding:32px 48px;}
-.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
-.section-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:var(--text);}
-.section-link{font-size:12px;color:var(--gold);cursor:pointer;opacity:.7;transition:opacity .2s;}
-.section-link:hover{opacity:1;}
-.cat-pills{display:flex;gap:8px;flex-wrap:wrap;}
-.cat-pill{padding:7px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .2s;white-space:nowrap;}
-.cat-pill:hover{border-color:var(--border2);color:var(--text);}
-.cat-pill.active{background:linear-gradient(135deg,rgba(212,168,67,.15),rgba(212,168,67,.08));border-color:rgba(212,168,67,.35);color:var(--gold2);}
-
-/* Featured shelf */
-.book-shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:20px;}
-.shelf-card{cursor:pointer;transition:transform .2s;position:relative;}
-.shelf-card:hover{transform:translateY(-4px);}
-.shelf-cover{height:220px;border-radius:10px;position:relative;overflow:hidden;margin-bottom:10px;box-shadow:0 8px 24px rgba(0,0,0,.4);}
-.shelf-cover-spine{position:absolute;left:0;top:0;bottom:0;width:6px;background:rgba(0,0,0,.3);z-index:2;}
-.shelf-cover-img{width:100%;height:100%;object-fit:cover;}
-.shelf-cover-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center;}
-.shelf-cover-emoji{font-size:32px;margin-bottom:8px;}
-.shelf-cover-title{font-family:'Cormorant Garamond',serif;font-size:12px;color:rgba(255,255,255,.85);line-height:1.4;}
-.shelf-title{font-size:12px;font-weight:500;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.shelf-author{font-size:11px;color:var(--muted);margin-top:2px;}
-.shelf-badge{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);border-radius:6px;padding:3px 7px;font-size:9px;color:var(--gold2);font-weight:500;border:1px solid rgba(212,168,67,.2);}
-
-/* Cover colors per genre */
+/* User profile */
+.user-profile{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);cursor:pointer;transition:all .2s;}
+.user-profile:hover{border-color:var(--border2);}
+.user-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;}
+.user-avatar-placeholder{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--gold3),var(--violet));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0;}
+.user-name{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-email{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* Auth page */
+.auth-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.auth-card{background:var(--surface);border:1px solid var(--border2);border-radius:24px;padding:48px 40px;max-width:440px;width:100%;text-align:center;}
+.auth-logo{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:28px;}
+.auth-logo-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--gold3),var(--gold2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;}
+.auth-logo h1{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:600;color:var(--gold2);}
+.auth-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;margin-bottom:8px;}
+.auth-subtitle{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:28px;}
+.auth-features{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:28px;text-align:left;}
+.auth-feature{padding:12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);}
+.auth-feature-icon{font-size:18px;margin-bottom:4px;}
+.auth-feature-title{font-size:12px;font-weight:500;color:var(--text);}
+.auth-feature-desc{font-size:10px;color:var(--muted);margin-top:2px;}
+.google-btn{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:14px;background:#fff;border:none;border-radius:12px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;color:#1f1f1f;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.3);}
+.google-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.4);}
+.google-btn img{width:20px;height:20px;}
+.auth-disclaimer{font-size:11px;color:var(--muted2);margin-top:14px;line-height:1.6;}
+/* Donate banner */
+.donate-banner{position:fixed;bottom:84px;right:20px;background:linear-gradient(135deg,rgba(212,168,67,.15),rgba(124,92,191,.1));backdrop-filter:blur(10px);border:1px solid rgba(212,168,67,.25);border-radius:14px;padding:14px 16px;max-width:250px;z-index:150;}
+.donate-banner.hidden{display:none;}
+.donate-banner-close{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;}
+.donate-banner-icon{font-size:18px;margin-bottom:5px;}
+.donate-banner-text{font-size:11px;color:var(--text);line-height:1.5;margin-bottom:10px;}
+.donate-banner-text strong{color:var(--gold2);}
+.donate-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:8px;background:linear-gradient(135deg,#003087,#009cde);border:none;border-radius:8px;color:#fff;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
+.donate-btn:hover{transform:translateY(-1px);}
+/* Page layout */
+.page-header{padding:48px 48px 0;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:28px;}
+.page-header-left h2{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:300;}
+.page-header-left p{color:var(--muted);font-size:13px;margin-top:4px;}
+.toolbar{padding:0 48px;display:flex;align-items:center;gap:10px;margin-bottom:22px;flex-wrap:wrap;}
+.books-wrap{padding:0 48px 140px;}
+.search-input{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 14px;font-size:13px;font-family:'Outfit',sans-serif;width:200px;outline:none;transition:all .2s;}
+.search-input:focus{border-color:rgba(212,168,67,.3);}
+.search-input::placeholder{color:var(--muted2);}
+.filter-select{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 12px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;outline:none;}
+.spacer{flex:1;}
+.toggle-view{display:flex;background:var(--surface2);border-radius:10px;border:1px solid var(--border);overflow:hidden;}
+.toggle-view button{background:none;border:none;color:var(--muted);padding:8px 12px;cursor:pointer;}
+.toggle-view button.active{background:var(--surface3);color:var(--gold);}
+/* Book cards */
+.book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:18px;}
+.book-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .25s;}
+.book-card:hover{border-color:rgba(212,168,67,.3);transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.4);}
+.book-cover{height:195px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.book-cover::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(15,15,26,.95));}
+.book-cover-text{font-family:'Cormorant Garamond',serif;font-size:13px;color:rgba(255,255,255,.8);padding:20px;text-align:center;line-height:1.5;z-index:1;position:relative;}
+.book-card-body{padding:12px 13px 13px;}
+.book-card-title{font-size:12px;font-weight:500;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.book-card-author{font-size:11px;color:var(--muted);margin-top:2px;}
+.book-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
+.book-list{display:flex;flex-direction:column;gap:8px;}
+.book-row{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 16px;display:flex;align-items:center;gap:13px;cursor:pointer;transition:all .15s;}
+.book-row:hover{border-color:rgba(212,168,67,.25);background:var(--surface2);}
+.book-row-icon{width:34px;height:46px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;}
+.book-row-info{flex:1;min-width:0;}
+.book-row-title{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.book-row-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+.book-row-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+/* Cover colors */
 .cover-fiction{background:linear-gradient(160deg,#1a0e2e,#2d1444,#1a0e2e);}
 .cover-philosophy{background:linear-gradient(160deg,#0e1a14,#1a3020,#0e1a14);}
 .cover-science{background:linear-gradient(160deg,#0e1420,#1a2040,#0e1420);}
@@ -116,79 +132,83 @@ nav{padding:8px 12px;flex:1;}
 .cover-selfhelp{background:linear-gradient(160deg,#0a1a1a,#102828,#0a1a1a);}
 .cover-spirituality{background:linear-gradient(160deg,#1a1020,#2a1a3a,#1a1020);}
 .cover-technology{background:linear-gradient(160deg,#0a0e1a,#101830,#0a0e1a);}
+.cover-comics{background:linear-gradient(160deg,#1a0800,#2a1200,#1a0800);}
 .cover-default{background:linear-gradient(160deg,#12101a,#1e1830,#12101a);}
-
-/* Gutenberg results grid */
-.results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:20px;margin-top:20px;}
-.result-loading{display:flex;align-items:center;justify-content:center;padding:60px;color:var(--muted);font-size:13px;gap:10px;}
-.result-empty{text-align:center;padding:60px;color:var(--muted);}
-.result-empty-icon{font-size:40px;margin-bottom:12px;}
-
-/* ── MY LIBRARY PAGE ── */
-.page-header{padding:48px 48px 0;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:32px;}
-.page-header-left h2{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;}
-.page-header-left p{color:var(--muted);font-size:13px;margin-top:4px;}
-.toolbar{padding:0 48px;display:flex;align-items:center;gap:10px;margin-bottom:24px;flex-wrap:wrap;}
-.search-input{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 14px;font-size:13px;font-family:'Outfit',sans-serif;width:220px;outline:none;transition:all .2s;}
-.search-input:focus{border-color:rgba(212,168,67,.3);}
-.search-input::placeholder{color:var(--muted2);}
-.filter-select{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 12px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;outline:none;}
-.spacer{flex:1;}
-.toggle-view{display:flex;background:var(--surface2);border-radius:10px;border:1px solid var(--border);overflow:hidden;}
-.toggle-view button{background:none;border:none;color:var(--muted);padding:8px 12px;cursor:pointer;transition:all .15s;}
-.toggle-view button.active{background:var(--surface3);color:var(--gold);}
-.books-wrap{padding:0 48px 120px;}
-.book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:20px;}
-.book-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .25s;position:relative;}
-.book-card:hover{border-color:rgba(212,168,67,.3);transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.4);}
-.book-cover{height:200px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
-.book-cover::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(15,15,26,.95));}
-.book-cover-text{font-family:'Cormorant Garamond',serif;font-size:13px;color:rgba(255,255,255,.8);padding:20px;text-align:center;line-height:1.5;z-index:1;position:relative;}
-.book-card-body{padding:12px 14px 14px;}
-.book-card-title{font-size:12px;font-weight:500;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.book-card-author{font-size:11px;color:var(--muted);margin-top:2px;}
-.book-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
-.book-list{display:flex;flex-direction:column;gap:8px;}
-.book-row{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .15s;}
-.book-row:hover{border-color:rgba(212,168,67,.25);background:var(--surface2);}
-.book-row-icon{width:36px;height:48px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;}
-.book-row-info{flex:1;min-width:0;}
-.book-row-title{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.book-row-meta{font-size:11px;color:var(--muted);margin-top:2px;}
-.book-row-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
-
 /* Badges */
 .badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;}
 .badge-stored{background:var(--surface3);color:var(--muted);}
 .badge-ready{background:rgba(76,175,138,.12);color:var(--green);border:1px solid rgba(76,175,138,.2);}
 .badge-processing,.badge-pending{background:rgba(212,168,67,.1);color:var(--gold);border:1px solid rgba(212,168,67,.2);}
 .badge-failed{background:rgba(229,115,115,.1);color:var(--red);border:1px solid rgba(229,115,115,.2);}
-
+.badge-dmca_flagged{background:rgba(229,115,115,.15);color:var(--red);}
 /* Buttons */
-.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:10px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;border:none;white-space:nowrap;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:10px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;border:none;white-space:nowrap;}
 .btn-gold{background:linear-gradient(135deg,var(--gold3),var(--gold));color:#0a0a10;}
 .btn-gold:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(212,168,67,.3);}
 .btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
 .btn-ghost:hover{border-color:var(--border2);}
 .btn-danger{background:rgba(229,115,115,.08);color:var(--red);border:1px solid rgba(229,115,115,.15);}
 .btn-danger:hover{background:rgba(229,115,115,.15);}
-.btn:disabled{opacity:.4;cursor:not-allowed;transform:none !important;}
-.btn-sm{padding:6px 13px;font-size:11px;}
 .btn-violet{background:linear-gradient(135deg,var(--violet),var(--violet2));color:#fff;}
-.btn-violet:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(124,92,191,.35);}
-
+.btn-violet:hover{transform:translateY(-1px);}
+.btn-green{background:rgba(76,175,138,.15);color:var(--green);border:1px solid rgba(76,175,138,.25);}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+.btn-sm{padding:5px 12px;font-size:11px;}
 /* Empty */
 .empty{text-align:center;padding:80px 40px;color:var(--muted);}
-.empty-icon{font-size:48px;margin-bottom:16px;opacity:.6;}
+.empty-icon{font-size:48px;margin-bottom:14px;opacity:.6;}
 .empty h3{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--text);margin-bottom:8px;font-weight:400;}
 .empty p{font-size:13px;line-height:1.7;}
-
-/* ── PLAYER PAGE ── */
-.player-page-wrap{padding:40px 48px 120px;max-width:760px;}
-.back-btn{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;cursor:pointer;background:none;border:none;margin-bottom:28px;transition:color .15s;}
+/* Discover hero */
+.discover-hero{padding:56px 48px 32px;position:relative;overflow:hidden;}
+.discover-hero::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(124,92,191,.06),rgba(212,168,67,.04));pointer-events:none;}
+.discover-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent);}
+.hero-eyebrow{font-size:10px;color:var(--gold);letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.hero-eyebrow::before{content:'';width:24px;height:1px;background:var(--gold);opacity:.5;}
+.hero-title{font-family:'Cormorant Garamond',serif;font-size:46px;font-weight:300;line-height:1.1;margin-bottom:12px;background:linear-gradient(135deg,var(--text) 0%,var(--gold2) 60%,var(--text) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-subtitle{font-size:14px;color:var(--muted);max-width:500px;line-height:1.7;margin-bottom:24px;}
+.hero-search{display:flex;gap:10px;max-width:560px;}
+.hero-search-wrap{flex:1;position:relative;}
+.hero-search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;}
+.hero-search-input{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border2);color:var(--text);border-radius:12px;padding:12px 14px 12px 42px;font-size:14px;font-family:'Outfit',sans-serif;outline:none;transition:all .2s;}
+.hero-search-input:focus{border-color:rgba(212,168,67,.4);box-shadow:0 0 0 3px rgba(212,168,67,.08);}
+.hero-search-input::placeholder{color:var(--muted2);}
+.btn-search{background:linear-gradient(135deg,var(--gold3),var(--gold));color:#0a0a10;border:none;border-radius:12px;padding:12px 20px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.btn-search:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(212,168,67,.25);}
+/* Stats bar */
+.stats-bar{display:flex;gap:24px;padding:16px 48px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.stat-item{display:flex;flex-direction:column;gap:2px;}
+.stat-num{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--gold2);}
+.stat-label{font-size:11px;color:var(--muted);}
+/* Category pills */
+.section-wrap{padding:24px 48px;}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;}
+.cat-pills{display:flex;gap:8px;flex-wrap:wrap;}
+.cat-pill{padding:6px 15px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .2s;white-space:nowrap;}
+.cat-pill:hover{border-color:var(--border2);color:var(--text);}
+.cat-pill.active{background:linear-gradient(135deg,rgba(212,168,67,.15),rgba(212,168,67,.08));border-color:rgba(212,168,67,.35);color:var(--gold2);}
+/* Shelf grid */
+.results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:16px;}
+.shelf-card{cursor:pointer;transition:transform .2s;}
+.shelf-card:hover{transform:translateY(-4px);}
+.shelf-cover{height:205px;border-radius:10px;position:relative;overflow:hidden;margin-bottom:9px;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+.shelf-cover-spine{position:absolute;left:0;top:0;bottom:0;width:6px;background:rgba(0,0,0,.3);z-index:2;}
+.shelf-cover-img{width:100%;height:100%;object-fit:cover;}
+.shelf-cover-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center;}
+.shelf-cover-emoji{font-size:30px;margin-bottom:8px;}
+.shelf-cover-title{font-family:'Cormorant Garamond',serif;font-size:12px;color:rgba(255,255,255,.85);line-height:1.4;}
+.shelf-title{font-size:12px;font-weight:500;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.shelf-author{font-size:11px;color:var(--muted);margin-top:2px;}
+.shelf-badge{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);border-radius:6px;padding:3px 7px;font-size:9px;color:var(--gold2);font-weight:500;}
+.result-loading{display:flex;align-items:center;justify-content:center;padding:60px;color:var(--muted);font-size:13px;gap:10px;}
+.result-empty{text-align:center;padding:60px;}
+/* Player */
+.player-page-wrap{padding:36px 48px 140px;max-width:760px;}
+.back-btn{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;cursor:pointer;background:none;border:none;margin-bottom:24px;transition:color .15s;}
 .back-btn:hover{color:var(--text);}
-.player-book-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;margin-bottom:8px;line-height:1.2;}
-.player-book-meta{font-size:13px;color:var(--muted);display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:32px;}
+.player-book-title{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:300;margin-bottom:8px;line-height:1.2;}
+.player-book-meta{font-size:13px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:28px;}
 .chapter-list{display:flex;flex-direction:column;gap:6px;}
 .chapter-row{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:10px;cursor:pointer;transition:all .15s;border:1px solid transparent;}
 .chapter-row:hover{background:var(--surface);border-color:var(--border);}
@@ -200,47 +220,34 @@ nav{padding:8px 12px;flex:1;}
 .ch-meta{font-size:11px;color:var(--muted);margin-top:2px;}
 .ch-play{color:var(--muted);transition:color .15s;}
 .chapter-row:hover .ch-play,.chapter-row.playing .ch-play{color:var(--gold);}
-
-/* Narration progress */
-.narr-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:24px;}
-.narr-card-top{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
-.narr-waveform{display:flex;align-items:center;gap:3px;height:32px;flex-shrink:0;}
+/* Narr progress */
+.narr-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:22px;}
+.narr-card-top{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+.narr-waveform{display:flex;align-items:center;gap:3px;height:30px;flex-shrink:0;}
 .narr-waveform span{display:block;width:3px;background:var(--gold);border-radius:2px;animation:wave 1.2s ease-in-out infinite;}
-.narr-waveform span:nth-child(1){animation-delay:0s;height:8px;}
-.narr-waveform span:nth-child(2){animation-delay:.1s;height:18px;}
-.narr-waveform span:nth-child(3){animation-delay:.2s;height:28px;}
-.narr-waveform span:nth-child(4){animation-delay:.3s;height:20px;}
-.narr-waveform span:nth-child(5){animation-delay:.4s;height:12px;}
-.narr-waveform span:nth-child(6){animation-delay:.15s;height:24px;}
-.narr-waveform span:nth-child(7){animation-delay:.25s;height:16px;}
+.narr-waveform span:nth-child(1){animation-delay:0s;height:8px;} .narr-waveform span:nth-child(2){animation-delay:.1s;height:18px;} .narr-waveform span:nth-child(3){animation-delay:.2s;height:26px;} .narr-waveform span:nth-child(4){animation-delay:.3s;height:18px;} .narr-waveform span:nth-child(5){animation-delay:.4s;height:10px;} .narr-waveform span:nth-child(6){animation-delay:.15s;height:22px;} .narr-waveform span:nth-child(7){animation-delay:.25s;height:14px;}
 .narr-waveform.paused span{animation:none;height:4px!important;opacity:.4;}
 .narr-waveform.done span{animation:none;background:var(--green);}
 @keyframes wave{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
-.narr-info{flex:1;}
-.narr-status{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px;}
-.narr-step{font-size:12px;color:var(--muted);line-height:1.4;}
-.narr-pct-big{font-size:28px;font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1;font-family:'Cormorant Garamond',serif;}
-.narr-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:14px;}
+.narr-info{flex:1;} .narr-status{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px;} .narr-step{font-size:12px;color:var(--muted);}
+.narr-pct-big{font-size:24px;font-weight:700;color:var(--gold);font-family:'Cormorant Garamond',serif;}
+.narr-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:12px;}
 .narr-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold3),var(--gold2));border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1);}
 .narr-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-.narr-stat{background:var(--surface2);border-radius:10px;padding:10px 14px;border:1px solid var(--border);}
+.narr-stat{background:var(--surface2);border-radius:10px;padding:10px 13px;border:1px solid var(--border);}
 .narr-stat-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}
-.narr-stat-value{font-size:15px;font-weight:500;color:var(--text);font-variant-numeric:tabular-nums;}
+.narr-stat-value{font-size:14px;font-weight:500;color:var(--text);font-variant-numeric:tabular-nums;}
 .narr-stat-value.gold{color:var(--gold);}
-.narr-chapter-list{margin-top:16px;border-top:1px solid var(--border);padding-top:12px;max-height:160px;overflow-y:auto;}
-.narr-ch-row{display:flex;align-items:center;gap:10px;padding:5px 4px;font-size:12px;color:var(--muted);border-radius:6px;}
-.narr-ch-row.done{color:var(--green);}
-.narr-ch-row.active{color:var(--gold);background:var(--surface2);padding-left:8px;}
+.narr-chapter-list{margin-top:12px;border-top:1px solid var(--border);padding-top:10px;max-height:150px;overflow-y:auto;}
+.narr-ch-row{display:flex;align-items:center;gap:10px;padding:4px;font-size:12px;color:var(--muted);border-radius:6px;}
+.narr-ch-row.done{color:var(--green);} .narr-ch-row.active{color:var(--gold);background:var(--surface2);padding-left:8px;}
 .narr-ch-dot{width:6px;height:6px;border-radius:50%;background:var(--border);flex-shrink:0;}
-.narr-ch-row.done .narr-ch-dot{background:var(--green);}
-.narr-ch-row.active .narr-ch-dot{background:var(--gold);box-shadow:0 0 6px var(--gold);}
-
+.narr-ch-row.done .narr-ch-dot{background:var(--green);} .narr-ch-row.active .narr-ch-dot{background:var(--gold);box-shadow:0 0 6px var(--gold);}
 /* Audio bar */
-#audio-bar{position:fixed;bottom:0;left:240px;right:0;background:rgba(10,10,20,.92);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:12px 32px;display:none;align-items:center;gap:20px;z-index:200;}
+#audio-bar{position:fixed;bottom:0;left:var(--sidebar);right:0;background:rgba(10,10,20,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:12px 28px;display:none;align-items:center;gap:16px;z-index:200;transition:left .3s ease;}
+#audio-bar.expanded{left:0;}
 #audio-bar.visible{display:flex;}
-.audio-info{flex:1;min-width:0;}
-.audio-title{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.audio-book{font-size:11px;color:var(--muted);}
+.audio-info{flex:1;min-width:0;} .audio-title{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;} .audio-book{font-size:11px;color:var(--muted);}
 .audio-controls{display:flex;align-items:center;gap:10px;}
 .ctrl-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:6px;border-radius:8px;transition:color .15s;}
 .ctrl-btn:hover{color:var(--gold);}
@@ -251,139 +258,166 @@ nav{padding:8px 12px;flex:1;}
 input[type=range]{-webkit-appearance:none;width:100%;height:3px;background:var(--border);border-radius:2px;outline:none;cursor:pointer;}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--gold);cursor:pointer;}
 .speed-sel{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:4px 8px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;}
-
 /* Modals */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
 .modal-overlay.hidden{display:none;}
-.modal{background:var(--surface);border:1px solid var(--border2);border-radius:18px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;}
-.modal-header{padding:24px 26px 0;display:flex;align-items:center;justify-content:space-between;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:18px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;}
+.modal-header{padding:22px 24px 0;display:flex;align-items:center;justify-content:space-between;}
 .modal-header h3{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;}
-.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px;line-height:1;transition:color .15s;}
+.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px;line-height:1;}
 .modal-close:hover{color:var(--text);}
-.modal-body{padding:22px 26px;}
-.modal-footer{padding:0 26px 24px;display:flex;gap:10px;justify-content:flex-end;}
-.form-group{margin-bottom:16px;}
-.form-label{display:block;font-size:10px;font-weight:600;color:var(--muted);margin-bottom:7px;letter-spacing:.08em;text-transform:uppercase;}
+.modal-body{padding:20px 24px;} .modal-footer{padding:0 24px 22px;display:flex;gap:10px;justify-content:flex-end;}
+.form-group{margin-bottom:14px;}
+.form-label{display:block;font-size:10px;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:.08em;text-transform:uppercase;}
 .form-input,.form-select{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 13px;font-size:13px;font-family:'Outfit',sans-serif;outline:none;transition:all .2s;}
 .form-input:focus,.form-select:focus{border-color:rgba(212,168,67,.35);}
 .form-input::placeholder{color:var(--muted2);}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .upload-zone{border:1.5px dashed var(--border2);border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2);position:relative;margin-bottom:4px;}
-.upload-zone:hover,.upload-zone.drag{border-color:rgba(212,168,67,.4);background:rgba(212,168,67,.04);}
+.upload-zone:hover,.upload-zone.drag{border-color:rgba(212,168,67,.4);}
 .upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;}
-.upload-zone-icon{font-size:28px;margin-bottom:8px;}
+.upload-zone-icon{font-size:26px;margin-bottom:8px;}
 .upload-zone h4{font-size:14px;font-weight:500;color:var(--text);}
 .upload-zone p{font-size:12px;color:var(--muted);margin-top:4px;}
 .file-pill{display:inline-flex;align-items:center;gap:8px;padding:7px 13px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text);margin-top:10px;}
 .voice-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-.voice-card{border:1.5px solid var(--border);border-radius:10px;padding:10px 11px;cursor:pointer;transition:all .15s;background:var(--surface2);}
+.voice-card{border:1.5px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;transition:all .15s;background:var(--surface2);}
 .voice-card:hover{border-color:var(--border2);}
 .voice-card.sel{border-color:rgba(212,168,67,.4);background:rgba(212,168,67,.06);}
 .voice-name{font-size:12px;font-weight:500;color:var(--text);}
 .voice-meta{font-size:10px;color:var(--muted);margin-top:2px;}
-
 /* Toast */
-#toast{position:fixed;bottom:80px;right:24px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:11px 16px;border-radius:12px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:9000;backdrop-filter:blur(10px);}
+#toast{position:fixed;bottom:80px;right:24px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:11px 16px;border-radius:12px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:9000;}
 #toast.show{opacity:1;}
-
-/* Animations */
+/* Anim */
 @keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .fadein{animation:fadein .3s ease forwards;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spin{animation:spin 1s linear infinite;display:inline-block;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 .pulsing{animation:pulse 1.5s ease-in-out infinite;}
-
-/* Scrollbar */
 ::-webkit-scrollbar{width:5px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+/* Mobile */
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;}
+@media(max-width:768px){
+  :root{--sidebar:0px;}
+  aside{width:260px;transform:translateX(-100%);}
+  aside.open{transform:translateX(0)!important;}
+  main{margin-left:0!important;}
+  #audio-bar{left:0!important;}
+  .sidebar-overlay.visible{display:block;}
+  .sidebar-toggle{top:12px;left:12px;}
+  .discover-hero{padding:48px 20px 24px;}
+  .hero-title{font-size:30px;}
+  .hero-search{flex-direction:column;}
+  .stats-bar{padding:12px 20px;gap:14px;}
+  .section-wrap{padding:18px 20px;}
+  .page-header{padding:24px 20px 0;}
+  .toolbar{padding:0 20px;}
+  .books-wrap{padding:0 20px 140px;}
+  .book-grid{grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:12px;}
+  .player-page-wrap{padding:24px 20px 140px;}
+  .player-book-title{font-size:24px;}
+  .results-grid{grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:12px;}
+  .narr-stats{grid-template-columns:1fr 1fr;}
+  .voice-grid{grid-template-columns:repeat(2,1fr);}
+  .form-row{grid-template-columns:1fr;}
+  .modal{max-width:100%;border-radius:14px;}
+  .auth-card{padding:32px 20px;}
+  .auth-features{grid-template-columns:1fr;}
+  .donate-banner{right:10px;bottom:88px;max-width:220px;}
+  .page-header-left h2{font-size:26px;}
+  .audio-controls .speed-sel{display:none;}
+}
 </style>
 </head>
 <body>
-<div class="bg-orbs">
-  <div class="orb orb1"></div>
-  <div class="orb orb2"></div>
-  <div class="orb orb3"></div>
-</div>
-
+<div class="bg-orbs"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
+  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+</button>
 <div class="shell">
-<!-- Sidebar -->
-<aside>
-  <div class="logo">
-    <div class="logo-mark">
-      <div class="logo-icon">📚</div>
-      <h1>Aurelius</h1>
-    </div>
-    <p>World Library</p>
-  </div>
+<aside id="sidebar">
+  <div class="logo"><div class="logo-mark"><div class="logo-icon">&#x1F4DA;</div><h1>Aurelius</h1></div><p>World Library</p></div>
   <div class="sidebar-divider"></div>
   <nav>
     <div class="nav-section">Explore</div>
-    <button class="nav-btn" onclick="showPage('discover')" id="nav-discover">
+    <button class="nav-btn" onclick="showPage('discover');closeSidebar()" id="nav-discover">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253"/></svg>
-      Discover
-      <span class="nav-badge">NEW</span>
+      Discover <span class="nav-badge">NEW</span>
     </button>
-    <div class="nav-section">My Space</div>
-    <button class="nav-btn active" onclick="showPage('library')" id="nav-library">
-      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.966 8.966 0 00-6 2.292m0-14.25v14.25"/></svg>
-      My Library
-    </button>
-    <button class="nav-btn" onclick="showPage('archive')" id="nav-archive">
+    <button class="nav-btn" onclick="showPage('archive');closeSidebar()" id="nav-archive">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
       Internet Archive
+    </button>
+    <div class="nav-section">My Space</div>
+    <button class="nav-btn active" onclick="showPage('library');closeSidebar()" id="nav-library">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.966 8.966 0 00-6 2.292m0-14.25v14.25"/></svg>
+      My Library
     </button>
     <button class="nav-btn" onclick="openUploadModal()" id="nav-upload">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
       Upload Book
     </button>
-    <button class="nav-btn" onclick="showPage('requests')" id="nav-requests">
+    <button class="nav-btn" onclick="showPage('requests');closeSidebar()" id="nav-requests">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/></svg>
-      Request a Book
-      <span class="nav-badge" id="requests-count" style="display:none"></span>
+      Request a Book <span class="nav-badge" id="requests-count" style="display:none"></span>
     </button>
-    <button class="nav-btn" onclick="showPage('player')" id="nav-player" style="display:none">
+    <button class="nav-btn" onclick="showPage('player');closeSidebar()" id="nav-player" style="display:none">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg>
       Now Playing
     </button>
   </nav>
   <div class="sidebar-footer">
-    <div class="engine-pill">
-      <div class="engine-dot"></div>
-      <div class="engine-text">Engine: <span id="engine-name">detecting...</span></div>
-    </div>
+    <div class="engine-pill"><div class="engine-dot"></div><div class="engine-text">Engine: <span id="engine-name">detecting...</span></div></div>
+    <div id="user-profile-wrap"></div>
   </div>
 </aside>
+<main id="main-content">
 
-<main>
-<!-- ═══════════════════════════════ DISCOVER PAGE ═══════════════════════════════ -->
+<!-- AUTH PAGE -->
+<div class="page" id="page-auth">
+<div class="auth-page"><div class="auth-card">
+  <div class="auth-logo"><div class="auth-logo-icon">&#x1F4DA;</div><h1>Aurelius</h1></div>
+  <div class="auth-title">Your personal world library</div>
+  <div class="auth-subtitle">Sign in to access millions of books, build your personal library, and listen to AI narrations.</div>
+  <div class="auth-features">
+    <div class="auth-feature"><div class="auth-feature-icon">&#x1F30D;</div><div class="auth-feature-title">World Library</div><div class="auth-feature-desc">70,000+ Gutenberg + Internet Archive</div></div>
+    <div class="auth-feature"><div class="auth-feature-icon">&#x1F399;&#xFE0F;</div><div class="auth-feature-title">AI Narration</div><div class="auth-feature-desc">Any book converted to audio instantly</div></div>
+    <div class="auth-feature"><div class="auth-feature-icon">&#x1F4F1;</div><div class="auth-feature-title">Any Device</div><div class="auth-feature-desc">Phone, tablet and desktop</div></div>
+    <div class="auth-feature"><div class="auth-feature-icon">&#x1F512;</div><div class="auth-feature-title">Your Library</div><div class="auth-feature-desc">Private — only you can see it</div></div>
+  </div>
+  <button class="google-btn" onclick="signInWithGoogle()">
+    <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google">
+    Continue with Google
+  </button>
+  <div class="auth-disclaimer">Free forever. No credit card required.</div>
+</div></div>
+</div>
+
+<!-- DISCOVER PAGE -->
 <div class="page" id="page-discover">
   <div class="discover-hero">
     <div class="hero-eyebrow">World Library</div>
     <h1 class="hero-title">Every great story,<br>waiting to be heard.</h1>
-    <p class="hero-subtitle">Search millions of books from Project Gutenberg and the Internet Archive. Add any book to your library and listen instantly with AI narration.</p>
+    <p class="hero-subtitle">Search 70,000+ free books from Project Gutenberg. Add any book and listen with AI narration.</p>
     <div class="hero-search">
       <div class="hero-search-wrap">
         <svg class="hero-search-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
         <input class="hero-search-input" type="text" id="gutenberg-search" placeholder="Search by title, author, or topic..." onkeydown="if(event.key==='Enter')searchGutenberg()">
       </div>
-      <button class="btn-search" onclick="searchGutenberg()">Search Library</button>
+      <button class="btn-search" onclick="searchGutenberg()">Search</button>
     </div>
   </div>
-
   <div class="stats-bar">
     <div class="stat-item"><div class="stat-num">70,000+</div><div class="stat-label">Free Books</div></div>
     <div class="stat-item"><div class="stat-num">50+</div><div class="stat-label">Languages</div></div>
-    <div class="stat-item"><div class="stat-num">1,000+</div><div class="stat-label">Authors</div></div>
-    <div class="stat-item"><div class="stat-num">100%</div><div class="stat-label">Free & Legal</div></div>
+    <div class="stat-item"><div class="stat-num">100%</div><div class="stat-label">Free &amp; Legal</div></div>
   </div>
-
-  <!-- Categories -->
-  <div class="section-wrap" style="padding-bottom:16px;">
-    <div class="section-header">
-      <div class="section-title">Browse by Subject</div>
-    </div>
+  <div class="section-wrap" style="padding-bottom:14px;">
     <div class="cat-pills">
       <div class="cat-pill active" onclick="selectGutenbergCat(this,'')">All</div>
       <div class="cat-pill" onclick="selectGutenbergCat(this,'fiction')">Fiction</div>
@@ -396,53 +430,38 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
       <div class="cat-pill" onclick="selectGutenbergCat(this,'romance')">Romance</div>
       <div class="cat-pill" onclick="selectGutenbergCat(this,'poetry')">Poetry</div>
       <div class="cat-pill" onclick="selectGutenbergCat(this,'psychology')">Psychology</div>
-      <div class="cat-pill" onclick="selectGutenbergCat(this,'economics')">Economics</div>
     </div>
   </div>
-
-  <!-- Results / Featured -->
-  <div class="section-wrap" style="padding-top:16px;">
-    <div class="section-header">
-      <div class="section-title" id="discover-section-title">Featured Books</div>
-      <div class="section-link" onclick="searchGutenberg('')" id="discover-section-link">See more →</div>
-    </div>
-    <div id="gutenberg-results">
-      <div class="result-loading"><span class="spin pulsing">⟳</span> Loading featured books...</div>
-    </div>
+  <div class="section-wrap" style="padding-top:14px;">
+    <div class="section-header"><div class="section-title" id="discover-section-title">Featured Books</div></div>
+    <div id="gutenberg-results"><div class="result-loading"><span class="spin pulsing">&#x27F3;</span> Loading...</div></div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════ ARCHIVE PAGE ═══════════════════════════════ -->
+<!-- ARCHIVE PAGE -->
 <div class="page" id="page-archive">
   <div class="discover-hero">
     <div class="hero-eyebrow">Internet Archive</div>
-    <h1 class="hero-title">Millions of books,<br>magazines & newspapers.</h1>
-    <p class="hero-subtitle">Search the Internet Archive — the world's largest digital library. Public domain books, historical newspapers, vintage magazines, academic texts and more.</p>
+    <h1 class="hero-title">Millions of books,<br>magazines &amp; newspapers.</h1>
+    <p class="hero-subtitle">The world&#x27;s largest digital library. Public domain books, historical newspapers, vintage magazines.</p>
     <div class="hero-search">
       <div class="hero-search-wrap">
         <svg class="hero-search-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
         <input class="hero-search-input" type="text" id="archive-search" placeholder="Search books, magazines, newspapers..." onkeydown="if(event.key==='Enter')searchArchive()">
       </div>
-      <button class="btn-search" onclick="searchArchive()">Search Archive</button>
+      <button class="btn-search" onclick="searchArchive()">Search</button>
     </div>
   </div>
-
   <div class="stats-bar">
     <div class="stat-item"><div class="stat-num">35M+</div><div class="stat-label">Items</div></div>
-    <div class="stat-item"><div class="stat-num">4M+</div><div class="stat-label">Books & Texts</div></div>
+    <div class="stat-item"><div class="stat-num">4M+</div><div class="stat-label">Books</div></div>
     <div class="stat-item"><div class="stat-num">1M+</div><div class="stat-label">Newspapers</div></div>
-    <div class="stat-item"><div class="stat-num">∞</div><div class="stat-label">Free Access</div></div>
   </div>
-
-  <!-- Media type filters -->
-  <div class="section-wrap" style="padding-bottom:16px;">
-    <div class="section-header">
-      <div class="section-title">Media Type</div>
-    </div>
+  <div class="section-wrap" style="padding-bottom:12px;">
     <div class="cat-pills" id="archive-type-pills">
-      <div class="cat-pill active" onclick="selectArchiveType(this,'texts')">📚 Books & Texts</div>
-      <div class="cat-pill" onclick="selectArchiveType(this,'magazines')">📰 Magazines</div>
-      <div class="cat-pill" onclick="selectArchiveType(this,'newspapers')">🗞️ Newspapers</div>
+      <div class="cat-pill active" onclick="selectArchiveType(this,'texts')">&#x1F4DA; Books</div>
+      <div class="cat-pill" onclick="selectArchiveType(this,'magazines')">&#x1F4F0; Magazines</div>
+      <div class="cat-pill" onclick="selectArchiveType(this,'newspapers')">&#x1F5DE;&#xFE0F; Newspapers</div>
     </div>
     <div class="cat-pills" style="margin-top:10px;" id="archive-subject-pills">
       <div class="cat-pill active" onclick="selectArchiveSubject(this,'')">All</div>
@@ -450,74 +469,49 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
       <div class="cat-pill" onclick="selectArchiveSubject(this,'philosophy')">Philosophy</div>
       <div class="cat-pill" onclick="selectArchiveSubject(this,'science')">Science</div>
       <div class="cat-pill" onclick="selectArchiveSubject(this,'history')">History</div>
-      <div class="cat-pill" onclick="selectArchiveSubject(this,'biography')">Biography</div>
       <div class="cat-pill" onclick="selectArchiveSubject(this,'technology')">Technology</div>
-      <div class="cat-pill" onclick="selectArchiveSubject(this,'psychology')">Psychology</div>
-      <div class="cat-pill" onclick="selectArchiveSubject(this,'economics')">Economics</div>
     </div>
   </div>
-
-  <div class="section-wrap" style="padding-top:16px;">
-    <div class="section-header">
-      <div class="section-title" id="archive-section-title">Featured from Archive</div>
-    </div>
-    <div id="archive-results">
-      <div class="result-loading"><span class="spin pulsing">⟳</span> Loading archive...</div>
-    </div>
-    <div id="archive-pagination" style="display:flex;gap:10px;justify-content:center;margin-top:24px;"></div>
+  <div class="section-wrap" style="padding-top:14px;">
+    <div class="section-header"><div class="section-title" id="archive-section-title">Featured from Archive</div></div>
+    <div id="archive-results"><div class="result-loading"><span class="spin pulsing">&#x27F3;</span> Loading...</div></div>
+    <div id="archive-pagination" style="display:flex;gap:10px;justify-content:center;margin-top:22px;"></div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════ LIBRARY PAGE ═══════════════════════════════ -->
+<!-- LIBRARY PAGE -->
 <div class="page active" id="page-library">
   <div class="page-header">
-    <div class="page-header-left">
-      <h2>My Library</h2>
-      <p id="library-count">Loading your collection...</p>
-    </div>
+    <div class="page-header-left"><h2>My Library</h2><p id="library-count">Loading your collection...</p></div>
     <button class="btn btn-gold" onclick="openUploadModal()">
-      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-      Add Book
+      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>Add Book
     </button>
   </div>
   <div class="toolbar">
     <input class="search-input" type="text" placeholder="Search..." id="search-input" oninput="filterBooks()">
     <select class="filter-select" id="filter-cat" onchange="filterBooks()"><option value="">All Categories</option></select>
-    <select class="filter-select" id="filter-status" onchange="filterBooks()">
-      <option value="">All Status</option>
-      <option value="stored">Stored</option>
-      <option value="ready">Ready</option>
-      <option value="processing">Processing</option>
-    </select>
+    <select class="filter-select" id="filter-status" onchange="filterBooks()"><option value="">All Status</option><option value="stored">Stored</option><option value="ready">Ready</option><option value="processing">Processing</option></select>
     <div class="spacer"></div>
     <div class="toggle-view">
-      <button id="btn-grid" class="active" onclick="setView('grid')" title="Grid">
-        <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z"/></svg>
-      </button>
-      <button id="btn-list" onclick="setView('list')" title="List">
-        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
-      </button>
+      <button id="btn-grid" class="active" onclick="setView('grid')"><svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z"/></svg></button>
+      <button id="btn-list" onclick="setView('list')"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg></button>
     </div>
   </div>
   <div class="books-wrap"><div id="books-container"></div></div>
 </div>
 
-<!-- ═══════════════════════════════ PLAYER PAGE ═══════════════════════════════ -->
+<!-- PLAYER PAGE -->
 <div class="page" id="page-player">
   <div class="player-page-wrap">
     <button class="back-btn" onclick="showPage('library')">
-      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
-      Back to Library
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>Back to Library
     </button>
     <div id="player-header"></div>
     <div id="job-progress-wrap" style="display:none">
       <div class="narr-card">
         <div class="narr-card-top">
           <div class="narr-waveform" id="narr-wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-          <div class="narr-info">
-            <div class="narr-status" id="narr-status-label">Generating audio...</div>
-            <div class="narr-step" id="job-step-label">Starting up...</div>
-          </div>
+          <div class="narr-info"><div class="narr-status" id="narr-status-label">Generating audio...</div><div class="narr-step" id="job-step-label">Starting up...</div></div>
           <div class="narr-pct-big" id="job-pct-label">0%</div>
         </div>
         <div class="narr-bar"><div class="narr-bar-fill" id="job-fill" style="width:0%"></div></div>
@@ -532,87 +526,63 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
     <div class="chapter-list" id="chapter-list"></div>
   </div>
 </div>
-<!-- ═══════════════════════════════ REQUESTS PAGE ═══════════════════════════════ -->
+
+<!-- REQUESTS PAGE -->
 <div class="page" id="page-requests">
   <div class="page-header">
-    <div class="page-header-left">
-      <h2>Request a Book</h2>
-      <p>Can't find what you're looking for? Request it and the community votes it up.</p>
-    </div>
+    <div class="page-header-left"><h2>Request a Book</h2><p>Can&#x27;t find what you want? Request it and the community votes it up.</p></div>
     <button class="btn btn-gold" onclick="openRequestModal()">
-      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-      Request a Book
+      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>Request a Book
     </button>
   </div>
-
-  <!-- DMCA notice -->
-  <div style="margin:0 48px 24px;padding:14px 18px;background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.15);border-radius:12px;font-size:12px;color:var(--muted);line-height:1.7;">
-    <strong style="color:var(--gold2);">⚖️ DMCA Safe Harbor</strong> — Aurelius operates under DMCA safe harbor provisions.
-    All uploaded content is user-submitted. If you believe a book infringes your copyright,
-    <span style="color:var(--gold);cursor:pointer;text-decoration:underline;" onclick="openDmcaModal()">file a takedown report</span>.
-    We respond to all valid requests within 48 hours.
+  <div style="margin:0 48px 18px;padding:11px 15px;background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.15);border-radius:12px;font-size:12px;color:var(--muted);line-height:1.7;">
+    <strong style="color:var(--gold2);">&#x2696;&#xFE0F; DMCA Safe Harbor</strong> &#x2014; All content is user-submitted. Copyright holders may <span style="color:var(--gold);cursor:pointer;text-decoration:underline;" onclick="openDmcaModal()">file a takedown report</span>.
   </div>
-
-  <!-- Filter tabs -->
-  <div style="padding:0 48px 20px;display:flex;gap:8px;">
-    <div class="cat-pill active" id="req-tab-all" onclick="setRequestTab(this,'')">All Requests</div>
-    <div class="cat-pill" id="req-tab-requested" onclick="setRequestTab(this,'requested')">🔍 Searching</div>
-    <div class="cat-pill" id="req-tab-sourced" onclick="setRequestTab(this,'sourced')">✅ Found</div>
-    <div class="cat-pill" id="req-tab-available" onclick="setRequestTab(this,'available')">🎧 Available</div>
+  <div style="padding:0 48px 18px;display:flex;gap:8px;flex-wrap:wrap;">
+    <div class="cat-pill active" id="req-tab-all" onclick="setRequestTab(this,'')">All</div>
+    <div class="cat-pill" id="req-tab-requested" onclick="setRequestTab(this,'requested')">&#x1F50D; Searching</div>
+    <div class="cat-pill" id="req-tab-sourced" onclick="setRequestTab(this,'sourced')">&#x2705; Found</div>
+    <div class="cat-pill" id="req-tab-available" onclick="setRequestTab(this,'available')">&#x1F3A7; Available</div>
     <div class="spacer"></div>
-    <select class="filter-select" onchange="setRequestSort(this.value)">
-      <option value="votes">Most Voted</option>
-      <option value="date">Newest</option>
-    </select>
+    <select class="filter-select" onchange="setRequestSort(this.value)"><option value="votes">Most Voted</option><option value="date">Newest</option></select>
   </div>
-
-  <div class="books-wrap">
-    <div id="requests-container">
-      <div class="result-loading"><span class="spin">⟳</span> Loading requests...</div>
-    </div>
-  </div>
+  <div class="books-wrap"><div id="requests-container"><div class="result-loading"><span class="spin">&#x27F3;</span> Loading...</div></div></div>
 </div>
 
-</main>
-</div>
+</main></div>
 
 <!-- Audio bar -->
 <div id="audio-bar">
-  <div class="audio-info">
-    <div class="audio-title" id="now-title">—</div>
-    <div class="audio-book" id="now-book">—</div>
-  </div>
-  <div class="seek-wrap">
-    <span class="time-lbl" id="time-cur">0:00</span>
-    <input type="range" id="seeker" value="0" min="0" max="100" step="0.1" oninput="seekTo(this.value)">
-    <span class="time-lbl" id="time-dur">0:00</span>
-  </div>
+  <div class="audio-info"><div class="audio-title" id="now-title">&#x2014;</div><div class="audio-book" id="now-book">&#x2014;</div></div>
+  <div class="seek-wrap"><span class="time-lbl" id="time-cur">0:00</span><input type="range" id="seeker" value="0" min="0" max="100" step="0.1" oninput="seekTo(this.value)"><span class="time-lbl" id="time-dur">0:00</span></div>
   <div class="audio-controls">
     <button class="ctrl-btn" onclick="skipBack()"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg></button>
-    <button class="ctrl-btn main" id="play-btn" onclick="togglePlay()">
-      <svg id="play-icon" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-    </button>
+    <button class="ctrl-btn main" id="play-btn" onclick="togglePlay()"><svg id="play-icon" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
     <button class="ctrl-btn" onclick="skipFwd()"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3"/></svg></button>
-    <select class="speed-sel" onchange="setSpeed(this.value)">
-      <option value="0.75">0.75×</option><option value="1" selected>1×</option>
-      <option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option>
-    </select>
+    <select class="speed-sel" onchange="setSpeed(this.value)"><option value="0.75">0.75x</option><option value="1" selected>1x</option><option value="1.25">1.25x</option><option value="1.5">1.5x</option><option value="2">2x</option></select>
   </div>
 </div>
 
-<!-- Upload Modal -->
-<div class="modal-overlay hidden" id="upload-modal" onclick="closeUploadModal(event)">
+<!-- Donate banner -->
+<div class="donate-banner hidden" id="donate-banner">
+  <button class="donate-banner-close" id="donate-close">&#x2715;</button>
+  <div class="donate-banner-icon">&#x2764;&#xFE0F;</div>
+  <div class="donate-banner-text"><strong>Aurelius is free forever.</strong> If you love it, consider supporting us to keep the servers running.</div>
+  <button class="donate-btn" onclick="window.open('https://www.paypal.com/donate','_blank')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7.076 21.337H2.47a.641.641 0 01-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 00-.607-.541c-.59 3.025-2.566 6.082-8.558 6.082H9.823l-1.38 8.73h3.886l.893-5.658h2.174c4.942 0 7.718-2.394 8.57-7.162a5.89 5.89 0 00-.744-1.705z"/></svg>
+    Donate via PayPal
+  </button>
+</div>
+
+<!-- MODALS -->
+<!-- Upload -->
+<div class="modal-overlay hidden" id="upload-modal" onclick="closeModal('upload-modal',event)">
   <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header"><h3>Add to Library</h3><button class="modal-close" onclick="closeUploadModal()">✕</button></div>
+    <div class="modal-header"><h3>Add to Library</h3><button class="modal-close" onclick="closeModal('upload-modal')">&#x2715;</button></div>
     <div class="modal-body">
       <div class="form-group">
-        <div class="upload-zone" id="drop-zone">
-          <input type="file" accept=".pdf" id="file-input" onchange="onFileSelected(this)">
-          <div class="upload-zone-icon">📄</div>
-          <h4>Drop PDF here or click to browse</h4>
-          <p>Supported: books, articles, documents</p>
-        </div>
-        <div id="file-pill" style="display:none" class="file-pill">📄 <span id="file-name-label"></span></div>
+        <div class="upload-zone" id="drop-zone"><input type="file" accept=".pdf" id="file-input" onchange="onFileSelected(this)"><div class="upload-zone-icon">&#x1F4C4;</div><h4>Drop PDF here or click to browse</h4><p>Books, articles, documents</p></div>
+        <div id="file-pill" style="display:none" class="file-pill">&#x1F4C4; <span id="file-name-label"></span></div>
       </div>
       <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="book-title" type="text" placeholder="Auto-detected from filename"></div>
       <div class="form-row">
@@ -620,757 +590,535 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
         <div class="form-group" style="margin-bottom:0"><label class="form-label">Category</label><select class="form-select" id="book-category"></select></div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeUploadModal()">Cancel</button>
-      <button class="btn btn-gold" id="upload-btn" onclick="submitUpload()" disabled>Save to Library</button>
-    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('upload-modal')">Cancel</button><button class="btn btn-gold" id="upload-btn" onclick="submitUpload()" disabled>Save to Library</button></div>
   </div>
 </div>
-
-<!-- Narrate Modal -->
-<div class="modal-overlay hidden" id="narrate-modal" onclick="closeNarrateModal(event)">
+<!-- Narrate -->
+<div class="modal-overlay hidden" id="narrate-modal" onclick="closeModal('narrate-modal',event)">
   <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header"><h3>Start Narration</h3><button class="modal-close" onclick="closeNarrateModal()">✕</button></div>
+    <div class="modal-header"><h3>Start Narration</h3><button class="modal-close" onclick="closeModal('narrate-modal')">&#x2715;</button></div>
     <div class="modal-body">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:20px;" id="narrate-book-name"></p>
-      <div class="form-group">
-        <label class="form-label">Choose narrator voice</label>
-        <div class="voice-grid" id="narrate-voice-grid"></div>
-      </div>
-      <div style="font-size:12px;color:var(--muted);padding:12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);">
-        <strong style="color:var(--text);">Active engine:</strong> <span id="narrate-engine">—</span>
-      </div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;" id="narrate-book-name"></p>
+      <div class="form-group"><label class="form-label">Choose Voice</label><div class="voice-grid" id="narrate-voice-grid"></div></div>
+      <div style="font-size:12px;color:var(--muted);padding:10px 12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);">Engine: <span id="narrate-engine">edge_tts</span></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeNarrateModal()">Cancel</button>
-      <button class="btn btn-gold" onclick="submitNarrate()" id="narrate-btn">
-        <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-        Start Narrating
-      </button>
-    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('narrate-modal')">Cancel</button><button class="btn btn-gold" onclick="submitNarrate()" id="narrate-btn"><svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Start Narrating</button></div>
   </div>
 </div>
-
-<!-- Gutenberg Add Modal -->
-<div class="modal-overlay hidden" id="gutenberg-modal" onclick="closeGutenbergModal(event)">
+<!-- Gutenberg options -->
+<div class="modal-overlay hidden" id="gutenberg-modal" onclick="closeModal('gutenberg-modal',event)">
   <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header"><h3>Add to My Library</h3><button class="modal-close" onclick="closeGutenbergModal()">✕</button></div>
+    <div class="modal-header"><h3>Add to My Library</h3><button class="modal-close" onclick="closeModal('gutenberg-modal')">&#x2715;</button></div>
     <div class="modal-body">
-      <div id="gutenberg-modal-info" style="display:flex;gap:14px;margin-bottom:20px;padding:14px;background:var(--surface2);border-radius:10px;">
-        <div id="gm-cover" style="width:60px;height:80px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;"></div>
-        <div><div id="gm-title" style="font-family:'Cormorant Garamond',serif;font-size:16px;margin-bottom:4px;"></div><div id="gm-author" style="font-size:12px;color:var(--muted);"></div><div id="gm-subjects" style="font-size:11px;color:var(--muted2);margin-top:6px;"></div></div>
+      <div id="gutenberg-modal-info" style="display:flex;gap:13px;margin-bottom:16px;padding:12px;background:var(--surface2);border-radius:10px;">
+        <div id="gm-cover" style="width:52px;height:70px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;"></div>
+        <div><div id="gm-title" style="font-family:'Cormorant Garamond',serif;font-size:15px;margin-bottom:3px;"></div><div id="gm-author" style="font-size:12px;color:var(--muted);"></div></div>
       </div>
       <div class="form-group"><label class="form-label">Category</label><select class="form-select" id="gm-category"></select></div>
-      <div style="font-size:12px;color:var(--muted);padding:10px 12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);line-height:1.6;">
-        📖 This book will be downloaded from Project Gutenberg and added to your library. Narration will start automatically.
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="option-card" onclick="gutenbergOptionChosen('read')"><div style="font-size:22px;margin-bottom:5px;">&#x1F4D6;</div><div style="font-size:12px;font-weight:500;color:var(--text);">Read Only</div><div style="font-size:10px;color:var(--muted);margin-top:2px;">No audio narration</div></div>
+        <div class="option-card" onclick="gutenbergOptionChosen('narrate')"><div style="font-size:22px;margin-bottom:5px;">&#x1F399;&#xFE0F;</div><div style="font-size:12px;font-weight:500;color:var(--text);">Add &amp; Narrate</div><div style="font-size:10px;color:var(--muted);margin-top:2px;">Generate AI audio</div></div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeGutenbergModal()">Cancel</button>
-      <button class="btn btn-gold" onclick="addGutenbergBook()" id="gm-add-btn">
-        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-        Add & Narrate
-      </button>
-    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('gutenberg-modal')">Cancel</button></div>
   </div>
 </div>
-
-<!-- Archive Add Modal -->
-<div class="modal-overlay hidden" id="archive-modal" onclick="closeArchiveModal(event)">
+<!-- Archive options -->
+<div class="modal-overlay hidden" id="archive-modal" onclick="closeModal('archive-modal',event)">
   <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header"><h3>Add from Archive</h3><button class="modal-close" onclick="closeArchiveModal()">✕</button></div>
+    <div class="modal-header"><h3>Add from Archive</h3><button class="modal-close" onclick="closeModal('archive-modal')">&#x2715;</button></div>
     <div class="modal-body">
-      <div id="archive-modal-info" style="display:flex;gap:14px;margin-bottom:20px;padding:14px;background:var(--surface2);border-radius:10px;">
-        <div id="am-cover" style="width:60px;height:80px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--surface3);"></div>
-        <div style="flex:1;min-width:0;">
-          <div id="am-title" style="font-family:'Cormorant Garamond',serif;font-size:16px;margin-bottom:4px;"></div>
-          <div id="am-creator" style="font-size:12px;color:var(--muted);"></div>
-          <div id="am-year" style="font-size:11px;color:var(--muted2);margin-top:4px;"></div>
-          <div id="am-desc" style="font-size:11px;color:var(--muted2);margin-top:6px;line-height:1.5;max-height:48px;overflow:hidden;"></div>
-        </div>
+      <div style="display:flex;gap:13px;margin-bottom:16px;padding:12px;background:var(--surface2);border-radius:10px;">
+        <div id="am-cover" style="width:52px;height:70px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--surface3);"></div>
+        <div style="flex:1;min-width:0;"><div id="am-title" style="font-family:'Cormorant Garamond',serif;font-size:15px;margin-bottom:3px;"></div><div id="am-creator" style="font-size:12px;color:var(--muted);"></div><div id="am-year" style="font-size:11px;color:var(--muted2);margin-top:2px;"></div></div>
       </div>
       <div class="form-group"><label class="form-label">Category</label><select class="form-select" id="am-category"></select></div>
-      <div style="font-size:12px;color:var(--muted);padding:10px 12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);line-height:1.6;">
-        🏛️ This item will be fetched from the Internet Archive and added to your library for narration.
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="option-card" onclick="archiveOptionChosen('read')"><div style="font-size:22px;margin-bottom:5px;">&#x1F4D6;</div><div style="font-size:12px;font-weight:500;color:var(--text);">Read Only</div></div>
+        <div class="option-card" onclick="archiveOptionChosen('narrate')"><div style="font-size:22px;margin-bottom:5px;">&#x1F399;&#xFE0F;</div><div style="font-size:12px;font-weight:500;color:var(--text);">Add &amp; Narrate</div></div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeArchiveModal()">Cancel</button>
-      <button class="btn btn-gold" onclick="addArchiveItem()" id="am-add-btn">
-        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-        Add & Narrate
-      </button>
-    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('archive-modal')">Cancel</button></div>
   </div>
 </div>
-
-<!-- Request Modal -->
-<div class="modal-overlay hidden" id="request-modal" onclick="closeRequestModal(event)">
+<!-- Request -->
+<div class="modal-overlay hidden" id="request-modal" onclick="closeModal('request-modal',event)">
   <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header"><h3>Request a Book</h3><button class="modal-close" onclick="closeRequestModal()">✕</button></div>
+    <div class="modal-header"><h3>Request a Book</h3><button class="modal-close" onclick="closeModal('request-modal')">&#x2715;</button></div>
     <div class="modal-body">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6;">
-        Tell us what book you'd like to hear. We'll search our sources automatically and notify the community.
-      </p>
       <div class="form-group"><label class="form-label">Book Title *</label><input class="form-input" id="req-title" type="text" placeholder="e.g. Thinking, Fast and Slow"></div>
       <div class="form-row">
-        <div class="form-group" style="margin-bottom:0"><label class="form-label">Author *</label><input class="form-input" id="req-author" type="text" placeholder="e.g. Daniel Kahneman"></div>
+        <div class="form-group" style="margin-bottom:0"><label class="form-label">Author *</label><input class="form-input" id="req-author" type="text" placeholder="Author name"></div>
         <div class="form-group" style="margin-bottom:0"><label class="form-label">Category</label><select class="form-select" id="req-category"></select></div>
       </div>
-      <div class="form-group" style="margin-top:14px;"><label class="form-label">Why do you want this book? (optional)</label><textarea class="form-input" id="req-desc" rows="2" placeholder="Brief description or reason..." style="resize:vertical;"></textarea></div>
-      <div style="font-size:12px;color:var(--muted);padding:10px 12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);margin-top:4px;line-height:1.6;">
-        ✅ By submitting, you confirm you are requesting this book in good faith. We will only source books from legal, public domain or licensed sources.
-      </div>
+      <div class="form-group" style="margin-top:12px;"><label class="form-label">Why this book? (optional)</label><textarea class="form-input" id="req-desc" rows="2" style="resize:vertical;"></textarea></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeRequestModal()">Cancel</button>
-      <button class="btn btn-gold" onclick="submitRequest()" id="req-submit-btn">Submit Request</button>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('request-modal')">Cancel</button><button class="btn btn-gold" onclick="submitRequest()" id="req-submit-btn">Submit Request</button></div>
+  </div>
+</div>
+<!-- DMCA -->
+<div class="modal-overlay hidden" id="dmca-modal" onclick="closeModal('dmca-modal',event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><h3>&#x2696;&#xFE0F; DMCA Takedown</h3><button class="modal-close" onclick="closeModal('dmca-modal')">&#x2715;</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Select Book *</label><select class="form-select" id="dmca-book-select"></select></div>
+      <div class="form-group"><label class="form-label">Reason *</label><textarea class="form-input" id="dmca-reason" rows="3" placeholder="Describe your copyright claim..." style="resize:vertical;"></textarea></div>
+      <div style="font-size:11px;color:var(--muted);padding:10px;background:rgba(229,115,115,.06);border-radius:10px;border:1px solid rgba(229,115,115,.15);">&#x26A0;&#xFE0F; Filing a false DMCA claim is a criminal offense under 17 U.S.C. &#xA7; 512(f).</div>
     </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('dmca-modal')">Cancel</button><button class="btn btn-danger" onclick="submitDmca()" id="dmca-submit-btn">File Report</button></div>
   </div>
 </div>
 
-<!-- DMCA Report Modal -->
-<div class="modal-overlay hidden" id="dmca-modal" onclick="closeDmcaModal(event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header"><h3>⚖️ DMCA Takedown Request</h3><button class="modal-close" onclick="closeDmcaModal()">✕</button></div>
-    <div class="modal-body">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6;">
-        If you are the copyright holder or authorized agent and believe this content infringes your rights,
-        please complete this form. We will remove the content within 48 hours of a valid request.
-      </p>
-      <div class="form-group">
-        <label class="form-label">Select Book *</label>
-        <select class="form-select" id="dmca-book-select"></select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Reason *</label>
-        <textarea class="form-input" id="dmca-reason" rows="3"
-          placeholder="Describe your copyright claim. Include the original work title, your ownership, and how this infringes your rights."
-          style="resize:vertical;"></textarea>
-      </div>
-      <div style="font-size:12px;color:var(--muted);padding:10px 12px;background:rgba(229,115,115,.06);border-radius:10px;border:1px solid rgba(229,115,115,.15);line-height:1.6;">
-        ⚠️ Filing a false DMCA claim is a criminal offense under 17 U.S.C. § 512(f). By submitting, you declare under penalty of perjury that your claim is accurate and made in good faith.
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeDmcaModal()">Cancel</button>
-      <button class="btn btn-danger" onclick="submitDmca()" id="dmca-submit-btn">File Takedown Report</button>
-    </div>
-  </div>
-</div>
+<style>
+.option-card{padding:14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;text-align:center;transition:all .2s;}
+.option-card:hover{border-color:rgba(212,168,67,.4);background:rgba(212,168,67,.04);}
+</style>
 
 <div id="toast"></div>
 <audio id="player"></audio>
-
 <script>
-const API = '/api';
-const GUTENBERG_API = 'https://gutendex.com/books';
-const audio = document.getElementById('player');
+const API='/api';
+const AUTH='/auth';
+const GOOGLE_CLIENT_ID='1017805317287-me5v533ju9kd0vcjq7d8u5add8mpniha.apps.googleusercontent.com';
+const audio=document.getElementById('player');
 
-const COVER_COLORS = {
-  fiction:'cover-fiction', philosophy:'cover-philosophy', science:'cover-science',
-  history:'cover-history', biography:'cover-biography', 'self-help':'cover-selfhelp',
-  spirituality:'cover-spirituality', technology:'cover-technology',
-};
+let S={books:[],voices:[],categories:[],view:'grid',selVoice:'af_bella',selFile:null,narrateBookId:null,pollTimer:null,_elapsedTimer:null,jobId:null,currentBook:null,gutenbergCat:'',gutenbergBook:null,token:null,user:null};
+let archiveState={type:'texts',subject:'',page:1,query:'',totalPages:1};
+let archiveLoaded=false;
+let requestsState={status:'',sort:'votes'};
 
-const COVER_EMOJIS = {
-  fiction:'📖', philosophy:'🏛️', science:'🔬', history:'📜',
-  biography:'👤', mystery:'🔍', adventure:'⚔️', romance:'💌',
-  poetry:'🪶', psychology:'🧠', economics:'📊', default:'📚',
-};
+// ── Auth ──────────────────────────────────────────────────────────────────────
+function authFetch(url,opts={}){
+  if(!opts.headers)opts.headers={};
+  if(S.token)opts.headers['Authorization']='Bearer '+S.token;
+  return fetch(url,opts);
+}
 
-let S = {
-  books:[], voices:[], categories:[],
-  view:'grid', selVoice:'af_bella',
-  selFile:null, narrateBookId:null,
-  pollTimer:null, jobId:null,
-  currentBook:null, gutenbergCat:'',
-  gutenbergBook:null,
-};
+function signInWithGoogle(){
+  google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:handleGoogleCallback});
+  google.accounts.id.prompt();
+}
+
+async function handleGoogleCallback(response){
+  try{
+    const r=await fetch(AUTH+'/google',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id_token:response.credential})});
+    const data=await r.json();
+    if(!r.ok)throw new Error(data.detail||'Auth failed');
+    S.token=data.token;S.user=data.user;
+    localStorage.setItem('au_token',data.token);
+    localStorage.setItem('au_user',JSON.stringify(data.user));
+    onSignedIn();
+  }catch(e){toast('Sign in failed: '+e.message);}
+}
+
+function onSignedIn(){
+  renderUserProfile();
+  loadMeta();loadLibrary();loadEngineStatus();
+  showPage('library');
+  setTimeout(()=>{if(!localStorage.getItem('donate_done'))document.getElementById('donate-banner').classList.remove('hidden');},30000);
+}
+
+function signOut(){
+  S.token=null;S.user=null;
+  localStorage.removeItem('au_token');localStorage.removeItem('au_user');
+  renderUserProfile();showAuthPage();
+}
+
+function showAuthPage(){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-auth').classList.add('active');
+}
+
+function renderUserProfile(){
+  const wrap=document.getElementById('user-profile-wrap');if(!wrap)return;
+  if(S.user){
+    wrap.innerHTML=`<div class="user-profile" onclick="if(confirm('Sign out of Aurelius?'))signOut()">${S.user.avatar?`<img class="user-avatar" src="${S.user.avatar}" alt="">`:`<div class="user-avatar-placeholder">${(S.user.name||'?')[0]}</div>`}<div style="min-width:0;"><div class="user-name">${esc(S.user.name)}</div><div class="user-email">${esc(S.user.email)}</div></div></div>`;
+  }else{
+    wrap.innerHTML=`<button class="btn btn-ghost" style="width:100%;" onclick="showAuthPage()">Sign In</button>`;
+  }
+}
+
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+let sidebarOpen=true;
+function toggleSidebar(){
+  const mobile=window.innerWidth<=768;
+  if(mobile){
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebar-overlay').classList.toggle('visible');
+  }else{
+    sidebarOpen=!sidebarOpen;
+    document.getElementById('sidebar').classList.toggle('collapsed',!sidebarOpen);
+    document.getElementById('main-content').classList.toggle('expanded',!sidebarOpen);
+    document.getElementById('audio-bar').classList.toggle('expanded',!sidebarOpen);
+  }
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('visible');
+}
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 (async()=>{
-  await Promise.all([loadMeta(), loadLibrary()]);
-  loadEngineStatus();
-  loadFeaturedBooks();
+  const t=localStorage.getItem('au_token'),u=localStorage.getItem('au_user');
+  if(t&&u){
+    S.token=t;S.user=JSON.parse(u);
+    try{const r=await authFetch(AUTH+'/me');if(r.ok){onSignedIn();}else{signOut();}}
+    catch{onSignedIn();}
+  }else{showAuthPage();renderUserProfile();}
+  document.getElementById('donate-close').onclick=()=>{document.getElementById('donate-banner').classList.add('hidden');localStorage.setItem('donate_done','1');};
 })();
 
 async function loadMeta(){
   try{
-    const[vr,cr]=await Promise.all([
-      fetch(API+'/voices').then(r=>r.json()),
-      fetch(API+'/categories').then(r=>r.json()),
-    ]);
-    S.voices=vr.voices||[];
-    S.categories=cr.categories||[];
-    populateCategoryFilter();
-    populateUploadCategory();
-    populateGutenbergCategory();
-    populateArchiveCategory();
-    populateRequestCategory();
+    const[vr,cr]=await Promise.all([fetch(API+'/voices').then(r=>r.json()),fetch(API+'/categories').then(r=>r.json())]);
+    S.voices=vr.voices||[];S.categories=cr.categories||[];
+    populateCategoryFilter();populateUploadCategory();populateAllSelects();
   }catch(e){}
 }
 
 async function loadEngineStatus(){
-  try{
-    const s=await fetch(API+'/tts-status').then(r=>r.json());
-    const eng=s.engine||s.active_engine||'edge_tts';
-    document.getElementById('engine-name').textContent=eng;
-    document.getElementById('narrate-engine').textContent=eng;
-  }catch(e){
-    document.getElementById('engine-name').textContent='edge_tts';
-  }
+  try{const s=await fetch(API+'/tts-status').then(r=>r.json());const e=s.engine||'edge_tts';document.getElementById('engine-name').textContent=e;document.getElementById('narrate-engine').textContent=e;}
+  catch{document.getElementById('engine-name').textContent='edge_tts';}
 }
 
-// ── Navigation ────────────────────────────────────────────────────────────────
-function showPage(name){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-  const nb=document.getElementById('nav-'+name);
-  if(nb)nb.classList.add('active');
-  if(name==='library') loadLibrary();
-  if(name==='archive') onShowArchive();
-  if(name==='requests') { populateDmcaBookSelect(); loadRequests(); }
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// GUTENBERG DISCOVER
-// ══════════════════════════════════════════════════════════════════════════════
-
-async function loadFeaturedBooks(){
-  const featured=['pride and prejudice','moby dick','frankenstein','the odyssey',
-    'the republic','thus spoke zarathustra','the art of war','sherlock holmes',
-    'jane eyre','dracula','the great gatsby','war and peace'];
-  const query=featured[Math.floor(Math.random()*4)];
-  await searchGutenberg(query, true);
-}
-
-async function searchGutenberg(query, isFeatured=false){
-  const q = query !== undefined ? query : document.getElementById('gutenberg-search').value.trim();
-  const cat = S.gutenbergCat;
-  const container = document.getElementById('gutenberg-results');
-  const titleEl = document.getElementById('discover-section-title');
-
-  container.innerHTML='<div class="result-loading"><span class="spin">⟳</span> Searching library...</div>';
-
-  let url = GUTENBERG_API+'?';
-  if(q) url+='search='+encodeURIComponent(q)+'&';
-  if(cat) url+='topic='+encodeURIComponent(cat)+'&';
-  url+='languages=en&mime_type=text/plain&page_size=20';
-
-  if(!q && !cat) url=GUTENBERG_API+'?languages=en&mime_type=text/plain&page_size=20';
-
-  try{
-    const data=await fetch(url).then(r=>r.json());
-    const books=(data.results||[]).filter(b=>b.formats&&(b.formats['text/plain; charset=utf-8']||b.formats['text/plain']));
-
-    if(isFeatured) titleEl.textContent='Featured Books';
-    else if(q) titleEl.textContent=`Results for "${q}"`;
-    else if(cat) titleEl.textContent=cat.charAt(0).toUpperCase()+cat.slice(1)+' Books';
-    else titleEl.textContent='All Books';
-
-    if(!books.length){
-      container.innerHTML=`<div class="result-empty"><div class="result-empty-icon">📭</div><p style="color:var(--muted);font-size:13px;">No results found. Try a different search.</p></div>`;
-      return;
-    }
-    renderGutenbergBooks(books, container);
-  }catch(e){
-    container.innerHTML=`<div class="result-empty"><div class="result-empty-icon">⚠️</div><p style="color:var(--muted);font-size:13px;">Could not reach Gutenberg. Check your connection.</p></div>`;
-  }
-}
-
-function renderGutenbergBooks(books, container){
-  const grid=document.createElement('div');
-  grid.className='results-grid';
-  grid.innerHTML=books.map(b=>{
-    const title=b.title||'Untitled';
-    const author=(b.authors&&b.authors[0])?b.authors[0].name.replace(/,\s*/,' ').replace(/(\d{4}-\d{4}|\d{4}-)/,'').trim():'Unknown';
-    const subjects=(b.subjects||[]).join(' ').toLowerCase();
-    const coverClass=getCoverClass(subjects);
-    const emoji=getCoverEmoji(subjects);
-    const coverImg=b.formats['image/jpeg'];
-    return `<div class="shelf-card fadein" onclick="openGutenbergModal(${JSON.stringify(b).replace(/"/g,'&quot;')})">
-      <div class="shelf-cover ${coverClass}">
-        <div class="shelf-cover-spine"></div>
-        ${coverImg
-          ? `<img class="shelf-cover-img" src="${coverImg}" alt="" onerror="this.style.display='none';this.parentNode.querySelector('.shelf-cover-placeholder').style.display='flex'">`
-          : ''}
-        <div class="shelf-cover-placeholder" style="${coverImg?'display:none':'display:flex'}">
-          <div class="shelf-cover-emoji">${emoji}</div>
-          <div class="shelf-cover-title">${esc(title)}</div>
-        </div>
-        <div class="shelf-badge">${b.download_count>1000?'Popular':''}</div>
-      </div>
-      <div class="shelf-title">${esc(title)}</div>
-      <div class="shelf-author">${esc(author)}</div>
-    </div>`;
-  }).join('');
-  container.innerHTML='';
-  container.appendChild(grid);
-}
-
-function getCoverClass(subjects){
-  if(/fiction|novel|story/.test(subjects)) return 'cover-fiction';
-  if(/philosophy|ethics|logic/.test(subjects)) return 'cover-philosophy';
-  if(/science|biology|physics|chemistry/.test(subjects)) return 'cover-science';
-  if(/history|historical/.test(subjects)) return 'cover-history';
-  if(/biography|memoir/.test(subjects)) return 'cover-biography';
-  if(/psychology|self/.test(subjects)) return 'cover-selfhelp';
-  if(/spirit|religion|mystic/.test(subjects)) return 'cover-spirituality';
-  return 'cover-default';
-}
-
-function getCoverEmoji(subjects){
-  if(/fiction|novel/.test(subjects)) return COVER_EMOJIS.fiction;
-  if(/philosophy/.test(subjects)) return COVER_EMOJIS.philosophy;
-  if(/science/.test(subjects)) return COVER_EMOJIS.science;
-  if(/history/.test(subjects)) return COVER_EMOJIS.history;
-  if(/biography/.test(subjects)) return COVER_EMOJIS.biography;
-  if(/mystery/.test(subjects)) return COVER_EMOJIS.mystery;
-  if(/adventure/.test(subjects)) return COVER_EMOJIS.adventure;
-  if(/romance|love/.test(subjects)) return COVER_EMOJIS.romance;
-  if(/poetry|poem/.test(subjects)) return COVER_EMOJIS.poetry;
-  return COVER_EMOJIS.default;
-}
-
-function selectGutenbergCat(el, cat){
-  document.querySelectorAll('.cat-pill').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');
-  S.gutenbergCat=cat;
-  searchGutenberg('');
-}
-
-// Gutenberg add modal
-function openGutenbergModal(book){
-  if(typeof book==='string') book=JSON.parse(book);
-  S.gutenbergBook=book;
-  const title=book.title||'Untitled';
-  const author=(book.authors&&book.authors[0])?book.authors[0].name.replace(/,\s*/,' ').replace(/(\d{4}-\d{4}|\d{4}-)/,'').trim():'Unknown';
-  const subjects=(book.subjects||[]).slice(0,3).join(', ');
-  const subjects_l=(book.subjects||[]).join(' ').toLowerCase();
-  const coverClass=getCoverClass(subjects_l);
-  const emoji=getCoverEmoji(subjects_l);
-  const coverImg=book.formats['image/jpeg'];
-
-  document.getElementById('gm-cover').className=coverClass;
-  document.getElementById('gm-cover').style.cssText='width:60px;height:80px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;';
-  if(coverImg){
-    document.getElementById('gm-cover').innerHTML=`<img src="${coverImg}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.parentNode.textContent='${emoji}'">`;
-  } else {
-    document.getElementById('gm-cover').textContent=emoji;
-  }
-  document.getElementById('gm-title').textContent=title;
-  document.getElementById('gm-author').textContent='by '+author;
-  document.getElementById('gm-subjects').textContent=subjects;
-  document.getElementById('gutenberg-modal').classList.remove('hidden');
-}
-
-function closeGutenbergModal(e){
-  if(e&&e.target!==document.getElementById('gutenberg-modal'))return;
-  document.getElementById('gutenberg-modal').classList.add('hidden');
-}
-
-function populateGutenbergCategory(){
-  const sel=document.getElementById('gm-category');
-  sel.innerHTML='<option value="Other">Other</option>';
-  S.categories.forEach(c=>{
-    const o=document.createElement('option');
-    o.value=c; o.textContent=c; sel.appendChild(o);
+function populateAllSelects(){
+  ['gm-category','am-category','req-category'].forEach(id=>{
+    const sel=document.getElementById(id);if(!sel)return;
+    sel.innerHTML='<option value="Other">Other</option>';
+    S.categories.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
   });
 }
 
-async function addGutenbergBook(){
-  const book=S.gutenbergBook;
-  if(!book)return;
-
-  const btn=document.getElementById('gm-add-btn');
-  btn.disabled=true;
-  btn.innerHTML='<span class="spin">⟳</span> Adding...';
-
-  const title=book.title||'Untitled';
-  const author=(book.authors&&book.authors[0])?book.authors[0].name.replace(/,\s*/,' ').replace(/(\d{4}-\d{4}|\d{4}-)/,'').trim():'Unknown';
-  const category=document.getElementById('gm-category').value||'Other';
-
-  // Get plain text URL
-  const textUrl=book.formats['text/plain; charset=utf-8']||book.formats['text/plain; charset=us-ascii']||book.formats['text/plain'];
-  if(!textUrl){toast('No plain text available for this book');btn.disabled=false;btn.innerHTML='Add & Narrate';return;}
-
-  try{
-    const r=await fetch(API+'/gutenberg/import',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({title,author,category,text_url:textUrl,gutenberg_id:book.id})
-    });
-    const data=await r.json();
-    if(!r.ok)throw new Error(data.detail||'Failed to import');
-
-    closeGutenbergModal();
-    toast(`"${title}" added! Starting narration...`);
-    showPage('library');
-    await openBook(data.book_id);
-    if(data.job_id) startPolling(data.job_id);
-  }catch(e){
-    toast('Error: '+e.message);
-  }finally{
-    btn.disabled=false;
-    btn.innerHTML='<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg> Add & Narrate';
-  }
+// ── Nav ───────────────────────────────────────────────────────────────────────
+function showPage(name){
+  if(!S.user&&name!=='auth'){showAuthPage();return;}
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  const nb=document.getElementById('nav-'+name);if(nb)nb.classList.add('active');
+  if(name==='library')loadLibrary();
+  if(name==='archive')onShowArchive();
+  if(name==='requests'){populateDmcaBookSelect();loadRequests();}
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// LIBRARY
-// ══════════════════════════════════════════════════════════════════════════════
+function closeModal(id,e){
+  if(e&&e.target!==document.getElementById(id))return;
+  document.getElementById(id).classList.add('hidden');
+}
+
+// ── Library ───────────────────────────────────────────────────────────────────
 async function loadLibrary(){
+  if(!S.token)return;
   try{
-    const data=await fetch(API+'/books').then(r=>r.json());
-    S.books=data.books||[];
-    renderBooks();
-    document.getElementById('library-count').textContent=
-      S.books.length===0?'No books yet — discover books or upload your own'
-      :`${S.books.length} book${S.books.length!==1?'s':''} in your collection`;
-  }catch(e){
-    document.getElementById('books-container').innerHTML=
-      '<div class="empty"><div class="empty-icon">⚠️</div><h3>Cannot reach server</h3><p>Make sure the API is running.</p></div>';
-  }
+    const data=await authFetch(API+'/my/books').then(r=>r.json());
+    S.books=data.books||[];renderBooks();
+    document.getElementById('library-count').textContent=S.books.length===0?'No books yet — discover or upload':''+S.books.length+' book'+(S.books.length!==1?'s':'')+' in your collection';
+  }catch(e){document.getElementById('books-container').innerHTML='<div class="empty"><div class="empty-icon">&#x26A0;&#xFE0F;</div><h3>Could not load library</h3></div>';}
 }
 
 function filterBooks(){
   const q=document.getElementById('search-input').value.toLowerCase();
   const cat=document.getElementById('filter-cat').value;
   const stat=document.getElementById('filter-status').value;
-  const filtered=S.books.filter(b=>{
-    const matchQ=!q||b.title.toLowerCase().includes(q)||(b.author||'').toLowerCase().includes(q);
-    const matchC=!cat||b.category===cat;
-    const matchS=!stat||b.status===stat;
-    return matchQ&&matchC&&matchS;
-  });
-  renderBooks(filtered);
+  renderBooks(S.books.filter(b=>(!q||b.title.toLowerCase().includes(q)||(b.author||'').toLowerCase().includes(q))&&(!cat||b.category===cat)&&(!stat||b.status===stat)));
+}
+
+function getCoverClass(cat){
+  return{Fiction:'cover-fiction',Philosophy:'cover-philosophy',Science:'cover-science',History:'cover-history',Biography:'cover-biography','Self-Help':'cover-selfhelp',Spirituality:'cover-spirituality',Technology:'cover-technology',Comics:'cover-comics'}[cat]||'cover-default';
 }
 
 function renderBooks(books){
   books=books??S.books;
   const c=document.getElementById('books-container');
-  if(!books.length){
-    c.innerHTML=`<div class="empty"><div class="empty-icon">📚</div><h3>No books found</h3><p>Try adjusting your filters or <span style="color:var(--gold);cursor:pointer" onclick="showPage('discover')">discover books</span> from our world library.</p></div>`;
-    return;
+  if(!books.length){c.innerHTML='<div class="empty"><div class="empty-icon">&#x1F4DA;</div><h3>No books found</h3><p>Try adjusting filters or <span style="color:var(--gold);cursor:pointer" onclick="showPage('discover')">discover books</span>.</p></div>';return;}
+  if(S.view==='grid'){
+    c.innerHTML='<div class="book-grid">'+books.map(b=>`<div class="book-card fadein" onclick="openBook('${b.id}')"><div class="book-cover ${getCoverClass(b.category)}"><div class="book-cover-text">${esc(b.title)}</div></div><div class="book-card-body"><div class="book-card-title">${esc(b.title)}</div><div class="book-card-author">${esc(b.author||'Unknown')}</div><div class="book-card-footer"><span style="font-size:10px;color:var(--muted);text-transform:uppercase">${esc(b.category||'')}</span><span class="badge badge-${b.status}">${b.status}</span></div></div></div>`).join('')+'</div>';
+  }else{
+    c.innerHTML='<div class="book-list">'+books.map(b=>`<div class="book-row fadein"><div class="book-row-icon ${getCoverClass(b.category)}" style="border-radius:6px">&#x1F4D6;</div><div class="book-row-info" onclick="openBook('${b.id}')"><div class="book-row-title">${esc(b.title)}</div><div class="book-row-meta">${esc(b.author||'Unknown')} &middot; ${esc(b.category||'')}</div></div><div class="book-row-actions"><span class="badge badge-${b.status}">${b.status}</span>${b.status==='stored'||b.status==='failed'?`<button class="btn btn-gold btn-sm" onclick="event.stopPropagation();openNarrateModal('${b.id}','${esc(b.title)}')">Narrate</button>`:b.status==='ready'?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openBook('${b.id}')">&#x25B6; Listen</button>`:`<button class="btn btn-ghost btn-sm" disabled><span class="spin">&#x27F3;</span></button>`}<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openDmcaModal('${b.id}')" title="DMCA">&#x2696;&#xFE0F;</button><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteBook('${b.id}','${esc(b.title)}')">&#x2715;</button></div></div>`).join('')+'</div>';
   }
-  if(S.view==='grid') renderGrid(books,c);
-  else renderList(books,c);
 }
 
-function getCoverClassFromCat(cat){
-  const m={'Fiction':'cover-fiction','Philosophy':'cover-philosophy','Science':'cover-science',
-    'History':'cover-history','Biography':'cover-biography','Self-Help':'cover-selfhelp',
-    'Spirituality':'cover-spirituality','Technology':'cover-technology'};
-  return m[cat]||'cover-default';
-}
-
-function renderGrid(books,container){
-  container.innerHTML=`<div class="book-grid">${books.map(b=>`
-    <div class="book-card fadein" onclick="openBook('${b.id}')">
-      <div class="book-cover ${getCoverClassFromCat(b.category)}">
-        <div class="book-cover-text">${esc(b.title)}</div>
-      </div>
-      <div class="book-card-body">
-        <div class="book-card-title">${esc(b.title)}</div>
-        <div class="book-card-author">${esc(b.author||'Unknown')}</div>
-        <div class="book-card-footer">
-          <span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;">${esc(b.category||'')}</span>
-          <span class="badge badge-${b.status}">${b.status}</span>
-        </div>
-      </div>
-    </div>`).join('')}</div>`;
-}
-
-function renderList(books,container){
-  container.innerHTML=`<div class="book-list">${books.map(b=>`
-    <div class="book-row fadein">
-      <div class="book-row-icon ${getCoverClassFromCat(b.category)}" style="border-radius:6px;">📖</div>
-      <div class="book-row-info" onclick="openBook('${b.id}')">
-        <div class="book-row-title">${esc(b.title)}</div>
-        <div class="book-row-meta">${esc(b.author||'Unknown')} · ${esc(b.category||'')} · ${b.chapter_count||0} chapter${b.chapter_count!==1?'s':''}</div>
-      </div>
-      <div class="book-row-actions">
-        <span class="badge badge-${b.status}">${b.status}</span>
-        ${b.status==='stored'||b.status==='failed'
-          ?`<button class="btn btn-gold btn-sm" onclick="event.stopPropagation();openNarrateModal('${b.id}','${esc(b.title)}')">Narrate</button>`
-          :b.status==='ready'
-          ?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openBook('${b.id}')">▶ Listen</button>`
-          :`<button class="btn btn-ghost btn-sm" disabled><span class="spin">⟳</span></button>`
-        }
-        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openDmcaModal('${b.id}')" title="Report DMCA" style="color:var(--muted);font-size:10px;">⚖️</button>
-        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteBook('${b.id}','${esc(b.title)}')">✕</button>
-      </div>
-    </div>`).join('')}</div>`;
-}
-
-function setView(v){
-  S.view=v;
-  document.getElementById('btn-grid').classList.toggle('active',v==='grid');
-  document.getElementById('btn-list').classList.toggle('active',v==='list');
-  renderBooks();
-}
-
-function populateCategoryFilter(){
-  const sel=document.getElementById('filter-cat');
-  S.categories.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
-}
-
-function populateUploadCategory(){
-  const sel=document.getElementById('book-category');
-  sel.innerHTML='';
-  S.categories.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
-}
+function setView(v){S.view=v;document.getElementById('btn-grid').classList.toggle('active',v==='grid');document.getElementById('btn-list').classList.toggle('active',v==='list');renderBooks();}
+function populateCategoryFilter(){const sel=document.getElementById('filter-cat');S.categories.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});}
+function populateUploadCategory(){const sel=document.getElementById('book-category');sel.innerHTML='';S.categories.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});}
+function populateDmcaBookSelect(){const sel=document.getElementById('dmca-book-select');if(!sel)return;sel.innerHTML='<option value="">Select a book...</option>';S.books.forEach(b=>{const o=document.createElement('option');o.value=b.id;o.textContent=b.title+(b.author?' — '+b.author:'');sel.appendChild(o);});}
 
 // ── Player ────────────────────────────────────────────────────────────────────
 async function openBook(bookId){
   try{
-    const data=await fetch(API+'/books/'+bookId).then(r=>r.json());
-    S.currentBook=data;
-    renderPlayer(data);
+    const data=await authFetch(API+'/books/'+bookId).then(r=>r.json());
+    S.currentBook=data;renderPlayer(data);
     document.getElementById('nav-player').style.display='flex';
     showPage('player');
-    if(data.job&&['queued','running'].includes(data.job.status)) startPolling(data.job.id);
+    if(data.job&&['queued','running'].includes(data.job.status))startPolling(data.job.id);
   }catch(e){toast('Could not load book');}
 }
 
 function renderPlayer(data){
   const book=data.book,chs=data.chapters;
-  document.getElementById('player-header').innerHTML=`
-    <div class="player-book-title">${esc(book.title)}</div>
-    <div class="player-book-meta">
-      <span>${esc(book.author||'Unknown')}</span><span>·</span>
-      <span>${esc(book.category||'')}</span><span>·</span>
-      <span class="badge badge-${book.status}">${book.status}</span>
-      ${book.status==='stored'||book.status==='failed'
-        ?`<button class="btn btn-gold btn-sm" style="margin-left:4px" onclick="openNarrateModal('${book.id}','${esc(book.title)}')">
-            <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Narrate
-           </button>`:''}
-    </div>`;
-
+  document.getElementById('player-header').innerHTML=`<div class="player-book-title">${esc(book.title)}</div><div class="player-book-meta"><span>${esc(book.author||'Unknown')}</span><span>&middot;</span><span>${esc(book.category||'')}</span><span>&middot;</span><span class="badge badge-${book.status}">${book.status}</span>${book.status==='stored'||book.status==='failed'?`<button class="btn btn-gold btn-sm" style="margin-left:4px" onclick="openNarrateModal('${book.id}','${esc(book.title)}')">&#x1F399;&#xFE0F; Narrate</button>`:''}</div>`;
   const list=document.getElementById('chapter-list');
-  if(!chs.length&&book.status==='stored'){
-    list.innerHTML=`<div class="empty" style="padding:40px 0;"><p>Click <strong>Narrate</strong> above to generate audio.</p></div>`;return;
-  }
-  if(!chs.length){
-    list.innerHTML=`<div style="color:var(--muted);font-size:13px;text-align:center;padding:32px;">Generating chapters...</div>`;return;
-  }
-  list.innerHTML=chs.map(ch=>{
-    const has=!!ch.audio_path;
-    return`<div class="chapter-row ${has?'':'no-audio'}" id="chrow-${ch.id}"
-      onclick="${has?`playChapter('${ch.id}','${esc(ch.title)}','${esc(book.title)}')`:''}">
-      <div class="ch-num">${ch.number}</div>
-      <div class="ch-info">
-        <div class="ch-title">${esc(ch.title)}</div>
-        <div class="ch-meta">${Math.round(ch.char_count/5)} words · ${has?'Ready to play':'Pending audio'}</div>
-      </div>
-      <div class="ch-play">${has
-        ?`<svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`
-        :`<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>`
-      }</div>
-    </div>`;
-  }).join('');
+  if(!chs.length&&book.status==='stored'){list.innerHTML='<div class="empty" style="padding:36px 0"><p>Click <strong>Narrate</strong> above to generate audio.</p></div>';return;}
+  if(!chs.length){list.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:28px">Generating chapters...</div>';return;}
+  list.innerHTML=chs.map(ch=>{const has=!!ch.audio_path;return`<div class="chapter-row ${has?'':'no-audio'}" id="chrow-${ch.id}" onclick="${has?`playChapter('${ch.id}','${esc(ch.title)}','${esc(book.title)}')`:''}"><div class="ch-num">${ch.number}</div><div class="ch-info"><div class="ch-title">${esc(ch.title)}</div><div class="ch-meta">${Math.round(ch.char_count/5)} words &middot; ${has?'Ready to play':'Pending audio'}</div></div><div class="ch-play">${has?'<svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>':'<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>'}</div></div>`;}).join('');
 }
 
-// ── Narrate modal ─────────────────────────────────────────────────────────────
-function openNarrateModal(bookId,bookTitle){
-  S.narrateBookId=bookId;
-  document.getElementById('narrate-book-name').textContent=`"${bookTitle}"`;
-  renderNarrateVoices();
-  loadEngineStatus();
-  document.getElementById('narrate-modal').classList.remove('hidden');
-}
-
-function closeNarrateModal(e){
-  if(e&&e.target!==document.getElementById('narrate-modal'))return;
-  document.getElementById('narrate-modal').classList.add('hidden');
-}
-
-function renderNarrateVoices(){
-  document.getElementById('narrate-voice-grid').innerHTML=S.voices.map(v=>`
-    <div class="voice-card ${v.id===S.selVoice?'sel':''}" onclick="selectVoice('${v.id}')">
-      <div class="voice-name">${v.name} · ${v.gender}</div>
-      <div class="voice-meta">${v.accent} · ${v.style}</div>
-    </div>`).join('');
-}
-
+// ── Narrate ───────────────────────────────────────────────────────────────────
+function openNarrateModal(bookId,bookTitle){S.narrateBookId=bookId;document.getElementById('narrate-book-name').textContent='"'+bookTitle+'"';renderNarrateVoices();document.getElementById('narrate-modal').classList.remove('hidden');}
+function renderNarrateVoices(){document.getElementById('narrate-voice-grid').innerHTML=S.voices.map(v=>`<div class="voice-card ${v.id===S.selVoice?'sel':''}" onclick="selectVoice('${v.id}')"><div class="voice-name">${v.name} &middot; ${v.gender}</div><div class="voice-meta">${v.accent} &middot; ${v.style}</div></div>`).join('');}
 function selectVoice(id){S.selVoice=id;renderNarrateVoices();}
-
 async function submitNarrate(){
   if(!S.narrateBookId)return;
-  const btn=document.getElementById('narrate-btn');
-  btn.disabled=true;btn.innerHTML='<span class="spin">⟳</span> Starting...';
+  const btn=document.getElementById('narrate-btn');btn.disabled=true;btn.innerHTML='<span class="spin">&#x27F3;</span> Starting...';
   const form=new FormData();form.append('voice',S.selVoice);
   try{
-    const r=await fetch(API+'/books/'+S.narrateBookId+'/narrate',{method:'POST',body:form});
-    const data=await r.json();
-    if(!r.ok)throw new Error(data.detail||'Failed');
-    closeNarrateModal();toast('Narration started!');
+    const r=await fetch(API+'/books/'+S.narrateBookId+'/narrate',{method:'POST',headers:{Authorization:'Bearer '+S.token},body:form});
+    const data=await r.json();if(!r.ok)throw new Error(data.detail||'Failed');
+    closeModal('narrate-modal');toast('Narration started!');
     await openBook(S.narrateBookId);startPolling(data.job_id);
   }catch(e){toast('Error: '+e.message);}
-  finally{btn.disabled=false;btn.innerHTML='<svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Start Narrating';}
+  finally{btn.disabled=false;btn.innerHTML='<svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Start Narrating';}
 }
 
-// ── Job polling ───────────────────────────────────────────────────────────────
+// ── Polling ───────────────────────────────────────────────────────────────────
 let _pollStart=null;
-
 function startPolling(jobId){
   S.jobId=jobId;_pollStart=Date.now();
   document.getElementById('job-progress-wrap').style.display='block';
   if(S.pollTimer)clearInterval(S.pollTimer);
   if(S._elapsedTimer)clearInterval(S._elapsedTimer);
-  S._elapsedTimer=setInterval(tickElapsed,1000);
-  S.pollTimer=setInterval(()=>pollJob(jobId),2500);
-  pollJob(jobId);
+  S._elapsedTimer=setInterval(()=>{if(!_pollStart)return;document.getElementById('narr-elapsed').textContent=fmtTime(Math.floor((Date.now()-_pollStart)/1000));},1000);
+  S.pollTimer=setInterval(()=>pollJob(jobId),2500);pollJob(jobId);
 }
-
-function tickElapsed(){
-  if(!_pollStart)return;
-  const sec=Math.floor((Date.now()-_pollStart)/1000);
-  document.getElementById('narr-elapsed').textContent=fmtTime(sec);
-}
-
 async function pollJob(jobId){
   try{
-    const job=await fetch(API+'/jobs/'+jobId).then(r=>r.json());
+    const job=await authFetch(API+'/jobs/'+jobId).then(r=>r.json());
     const pct=Math.min(job.percent||0,100);
-    const elapsed=Date.now()-_pollStart;
     document.getElementById('job-fill').style.width=pct+'%';
     document.getElementById('job-pct-label').textContent=Math.round(pct)+'%';
     document.getElementById('job-step-label').textContent=job.current_step||'';
     document.getElementById('narr-chunks').textContent=(job.progress||0)+' / '+(job.total||0);
-    document.getElementById('narr-eta').textContent=fmtETA(pct,elapsed);
+    document.getElementById('narr-eta').textContent=fmtETA(pct,Date.now()-_pollStart);
     const wave=document.getElementById('narr-wave');
-    if(job.status==='complete')wave.className='narr-waveform done';
-    else if(job.status==='failed')wave.className='narr-waveform paused';
-    else wave.className='narr-waveform';
+    wave.className='narr-waveform'+(job.status==='complete'?' done':job.status==='failed'?' paused':'');
     renderChapterProgress(job,S.currentBook?.chapters||[]);
     if(job.status==='complete'){
       clearInterval(S.pollTimer);clearInterval(S._elapsedTimer);
       document.getElementById('narr-status-label').textContent='Audiobook ready!';
-      document.getElementById('job-step-label').textContent='All chapters narrated.';
-      document.getElementById('job-fill').style.width='100%';
-      document.getElementById('job-pct-label').textContent='100%';
       document.getElementById('narr-eta').textContent='Done ✓';
-      toast('Audiobook ready! 🎉');
-      setTimeout(async()=>{
-        document.getElementById('job-progress-wrap').style.display='none';
-        const data=await fetch(API+'/books/'+S.currentBook.book.id).then(r=>r.json());
-        S.currentBook=data;renderPlayer(data);loadLibrary();
-      },2000);
+      toast('Audiobook ready! &#x1F389;');
+      setTimeout(async()=>{document.getElementById('job-progress-wrap').style.display='none';const data=await authFetch(API+'/books/'+S.currentBook.book.id).then(r=>r.json());S.currentBook=data;renderPlayer(data);loadLibrary();},2000);
     }else if(job.status==='failed'){
       clearInterval(S.pollTimer);clearInterval(S._elapsedTimer);
       document.getElementById('narr-status-label').textContent='Narration failed';
       document.getElementById('job-step-label').textContent=job.error||'Unknown error';
       toast('Narration failed');
     }else{
-      document.getElementById('narr-status-label').textContent=
-        pct<5?'Starting up...':pct<30?'Generating audio...':pct<70?'Narrating chapters...':pct<95?'Almost there...':'Finishing up...';
+      document.getElementById('narr-status-label').textContent=pct<5?'Starting up...':pct<30?'Generating audio...':pct<70?'Narrating chapters...':pct<95?'Almost there...':'Finishing up...';
     }
   }catch(e){}
 }
-
 function renderChapterProgress(job,chapters){
-  const list=document.getElementById('narr-chapter-list');
-  if(!chapters.length){list.innerHTML='';return;}
-  const pct=job.percent||0;
-  const perCh=100/chapters.length;
-  const activeIdx=Math.min(Math.floor(pct/perCh),chapters.length-1);
-  list.innerHTML=chapters.map((ch,i)=>{
-    const isDone=i<activeIdx||pct>=100;
-    const isActive=i===activeIdx&&pct<100;
-    const cls=isDone?'done':isActive?'active':'';
-    return`<div class="narr-ch-row ${cls}">
-      <div class="narr-ch-dot"></div>
-      <span style="min-width:16px;font-size:10px;text-align:center">${isDone?'✓':isActive?'▶':(i+1)}</span>
-      <span>${esc(ch.title)}</span>
-    </div>`;
-  }).join('');
-  const active=list.querySelector('.narr-ch-row.active');
-  if(active)active.scrollIntoView({block:'nearest',behavior:'smooth'});
+  const list=document.getElementById('narr-chapter-list');if(!chapters.length){list.innerHTML='';return;}
+  const pct=job.percent||0;const perCh=100/chapters.length;const ai=Math.min(Math.floor(pct/perCh),chapters.length-1);
+  list.innerHTML=chapters.map((ch,i)=>{const done=i<ai||pct>=100;const active=i===ai&&pct<100;return`<div class="narr-ch-row ${done?'done':active?'active':''}"><div class="narr-ch-dot"></div><span style="min-width:14px;font-size:10px;text-align:center">${done?'&#x2713;':active?'&#x25BA;':(i+1)}</span><span>${esc(ch.title)}</span></div>`;}).join('');
+  const a=list.querySelector('.narr-ch-row.active');if(a)a.scrollIntoView({block:'nearest',behavior:'smooth'});
 }
+function fmtETA(pct,ms){if(pct<=1)return'Calculating...';const r=Math.max(0,Math.floor((ms/(pct/100)-ms)/1000));if(r<60)return r+'s';if(r<3600)return Math.floor(r/60)+'m '+r%60+'s';return Math.floor(r/3600)+'h '+Math.floor(r%3600/60)+'m';}
 
-
-function fmtETA(pct,elapsedMs){
-  if(pct<=1)return'Calculating...';
-  const totalMs=elapsedMs/(pct/100);
-  const remSec=Math.max(0,Math.floor((totalMs-elapsedMs)/1000));
-  if(remSec<60)return remSec+'s';
-  if(remSec<3600)return Math.floor(remSec/60)+'m '+remSec%60+'s';
-  return Math.floor(remSec/3600)+'h '+Math.floor(remSec%3600/60)+'m';
-}
-
-// ── Upload modal ──────────────────────────────────────────────────────────────
-function openUploadModal(){document.getElementById('upload-modal').classList.remove('hidden');}
-function closeUploadModal(e){
-  if(e&&e.target!==document.getElementById('upload-modal'))return;
-  document.getElementById('upload-modal').classList.add('hidden');
-}
+// ── Upload ────────────────────────────────────────────────────────────────────
+function openUploadModal(){if(!S.token){showAuthPage();return;}document.getElementById('upload-modal').classList.remove('hidden');}
 function onFileSelected(input){
-  const file=input.files[0];if(!file)return;
-  S.selFile=file;
+  const file=input.files[0];if(!file)return;S.selFile=file;
   document.getElementById('file-name-label').textContent=file.name;
   document.getElementById('file-pill').style.display='inline-flex';
   document.getElementById('upload-btn').disabled=false;
-  if(!document.getElementById('book-title').value)
-    document.getElementById('book-title').value=file.name.replace('.pdf','').replace(/[_-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+  if(!document.getElementById('book-title').value)document.getElementById('book-title').value=file.name.replace('.pdf','').replace(/[_-]/g,' ').replace(/\w/g,c=>c.toUpperCase());
 }
 const dz=document.getElementById('drop-zone');
 dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
 dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
-dz.addEventListener('drop',e=>{
-  e.preventDefault();dz.classList.remove('drag');
-  const file=e.dataTransfer.files[0];
-  if(file?.name.endsWith('.pdf')){
-    S.selFile=file;
-    document.getElementById('file-name-label').textContent=file.name;
-    document.getElementById('file-pill').style.display='inline-flex';
-    document.getElementById('upload-btn').disabled=false;
-  }else toast('Please drop a PDF file');
-});
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');const f=e.dataTransfer.files[0];if(f?.name.endsWith('.pdf')){S.selFile=f;document.getElementById('file-name-label').textContent=f.name;document.getElementById('file-pill').style.display='inline-flex';document.getElementById('upload-btn').disabled=false;}else toast('Please drop a PDF file');});
 async function submitUpload(){
-  if(!S.selFile)return;
-  const btn=document.getElementById('upload-btn');
-  btn.disabled=true;btn.textContent='Saving...';
-  const form=new FormData();
-  form.append('file',S.selFile);
-  form.append('title',document.getElementById('book-title').value);
-  form.append('author',document.getElementById('book-author').value||'Unknown Author');
-  form.append('category',document.getElementById('book-category').value);
+  if(!S.selFile)return;const btn=document.getElementById('upload-btn');btn.disabled=true;btn.textContent='Saving...';
+  const form=new FormData();form.append('file',S.selFile);form.append('title',document.getElementById('book-title').value);form.append('author',document.getElementById('book-author').value||'Unknown Author');form.append('category',document.getElementById('book-category').value);
+  try{const r=await fetch(API+'/my/books/upload',{method:'POST',headers:{Authorization:'Bearer '+S.token},body:form});const data=await r.json();if(!r.ok)throw new Error(data.detail||'Upload failed');closeModal('upload-modal');toast('"'+data.title+'" added!');S.selFile=null;document.getElementById('file-input').value='';document.getElementById('file-pill').style.display='none';document.getElementById('book-title').value='';document.getElementById('book-author').value='';document.getElementById('upload-btn').disabled=true;loadLibrary();}
+  catch(e){toast('Error: '+e.message);}finally{btn.disabled=false;btn.textContent='Save to Library';}
+}
+async function deleteBook(id,title){if(!confirm('Delete "'+title+'" and all its audio?'))return;await authFetch(API+'/books/'+id,{method:'DELETE',headers:{Authorization:'Bearer '+S.token}});toast('Book deleted');loadLibrary();}
+
+// ── Gutenberg ─────────────────────────────────────────────────────────────────
+const GCE={fiction:'cover-fiction',philosophy:'cover-philosophy',science:'cover-science',history:'cover-history',biography:'cover-biography',spirit:'cover-spirituality',tech:'cover-technology'};
+function getCoverClassFromSubjects(s){for(const[k,v]of Object.entries(GCE)){if(s.includes(k))return v;}return'cover-default';}
+function getCoverEmoji(s){if(/fiction|novel/.test(s))return'&#x1F4D6;';if(/philosophy/.test(s))return'&#x1F3DB;&#xFE0F;';if(/science/.test(s))return'&#x1F52C;';if(/history/.test(s))return'&#x1F4DC;';if(/biography/.test(s))return'&#x1F464;';if(/mystery/.test(s))return'&#x1F50D;';if(/adventure/.test(s))return'&#x2694;&#xFE0F;';if(/romance|love/.test(s))return'&#x1F48C;';if(/poetry|poem/.test(s))return'&#x1FAB6;';return'&#x1F4DA;';}
+
+async function loadFeaturedBooks(){await searchGutenberg('philosophy',true);}
+async function searchGutenberg(query,isFeatured=false){
+  const q=query!==undefined?query:document.getElementById('gutenberg-search').value.trim();
+  const cat=S.gutenbergCat;
+  const container=document.getElementById('gutenberg-results');
+  container.innerHTML='<div class="result-loading"><span class="spin">&#x27F3;</span> Searching...</div>';
+  let url='https://gutendex.com/books?';
+  if(q)url+='search='+encodeURIComponent(q)+'&';
+  if(cat)url+='topic='+encodeURIComponent(cat)+'&';
+  url+='languages=en&mime_type=text/plain&page_size=20';
+  if(!isFeatured)document.getElementById('discover-section-title').textContent=q?'Results for "'+q+'"':cat?cat+' Books':'All Books';
   try{
-    const r=await fetch(API+'/books/upload',{method:'POST',body:form});
-    const data=await r.json();
-    if(!r.ok)throw new Error(data.detail||'Upload failed');
-    closeUploadModal();toast(`"${data.title}" added to library`);resetUploadForm();loadLibrary();
+    const data=await fetch(url).then(r=>r.json());
+    const books=(data.results||[]).filter(b=>b.formats&&(b.formats['text/plain; charset=utf-8']||b.formats['text/plain']));
+    if(!books.length){container.innerHTML='<div class="result-empty"><p style="color:var(--muted)">No results found.</p></div>';return;}
+    const grid=document.createElement('div');grid.className='results-grid';
+    grid.innerHTML=books.map(b=>{
+      const title=b.title||'Untitled';
+      const author=(b.authors&&b.authors[0])?b.authors[0].name.replace(/,\s*/,' ').replace(/(\d{4}-\d{4}|\d{4}-)/,'').trim():'Unknown';
+      const subjects=(b.subjects||[]).join(' ').toLowerCase();
+      const cc=getCoverClassFromSubjects(subjects);const emoji=getCoverEmoji(subjects);
+      const img=b.formats['image/jpeg'];
+      return`<div class="shelf-card fadein" onclick="openGutenbergModal(${JSON.stringify(b).replace(/"/g,'&quot;')})"><div class="shelf-cover ${cc}"><div class="shelf-cover-spine"></div>${img?`<img class="shelf-cover-img" src="${img}" alt="" onerror="this.style.display='none';this.parentNode.querySelector('.shelf-cover-placeholder').style.display='flex'">`:''}<div class="shelf-cover-placeholder" style="${img?'display:none':'display:flex'}"><div class="shelf-cover-emoji">${emoji}</div><div class="shelf-cover-title">${esc(title)}</div></div></div><div class="shelf-title">${esc(title)}</div><div class="shelf-author">${esc(author)}</div></div>`;
+    }).join('');
+    container.innerHTML='';container.appendChild(grid);
+  }catch(e){container.innerHTML='<div class="result-empty"><p style="color:var(--muted)">Could not reach Gutenberg.</p></div>';}
+}
+function selectGutenbergCat(el,cat){document.querySelectorAll('#page-discover .cat-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');S.gutenbergCat=cat;searchGutenberg('');}
+function openGutenbergModal(book){
+  if(typeof book==='string')book=JSON.parse(book);S.gutenbergBook=book;
+  const title=book.title||'Untitled';
+  const author=(book.authors&&book.authors[0])?book.authors[0].name.replace(/,\s*/,' ').replace(/(\d{4}-\d{4}|\d{4}-)/,'').trim():'Unknown';
+  const subjects=(book.subjects||[]).join(' ').toLowerCase();
+  const img=book.formats['image/jpeg'];const cc=getCoverClassFromSubjects(subjects);const emoji=getCoverEmoji(subjects);
+  const el=document.getElementById('gm-cover');el.className=cc;el.style.cssText='width:52px;height:70px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;';
+  el.innerHTML=img?`<img src="${img}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.parentNode.textContent='${emoji}'">`:`${emoji}`;
+  document.getElementById('gm-title').textContent=title;document.getElementById('gm-author').textContent='by '+author;
+  populateAllSelects();document.getElementById('gutenberg-modal').classList.remove('hidden');
+}
+function gutenbergOptionChosen(action){
+  closeModal('gutenberg-modal');const book=S.gutenbergBook;if(!book)return;
+  const cat=document.getElementById('gm-category').value||'Other';
+  const title=book.title||'Untitled';
+  const author=(book.authors&&book.authors[0])?book.authors[0].name.replace(/,\s*/,' ').replace(/(\d{4}-\d{4}|\d{4}-)/,'').trim():'Unknown';
+  const textUrl=book.formats['text/plain; charset=utf-8']||book.formats['text/plain'];
+  if(!textUrl){toast('No plain text available');return;}
+  doAddGutenberg(title,author,cat,textUrl,book.id,action);
+}
+async function doAddGutenberg(title,author,category,textUrl,gutenbergId,action){
+  if(!S.token){showAuthPage();return;}
+  toast('Adding "'+title+'" to your library...');
+  try{
+    const r=await fetch(API+'/my/gutenberg/import',{method:'POST',headers:{Authorization:'Bearer '+S.token,'Content-Type':'application/json'},body:JSON.stringify({title,author,category,text_url:textUrl,gutenberg_id:gutenbergId||0})});
+    const data=await r.json();if(!r.ok)throw new Error(data.detail||'Failed');
+    showPage('library');await openBook(data.book_id);
+    if(action==='narrate'&&data.job_id)startPolling(data.job_id);
+    else if(action==='narrate')openNarrateModal(data.book_id,title);
   }catch(e){toast('Error: '+e.message);}
-  finally{btn.disabled=false;btn.textContent='Save to Library';}
-}
-function resetUploadForm(){
-  S.selFile=null;
-  document.getElementById('file-input').value='';
-  document.getElementById('file-pill').style.display='none';
-  document.getElementById('book-title').value='';
-  document.getElementById('book-author').value='';
-  document.getElementById('upload-btn').disabled=true;
-}
-async function deleteBook(id,title){
-  if(!confirm(`Delete "${title}" and all its audio files?`))return;
-  await fetch(API+'/books/'+id,{method:'DELETE'});
-  toast('Book deleted');loadLibrary();
 }
 
-// ── Audio player ──────────────────────────────────────────────────────────────
+// ── Archive ───────────────────────────────────────────────────────────────────
+function onShowArchive(){if(!archiveLoaded){archiveLoaded=true;fetchArchive();}}
+async function searchArchive(){archiveState.query=document.getElementById('archive-search').value.trim();archiveState.page=1;document.getElementById('archive-section-title').textContent=archiveState.query?'Results for "'+archiveState.query+'"':'Featured from Archive';await fetchArchive();}
+function selectArchiveType(el,type){document.querySelectorAll('#archive-type-pills .cat-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');archiveState.type=type;archiveState.page=1;fetchArchive();}
+function selectArchiveSubject(el,subject){document.querySelectorAll('#archive-subject-pills .cat-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');archiveState.subject=subject;archiveState.page=1;fetchArchive();}
+async function fetchArchive(){
+  const container=document.getElementById('archive-results');container.innerHTML='<div class="result-loading"><span class="spin">&#x27F3;</span> Searching...</div>';
+  const{type,subject,page,query}=archiveState;const rows=20,start=(page-1)*rows;
+  let q='mediatype:'+type;if(query)q+=' AND (title:('+query+') OR creator:('+query+'))';if(subject)q+=' AND subject:('+subject+')';q+=' AND language:English AND -access-restricted-item:true';
+  const url='https://archive.org/advancedsearch.php?q='+encodeURIComponent(q)+'&fl[]=identifier,title,creator,year,subject,mediatype&sort[]=downloads+desc&rows='+rows+'&start='+start+'&output=json';
+  try{
+    const data=await fetch(url).then(r=>r.json());const docs=data.response?.docs||[];
+    archiveState.totalPages=Math.ceil((data.response?.numFound||0)/rows);
+    if(!docs.length){container.innerHTML='<div class="result-empty"><p style="color:var(--muted)">No results found.</p></div>';document.getElementById('archive-pagination').innerHTML='';return;}
+    const grid=document.createElement('div');grid.className='results-grid';
+    grid.innerHTML=docs.map(doc=>{
+      const title=doc.title||'Untitled';const creator=Array.isArray(doc.creator)?doc.creator[0]:(doc.creator||'Unknown');
+      const subjects=(Array.isArray(doc.subject)?doc.subject.join(' '):(doc.subject||'')).toLowerCase();
+      const cc=getCoverClassFromSubjects(subjects);const emoji=doc.mediatype==='magazines'?'&#x1F4F0;':doc.mediatype==='newspapers'?'&#x1F5DE;&#xFE0F;':getCoverEmoji(subjects);
+      const thumb='https://archive.org/services/img/'+doc.identifier;
+      return`<div class="shelf-card fadein" onclick="openArchiveModal(${JSON.stringify(doc).replace(/"/g,'&quot;')})"><div class="shelf-cover ${cc}"><div class="shelf-cover-spine"></div><img class="shelf-cover-img" src="${thumb}" alt="" onerror="this.style.display='none';this.parentNode.querySelector('.shelf-cover-placeholder').style.display='flex'"><div class="shelf-cover-placeholder" style="display:none"><div class="shelf-cover-emoji">${emoji}</div><div class="shelf-cover-title">${esc(title)}</div></div>${doc.year?'<div class="shelf-badge">'+doc.year+'</div>':''}</div><div class="shelf-title">${esc(title)}</div><div class="shelf-author">${esc(creator)}</div></div>`;
+    }).join('');
+    container.innerHTML='';container.appendChild(grid);
+    const pg=document.getElementById('archive-pagination');const{page:p,totalPages:tp}=archiveState;
+    pg.innerHTML=(p>1?`<button class="btn btn-ghost btn-sm" onclick="archivePage(${p-1})">&#x2190; Prev</button>`:'')+'<span style="font-size:12px;color:var(--muted);padding:6px 12px;">Page '+p+' of '+tp+'</span>'+(p<tp?`<button class="btn btn-ghost btn-sm" onclick="archivePage(${p+1})">Next &#x2192;</button>`:'');
+  }catch(e){container.innerHTML='<div class="result-empty"><p style="color:var(--muted)">Could not reach Internet Archive.</p></div>';}
+}
+function archivePage(p){archiveState.page=p;fetchArchive();window.scrollTo(0,0);}
+let currentArchiveItem=null;
+function openArchiveModal(item){
+  if(typeof item==='string')item=JSON.parse(item);currentArchiveItem=item;
+  const creator=Array.isArray(item.creator)?item.creator[0]:(item.creator||'Unknown');
+  const subjects=(Array.isArray(item.subject)?item.subject.join(' '):(item.subject||'')).toLowerCase();
+  const emoji=item.mediatype==='magazines'?'&#x1F4F0;':item.mediatype==='newspapers'?'&#x1F5DE;&#xFE0F;':getCoverEmoji(subjects);
+  const el=document.getElementById('am-cover');el.innerHTML=`<img src="https://archive.org/services/img/${item.identifier}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.parentNode.textContent='${emoji}'">`;
+  document.getElementById('am-title').textContent=item.title||'Untitled';
+  document.getElementById('am-creator').textContent='by '+creator;
+  document.getElementById('am-year').textContent=item.year?'Published: '+item.year:'';
+  populateAllSelects();document.getElementById('archive-modal').classList.remove('hidden');
+}
+function archiveOptionChosen(action){
+  closeModal('archive-modal');const item=currentArchiveItem;if(!item)return;
+  const cat=document.getElementById('am-category').value||'Other';
+  const title=item.title||'Untitled';const creator=Array.isArray(item.creator)?item.creator[0]:(item.creator||'Unknown Author');
+  doAddArchive(title,creator,cat,item.identifier,action);
+}
+async function doAddArchive(title,author,category,archiveId,action){
+  if(!S.token){showAuthPage();return;}
+  toast('Fetching "'+title+'" from Archive...');
+  try{
+    const r=await fetch(API+'/my/archive/import',{method:'POST',headers:{Authorization:'Bearer '+S.token,'Content-Type':'application/json'},body:JSON.stringify({title,author,category,archive_id:archiveId})});
+    const data=await r.json();if(!r.ok)throw new Error(data.detail||'Failed');
+    showPage('library');await openBook(data.book_id);
+    if(action==='narrate'&&data.job_id)startPolling(data.job_id);
+    else if(action==='narrate')openNarrateModal(data.book_id,title);
+  }catch(e){toast('Error: '+e.message);}
+}
+
+// ── Requests ──────────────────────────────────────────────────────────────────
+async function loadRequests(){
+  const c=document.getElementById('requests-container');if(!c)return;c.innerHTML='<div class="result-loading"><span class="spin">&#x27F3;</span> Loading...</div>';
+  const{status,sort}=requestsState;
+  try{
+    const data=await authFetch(API+'/requests?sort='+sort+(status?'&status='+status:'')).then(r=>r.json());
+    const reqs=data.requests||[];
+    const badge=document.getElementById('requests-count');if(badge){badge.textContent=reqs.length;badge.style.display=reqs.length>0?'inline':'none';}
+    if(!reqs.length){c.innerHTML='<div class="empty"><div class="empty-icon">&#x1F4CB;</div><h3>No requests yet</h3><p>Be the first to request a book!</p></div>';return;}
+    const sc={requested:{bg:'rgba(122,120,144,.1)',color:'var(--muted)',label:'&#x1F50D; Searching'},sourced:{bg:'rgba(76,175,138,.1)',color:'var(--green)',label:'&#x2705; Found'},available:{bg:'rgba(212,168,67,.1)',color:'var(--gold)',label:'&#x1F3A7; Available'}};
+    c.innerHTML='<div class="book-list">'+reqs.map(req=>{const s=sc[req.status]||sc.requested;return`<div class="book-row fadein" style="align-items:flex-start;gap:13px;"><div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;padding-top:2px;"><button onclick="voteRequest('${req.id}',this)" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;padding:5px 9px;font-size:14px;line-height:1;transition:all .2s;">&#x25B2;</button><div id="votes-${req.id}" style="font-size:14px;font-weight:600;color:var(--text);">${req.votes}</div><div style="font-size:9px;color:var(--muted2);">VOTES</div></div><div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px;">${esc(req.title)}</div><div style="font-size:11px;color:var(--muted);">by ${esc(req.author)} &middot; ${esc(req.category)}</div>${req.description?`<div style="font-size:11px;color:var(--muted2);margin-top:3px;">${esc(req.description)}</div>`:''}<div style="margin-top:6px;"><span style="font-size:10px;padding:3px 8px;border-radius:20px;background:${s.bg};color:${s.color};font-weight:500;">${s.label}</span></div></div><div style="display:flex;gap:5px;flex-shrink:0;">${req.status==='available'&&req.book_id?`<button class="btn btn-gold btn-sm" onclick="openBook('${req.book_id}')">&#x25B6;</button>`:''}${req.status==='sourced'?`<button class="btn btn-violet btn-sm" onclick="addFromRequest('${req.id}','${esc(req.title)}','${esc(req.author)}','${esc(req.source_url||'')}')">+ Add</button>`:''}<button class="btn btn-danger btn-sm" onclick="deleteRequest('${req.id}','${esc(req.title)}')">&#x2715;</button></div></div>`;}).join('')+'</div>';
+  }catch(e){c.innerHTML='<div class="empty"><div class="empty-icon">&#x26A0;&#xFE0F;</div><h3>Could not load requests</h3></div>';}
+}
+function setRequestTab(el,status){document.querySelectorAll('[id^="req-tab-"]').forEach(t=>t.classList.remove('active'));el.classList.add('active');requestsState.status=status;loadRequests();}
+function setRequestSort(s){requestsState.sort=s;loadRequests();}
+async function voteRequest(reqId,btn){
+  try{const r=await authFetch(API+'/requests/'+reqId+'/vote',{method:'POST',headers:{Authorization:'Bearer '+S.token}});const data=await r.json();document.getElementById('votes-'+reqId).textContent=data.votes;btn.style.color='var(--gold)';btn.style.borderColor='var(--gold)';toast('Vote counted!');}
+  catch{toast('Could not cast vote');}
+}
+async function deleteRequest(id,title){if(!confirm('Remove request for "'+title+'"?'))return;await authFetch(API+'/requests/'+id,{method:'DELETE',headers:{Authorization:'Bearer '+S.token}});toast('Removed');loadRequests();}
+async function addFromRequest(reqId,title,author,sourceUrl){
+  if(!sourceUrl){toast('No source URL available');return;}toast('Adding book...');
+  try{const r=await fetch(API+'/my/gutenberg/import',{method:'POST',headers:{Authorization:'Bearer '+S.token,'Content-Type':'application/json'},body:JSON.stringify({title,author,category:'Other',text_url:sourceUrl,gutenberg_id:0})});const data=await r.json();if(!r.ok)throw new Error(data.detail||'Failed');await fetch(API+'/requests/'+reqId,{method:'DELETE',headers:{Authorization:'Bearer '+S.token}});toast('"'+title+'" added!');showPage('library');await openBook(data.book_id);if(data.job_id)startPolling(data.job_id);}
+  catch(e){toast('Error: '+e.message);}
+}
+function openRequestModal(){document.getElementById('request-modal').classList.remove('hidden');}
+async function submitRequest(){
+  const title=document.getElementById('req-title').value.trim();const author=document.getElementById('req-author').value.trim();
+  if(!title||!author){toast('Please fill in title and author');return;}
+  const btn=document.getElementById('req-submit-btn');btn.disabled=true;btn.textContent='Submitting...';
+  try{const r=await authFetch(API+'/requests',{method:'POST',headers:{Authorization:'Bearer '+S.token,'Content-Type':'application/json'},body:JSON.stringify({title,author,category:document.getElementById('req-category').value||'Other',description:document.getElementById('req-desc').value.trim()||null})});const data=await r.json();if(!r.ok)throw new Error(data.detail||'Failed');closeModal('request-modal');document.getElementById('req-title').value='';document.getElementById('req-author').value='';document.getElementById('req-desc').value='';toast(data.already_existed?'Already requested — vote counted!':'Request submitted!');loadRequests();}
+  catch(e){toast('Error: '+e.message);}finally{btn.disabled=false;btn.textContent='Submit Request';}
+}
+function openDmcaModal(bookId){populateDmcaBookSelect();if(bookId)document.getElementById('dmca-book-select').value=bookId;document.getElementById('dmca-modal').classList.remove('hidden');}
+async function submitDmca(){
+  const bookId=document.getElementById('dmca-book-select').value;const reason=document.getElementById('dmca-reason').value.trim();
+  if(!bookId){toast('Please select a book');return;}if(reason.length<30){toast('Please provide a detailed reason (30+ chars)');return;}
+  const btn=document.getElementById('dmca-submit-btn');btn.disabled=true;btn.textContent='Filing...';
+  try{const r=await fetch(API+'/dmca/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({book_id:bookId,reason})});const data=await r.json();if(!r.ok)throw new Error(data.detail||'Failed');closeModal('dmca-modal');document.getElementById('dmca-reason').value='';toast('Takedown report filed.');loadLibrary();}
+  catch(e){toast('Error: '+e.message);}finally{btn.disabled=false;btn.textContent='File Report';}
+}
+
+// ── Audio ─────────────────────────────────────────────────────────────────────
 function playChapter(id,title,bookTitle){
-  audio.src=API+'/audio/'+id;
-  audio.load();audio.play().catch(()=>toast('Could not play audio'));
-  document.getElementById('now-title').textContent=title;
-  document.getElementById('now-book').textContent=bookTitle;
+  audio.src=API+'/audio/'+id;audio.load();audio.play().catch(()=>toast('Could not play audio'));
+  document.getElementById('now-title').textContent=title;document.getElementById('now-book').textContent=bookTitle;
   document.getElementById('audio-bar').classList.add('visible');
   document.querySelectorAll('.chapter-row').forEach(r=>r.classList.remove('playing'));
-  const row=document.getElementById('chrow-'+id);
-  if(row)row.classList.add('playing');
-  playIcon(true);
+  const row=document.getElementById('chrow-'+id);if(row)row.classList.add('playing');playIcon(true);
 }
 function togglePlay(){audio.paused?audio.play():audio.pause();}
 function skipBack(){audio.currentTime=Math.max(0,audio.currentTime-15);}
@@ -1379,308 +1127,8 @@ function setSpeed(v){audio.playbackRate=parseFloat(v);}
 function seekTo(v){if(audio.duration)audio.currentTime=(v/100)*audio.duration;}
 function fmtTime(s){if(!s||isNaN(s))return'0:00';return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');}
 function playIcon(p){document.getElementById('play-icon').innerHTML=p?'<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>':'<path d="M8 5v14l11-7z"/>';}
-audio.addEventListener('timeupdate',()=>{
-  const p=audio.duration?(audio.currentTime/audio.duration*100):0;
-  document.getElementById('seeker').value=p;
-  document.getElementById('time-cur').textContent=fmtTime(audio.currentTime);
-  document.getElementById('time-dur').textContent=fmtTime(audio.duration);
-});
-audio.addEventListener('play',()=>playIcon(true));
-audio.addEventListener('pause',()=>playIcon(false));
-audio.addEventListener('ended',()=>playIcon(false));
-
-// ══════════════════════════════════════════════════════════════════════════════
-// INTERNET ARCHIVE
-// ══════════════════════════════════════════════════════════════════════════════
-const ARCHIVE_API='https://archive.org';
-let archiveState={type:'texts',subject:'',page:1,query:'',totalPages:1};
-let archiveLoaded=false;
-
-function onShowArchive(){
-  if(!archiveLoaded){archiveLoaded=true;loadFeaturedArchive();}
-}
-async function loadFeaturedArchive(){
-  archiveState.query='';archiveState.page=1;
-  document.getElementById('archive-section-title').textContent='Featured from Archive';
-  await fetchArchive();
-}
-async function searchArchive(){
-  const q=document.getElementById('archive-search').value.trim();
-  archiveState.query=q;archiveState.page=1;
-  document.getElementById('archive-section-title').textContent=q?`Results for "${q}"`:'Featured from Archive';
-  await fetchArchive();
-}
-function selectArchiveType(el,type){
-  document.querySelectorAll('#archive-type-pills .cat-pill').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');archiveState.type=type;archiveState.page=1;fetchArchive();
-}
-function selectArchiveSubject(el,subject){
-  document.querySelectorAll('#archive-subject-pills .cat-pill').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');archiveState.subject=subject;archiveState.page=1;fetchArchive();
-}
-async function fetchArchive(){
-  const container=document.getElementById('archive-results');
-  container.innerHTML='<div class="result-loading"><span class="spin">⟳</span> Searching archive...</div>';
-  const{type,subject,page,query}=archiveState;
-  const rows=20,start=(page-1)*rows;
-  let q=`mediatype:${type}`;
-  if(query) q+=` AND (title:(${query}) OR creator:(${query}))`;
-  if(subject) q+=` AND subject:(${subject})`;
-  q+=' AND language:English AND -access-restricted-item:true';
-  const url=`${ARCHIVE_API}/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier,title,creator,year,description,subject,mediatype,format&sort[]=downloads+desc&rows=${rows}&start=${start}&output=json`;
-  try{
-    const data=await fetch(url).then(r=>r.json());
-    const docs=data.response?.docs||[];
-    const total=data.response?.numFound||0;
-    archiveState.totalPages=Math.ceil(total/rows);
-    if(!docs.length){
-      container.innerHTML='<div class="result-empty"><div class="result-empty-icon">📭</div><p style="color:var(--muted);font-size:13px;">No results found.</p></div>';
-      document.getElementById('archive-pagination').innerHTML='';return;
-    }
-    renderArchiveResults(docs,container);renderArchivePagination();
-  }catch(e){
-    container.innerHTML='<div class="result-empty"><div class="result-empty-icon">⚠️</div><p style="color:var(--muted);font-size:13px;">Could not reach Internet Archive.</p></div>';
-  }
-}
-function renderArchiveResults(docs,container){
-  const grid=document.createElement('div');grid.className='results-grid';
-  grid.innerHTML=docs.map(doc=>{
-    const title=doc.title||'Untitled';
-    const creator=Array.isArray(doc.creator)?doc.creator[0]:(doc.creator||'Unknown');
-    const year=doc.year||'';
-    const subjects=(Array.isArray(doc.subject)?doc.subject.join(' '):(doc.subject||'')).toLowerCase();
-    const coverClass=getCoverClass(subjects);
-    const emoji=getArchiveEmoji(doc.mediatype,subjects);
-    const thumbUrl=`${ARCHIVE_API}/services/img/${doc.identifier}`;
-    return`<div class="shelf-card fadein" onclick="openArchiveModal(${JSON.stringify(doc).replace(/"/g,'&quot;')})">
-      <div class="shelf-cover ${coverClass}">
-        <div class="shelf-cover-spine"></div>
-        <img class="shelf-cover-img" src="${thumbUrl}" alt="" onerror="this.style.display='none';this.parentNode.querySelector('.shelf-cover-placeholder').style.display='flex'">
-        <div class="shelf-cover-placeholder" style="display:none"><div class="shelf-cover-emoji">${emoji}</div><div class="shelf-cover-title">${esc(title)}</div></div>
-        ${year?`<div class="shelf-badge">${year}</div>`:''}
-      </div>
-      <div class="shelf-title">${esc(title)}</div>
-      <div class="shelf-author">${esc(creator)}</div>
-    </div>`;
-  }).join('');
-  container.innerHTML='';container.appendChild(grid);
-}
-function getArchiveEmoji(mediatype,subjects){
-  if(mediatype==='magazines')return'📰';
-  if(mediatype==='newspapers')return'🗞️';
-  return getCoverEmoji(subjects);
-}
-function renderArchivePagination(){
-  const{page,totalPages}=archiveState;
-  const el=document.getElementById('archive-pagination');
-  if(totalPages<=1){el.innerHTML='';return;}
-  let html='';
-  if(page>1)html+=`<button class="btn btn-ghost btn-sm" onclick="archivePage(${page-1})">← Prev</button>`;
-  html+=`<span style="font-size:12px;color:var(--muted);padding:6px 12px;">Page ${page} of ${totalPages}</span>`;
-  if(page<totalPages)html+=`<button class="btn btn-ghost btn-sm" onclick="archivePage(${page+1})">Next →</button>`;
-  el.innerHTML=html;
-}
-function archivePage(p){archiveState.page=p;fetchArchive();window.scrollTo(0,0);}
-let currentArchiveItem=null;
-function openArchiveModal(item){
-  if(typeof item==='string')item=JSON.parse(item);
-  currentArchiveItem=item;
-  const title=item.title||'Untitled';
-  const creator=Array.isArray(item.creator)?item.creator[0]:(item.creator||'Unknown');
-  const year=item.year||'';
-  const desc=Array.isArray(item.description)?item.description[0]:(item.description||'');
-  const subjects=(Array.isArray(item.subject)?item.subject.join(' '):(item.subject||'')).toLowerCase();
-  const emoji=getArchiveEmoji(item.mediatype,subjects);
-  const thumb=`${ARCHIVE_API}/services/img/${item.identifier}`;
-  const coverEl=document.getElementById('am-cover');
-  coverEl.innerHTML=`<img src="${thumb}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.parentNode.textContent='${emoji}'">`;
-  document.getElementById('am-title').textContent=title;
-  document.getElementById('am-creator').textContent='by '+creator;
-  document.getElementById('am-year').textContent=year?`Published: ${year}`:'';
-  document.getElementById('am-desc').textContent=desc.replace(/<[^>]+>/g,'').slice(0,200)+(desc.length>200?'…':'');
-  document.getElementById('archive-modal').classList.remove('hidden');
-}
-function closeArchiveModal(e){
-  if(e&&e.target!==document.getElementById('archive-modal'))return;
-  document.getElementById('archive-modal').classList.add('hidden');
-}
-function populateArchiveCategory(){
-  const sel=document.getElementById('am-category');
-  if(!sel)return;
-  sel.innerHTML='<option value="Other">Other</option>';
-  S.categories.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
-}
-async function addArchiveItem(){
-  const item=currentArchiveItem;if(!item)return;
-  const btn=document.getElementById('am-add-btn');
-  btn.disabled=true;btn.innerHTML='<span class="spin">⟳</span> Fetching...';
-  const title=item.title||'Untitled';
-  const creator=Array.isArray(item.creator)?item.creator[0]:(item.creator||'Unknown Author');
-  const category=document.getElementById('am-category').value||'Other';
-  try{
-    const r=await fetch(API+'/archive/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,author:creator,category,archive_id:item.identifier})});
-    const data=await r.json();
-    if(!r.ok)throw new Error(data.detail||'Failed to import');
-    closeArchiveModal();toast(`"${title}" added! Starting narration...`);
-    showPage('library');await openBook(data.book_id);
-    if(data.job_id)startPolling(data.job_id);
-  }catch(e){toast('Error: '+e.message);}
-  finally{btn.disabled=false;btn.innerHTML='<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg> Add & Narrate';}
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// PHASE 4 — BOOK REQUESTS + DMCA
-// ══════════════════════════════════════════════════════════════════════════════
-let requestsState={status:'',sort:'votes'};
-
-function populateRequestCategory(){
-  const sel=document.getElementById('req-category');
-  if(!sel)return;
-  sel.innerHTML='<option value="Other">Other</option>';
-  S.categories.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
-}
-function populateArchiveCategoryModal(){
-  populateArchiveCategory();
-}
-function populateDmcaBookSelect(){
-  const sel=document.getElementById('dmca-book-select');
-  if(!sel)return;
-  sel.innerHTML='<option value="">Select a book...</option>';
-  S.books.forEach(b=>{const o=document.createElement('option');o.value=b.id;o.textContent=b.title+(b.author?' — '+b.author:'');sel.appendChild(o);});
-}
-function populateGutenbergCategory(){
-  const sel=document.getElementById('gm-category');
-  if(!sel)return;
-  sel.innerHTML='<option value="Other">Other</option>';
-  S.categories.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
-}
-
-async function loadRequests(){
-  const container=document.getElementById('requests-container');
-  if(!container)return;
-  container.innerHTML='<div class="result-loading"><span class="spin">⟳</span> Loading requests...</div>';
-  const{status,sort}=requestsState;
-  let url=API+'/requests?sort='+sort;
-  if(status)url+='&status='+status;
-  try{
-    const data=await fetch(url).then(r=>r.json());
-    const reqs=data.requests||[];
-    const badge=document.getElementById('requests-count');
-    if(badge){badge.textContent=reqs.length;badge.style.display=reqs.length>0?'inline':'none';}
-    if(!reqs.length){
-      container.innerHTML='<div class="empty"><div class="empty-icon">📋</div><h3>No requests yet</h3><p>Be the first to request a book!</p></div>';return;
-    }
-    renderRequests(reqs,container);
-  }catch(e){
-    container.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><h3>Could not load requests</h3></div>';
-  }
-}
-
-function renderRequests(reqs,container){
-  const statusColors={
-    requested:{bg:'rgba(122,120,144,.1)',color:'var(--muted)',label:'🔍 Searching sources'},
-    sourced:{bg:'rgba(76,175,138,.1)',color:'var(--green)',label:'✅ Source found'},
-    available:{bg:'rgba(212,168,67,.1)',color:'var(--gold)',label:'🎧 Available in library'},
-  };
-  container.innerHTML=`<div class="book-list">${reqs.map(req=>{
-    const s=statusColors[req.status]||statusColors.requested;
-    const isAvail=req.status==='available'&&req.book_id;
-    return`<div class="book-row fadein" style="align-items:flex-start;gap:16px;">
-      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;padding-top:2px;">
-        <button onclick="voteRequest('${req.id}',this)" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;padding:6px 10px;font-size:16px;line-height:1;transition:all .2s;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">▲</button>
-        <div id="votes-${req.id}" style="font-size:15px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;">${req.votes}</div>
-        <div style="font-size:9px;color:var(--muted2);letter-spacing:.06em;">VOTES</div>
-      </div>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:3px;">${esc(req.title)}</div>
-        <div style="font-size:12px;color:var(--muted);">by ${esc(req.author)} · ${esc(req.category)}</div>
-        ${req.description?`<div style="font-size:12px;color:var(--muted2);margin-top:5px;line-height:1.5;">${esc(req.description)}</div>`:''}
-        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
-          <span style="font-size:10px;padding:3px 9px;border-radius:20px;background:${s.bg};color:${s.color};font-weight:500;">${s.label}</span>
-          <span style="font-size:10px;color:var(--muted2);">${formatDate(req.created_at)}</span>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;flex-shrink:0;align-items:flex-start;">
-        ${isAvail?`<button class="btn btn-gold btn-sm" onclick="openBook('${req.book_id}')">▶ Listen</button>`:req.status==='sourced'?`<button class="btn btn-violet btn-sm" onclick="addFromRequest('${req.id}','${esc(req.title)}','${esc(req.author)}','${esc(req.source_url||'')}')">+ Add</button>`:''}
-        <button class="btn btn-danger btn-sm" onclick="deleteRequest('${req.id}','${esc(req.title)}')">✕</button>
-      </div>
-    </div>`;
-  }).join('')}</div>`;
-}
-
-function formatDate(iso){
-  if(!iso)return'';
-  const d=new Date(iso);
-  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-}
-function setRequestTab(el,status){
-  document.querySelectorAll('[id^="req-tab-"]').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');requestsState.status=status;loadRequests();
-}
-function setRequestSort(sort){requestsState.sort=sort;loadRequests();}
-async function voteRequest(reqId,btn){
-  try{
-    const r=await fetch(API+'/requests/'+reqId+'/vote',{method:'POST'});
-    const data=await r.json();
-    document.getElementById('votes-'+reqId).textContent=data.votes;
-    btn.style.color='var(--gold)';btn.style.borderColor='var(--gold)';
-    toast(data.message||'Vote counted!');
-  }catch(e){toast('Could not cast vote');}
-}
-async function deleteRequest(id,title){
-  if(!confirm(`Remove request for "${title}"?`))return;
-  await fetch(API+'/requests/'+id,{method:'DELETE'});
-  toast('Request removed');loadRequests();
-}
-async function addFromRequest(reqId,title,author,sourceUrl){
-  if(!sourceUrl){toast('No source URL available');return;}
-  toast('Adding book from found source...');
-  try{
-    const r=await fetch(API+'/gutenberg/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,author,category:'Other',text_url:sourceUrl,gutenberg_id:0})});
-    const data=await r.json();
-    if(!r.ok)throw new Error(data.detail||'Failed');
-    await fetch(API+'/requests/'+reqId,{method:'DELETE'});
-    toast(`"${title}" added to library!`);showPage('library');
-    await openBook(data.book_id);if(data.job_id)startPolling(data.job_id);
-  }catch(e){toast('Error: '+e.message);}
-}
-function openRequestModal(){populateRequestCategory();document.getElementById('request-modal').classList.remove('hidden');}
-function closeRequestModal(e){if(e&&e.target!==document.getElementById('request-modal'))return;document.getElementById('request-modal').classList.add('hidden');}
-async function submitRequest(){
-  const title=document.getElementById('req-title').value.trim();
-  const author=document.getElementById('req-author').value.trim();
-  if(!title||!author){toast('Please fill in title and author');return;}
-  const btn=document.getElementById('req-submit-btn');btn.disabled=true;btn.textContent='Submitting...';
-  try{
-    const r=await fetch(API+'/requests',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,author,category:document.getElementById('req-category').value||'Other',description:document.getElementById('req-desc').value.trim()||null})});
-    const data=await r.json();if(!r.ok)throw new Error(data.detail||'Failed');
-    closeRequestModal();
-    document.getElementById('req-title').value='';document.getElementById('req-author').value='';document.getElementById('req-desc').value='';
-    toast(data.already_existed?'Already requested — your vote has been counted!':'📋 Request submitted!');
-    loadRequests();
-  }catch(e){toast('Error: '+e.message);}
-  finally{btn.disabled=false;btn.textContent='Submit Request';}
-}
-function openDmcaModal(bookId){
-  populateDmcaBookSelect();
-  if(bookId)document.getElementById('dmca-book-select').value=bookId;
-  document.getElementById('dmca-modal').classList.remove('hidden');
-}
-function closeDmcaModal(e){if(e&&e.target!==document.getElementById('dmca-modal'))return;document.getElementById('dmca-modal').classList.add('hidden');}
-async function submitDmca(){
-  const bookId=document.getElementById('dmca-book-select').value;
-  const reason=document.getElementById('dmca-reason').value.trim();
-  if(!bookId){toast('Please select a book');return;}
-  if(!reason||reason.length<30){toast('Please provide a detailed reason (at least 30 characters)');return;}
-  const btn=document.getElementById('dmca-submit-btn');btn.disabled=true;btn.textContent='Filing...';
-  try{
-    const r=await fetch(API+'/dmca/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({book_id:bookId,reason})});
-    const data=await r.json();if(!r.ok)throw new Error(data.detail||'Failed');
-    closeDmcaModal();document.getElementById('dmca-reason').value='';
-    toast('⚖️ Takedown report filed. The book has been hidden pending review.');loadLibrary();
-  }catch(e){toast('Error: '+e.message);}
-  finally{btn.disabled=false;btn.textContent='File Takedown Report';}
-}
+audio.addEventListener('timeupdate',()=>{const p=audio.duration?(audio.currentTime/audio.duration*100):0;document.getElementById('seeker').value=p;document.getElementById('time-cur').textContent=fmtTime(audio.currentTime);document.getElementById('time-dur').textContent=fmtTime(audio.duration);});
+audio.addEventListener('play',()=>playIcon(true));audio.addEventListener('pause',()=>playIcon(false));audio.addEventListener('ended',()=>playIcon(false));
 
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
