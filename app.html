@@ -66,7 +66,7 @@ nav{padding:8px 12px;flex:1;overflow-y:auto;}
 .user-name{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .user-email{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 /* Auth page */
-.auth-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.auth-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;z-index:10;}
 .auth-card{background:var(--surface);border:1px solid var(--border2);border-radius:24px;padding:48px 40px;max-width:440px;width:100%;text-align:center;}
 .auth-logo{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:28px;}
 .auth-logo-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--gold3),var(--gold2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;}
@@ -380,7 +380,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 <main id="main-content">
 
 <!-- AUTH PAGE -->
-<div class="page" id="page-auth">
+<div class="page active" id="page-auth">
 <div class="auth-page"><div class="auth-card">
   <div class="auth-logo"><div class="auth-logo-icon">&#x1F4DA;</div><h1>Aurelius</h1></div>
   <div class="auth-title">Your personal world library</div>
@@ -391,7 +391,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
     <div class="auth-feature"><div class="auth-feature-icon">&#x1F4F1;</div><div class="auth-feature-title">Any Device</div><div class="auth-feature-desc">Phone, tablet and desktop</div></div>
     <div class="auth-feature"><div class="auth-feature-icon">&#x1F512;</div><div class="auth-feature-title">Your Library</div><div class="auth-feature-desc">Private — only you can see it</div></div>
   </div>
-  <button class="google-btn" onclick="signInWithGoogle()">
+  <div id="g-signin-btn" style="display:flex;justify-content:center;margin-bottom:8px;"></div>
+  <button class="google-btn" onclick="signInWithGoogleRedirect()">
     <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google">
     Continue with Google
   </button>
@@ -481,7 +482,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 </div>
 
 <!-- LIBRARY PAGE -->
-<div class="page active" id="page-library">
+<div class="page" id="page-library">
   <div class="page-header">
     <div class="page-header-left"><h2>My Library</h2><p id="library-count">Loading your collection...</p></div>
     <button class="btn btn-gold" onclick="openUploadModal()">
@@ -695,9 +696,24 @@ function authFetch(url,opts={}){
   return fetch(url,opts);
 }
 
+function signInWithGoogleRedirect(){
+  const params=new URLSearchParams({
+    client_id:GOOGLE_CLIENT_ID,
+    redirect_uri:window.location.origin+'/auth/google/callback',
+    response_type:'code',
+    scope:'openid email profile',
+    access_type:'offline',
+    prompt:'select_account',
+  });
+  window.location.href='https://accounts.google.com/o/oauth2/v2/auth?'+params.toString();
+}
+
+// Also support One Tap as fallback
 function signInWithGoogle(){
-  google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:handleGoogleCallback});
-  google.accounts.id.prompt();
+  try{
+    google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:handleGoogleCallback,auto_select:false});
+    google.accounts.id.renderButton(document.getElementById('g-signin-btn'),{theme:'outline',size:'large',width:360,text:'continue_with'});
+  }catch(e){signInWithGoogleRedirect();}
 }
 
 async function handleGoogleCallback(response){
@@ -710,6 +726,26 @@ async function handleGoogleCallback(response){
     localStorage.setItem('au_user',JSON.stringify(data.user));
     onSignedIn();
   }catch(e){toast('Sign in failed: '+e.message);}
+}
+
+// Handle OAuth callback code
+async function handleOAuthCallback(){
+  const params=new URLSearchParams(window.location.search);
+  const code=params.get('code');
+  const error=params.get('error');
+  if(error){toast('Sign in cancelled');window.history.replaceState({},'','/');return;}
+  if(!code)return;
+  // Exchange code for token via backend
+  try{
+    const r=await fetch(AUTH+'/google/callback?code='+encodeURIComponent(code)+'&redirect_uri='+encodeURIComponent(window.location.origin+'/auth/google/callback'));
+    const data=await r.json();
+    if(!r.ok)throw new Error(data.detail||'Auth failed');
+    S.token=data.token;S.user=data.user;
+    localStorage.setItem('au_token',data.token);
+    localStorage.setItem('au_user',JSON.stringify(data.user));
+    window.history.replaceState({},'','/');
+    onSignedIn();
+  }catch(e){toast('Sign in failed: '+e.message);window.history.replaceState({},'','/');}
 }
 
 function onSignedIn(){
@@ -728,6 +764,10 @@ function signOut(){
 function showAuthPage(){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-auth').classList.add('active');
+  // Try to render Google button
+  setTimeout(()=>{
+    try{signInWithGoogle();}catch(e){}
+  },500);
 }
 
 function renderUserProfile(){
@@ -762,6 +802,11 @@ function closeSidebar(){
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 (async()=>{
+  // Check for OAuth callback first
+  if(window.location.search.includes('code=')&&window.location.pathname.includes('callback')){
+    await handleOAuthCallback();return;
+  }
+
   // Always hide all pages first, show auth by default
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-auth').classList.add('active');
@@ -843,7 +888,7 @@ function getCoverClass(cat){
 function renderBooks(books){
   books=books??S.books;
   const c=document.getElementById('books-container');
-  if(!books.length){c.innerHTML='<div class="empty"><div class="empty-icon">&#x1F4DA;</div><h3>No books found</h3><p>Try adjusting filters or <span style="color:var(--gold);cursor:pointer" onclick="showPage('discover')">discover books</span>.</p></div>';return;}
+  if(!books.length){c.innerHTML='<div class="empty"><div class="empty-icon">&#x1F4DA;</div><h3>No books found</h3><p>Try adjusting filters or <span style="color:var(--gold);cursor:pointer" onclick="showPage(&quot;discover&quot;)">discover books</span>.</p></div>';return;}
   if(S.view==='grid'){
     c.innerHTML='<div class="book-grid">'+books.map(b=>`<div class="book-card fadein" onclick="openBook('${b.id}')"><div class="book-cover ${getCoverClass(b.category)}"><div class="book-cover-text">${esc(b.title)}</div></div><div class="book-card-body"><div class="book-card-title">${esc(b.title)}</div><div class="book-card-author">${esc(b.author||'Unknown')}</div><div class="book-card-footer"><span style="font-size:10px;color:var(--muted);text-transform:uppercase">${esc(b.category||'')}</span><span class="badge badge-${b.status}">${b.status}</span></div></div></div>`).join('')+'</div>';
   }else{
