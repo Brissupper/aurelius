@@ -35,8 +35,9 @@ main.expanded{margin-left:0;}
 .page{display:none;min-height:100vh;}
 .page.active{display:block;}
 /* Sidebar toggle */
-.sidebar-toggle{position:fixed;top:16px;left:16px;z-index:200;background:rgba(10,10,20,.85);backdrop-filter:blur(10px);border:1px solid var(--border2);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;color:var(--muted);}
+.sidebar-toggle{position:fixed;top:16px;left:256px;z-index:200;background:rgba(10,10,20,.85);backdrop-filter:blur(10px);border:1px solid var(--border2);border-radius:10px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s ease;color:var(--muted);}
 .sidebar-toggle:hover{border-color:rgba(212,168,67,.3);color:var(--gold);}
+aside.collapsed ~ * .sidebar-toggle, main.expanded .sidebar-toggle{left:16px;}
 /* Sidebar */
 .logo{padding:28px 24px 16px;}
 .logo-mark{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
@@ -308,7 +309,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
   main{margin-left:0!important;}
   #audio-bar{left:0!important;}
   .sidebar-overlay.visible{display:block;}
-  .sidebar-toggle{top:12px;left:12px;}
+  .sidebar-toggle{top:12px;left:12px;left:12px!important;}
   .discover-hero{padding:48px 20px 24px;}
   .hero-title{font-size:30px;}
   .hero-search{flex-direction:column;}
@@ -742,6 +743,7 @@ function renderUserProfile(){
 let sidebarOpen=true;
 function toggleSidebar(){
   const mobile=window.innerWidth<=768;
+  const btn=document.querySelector('.sidebar-toggle');
   if(mobile){
     document.getElementById('sidebar').classList.toggle('open');
     document.getElementById('sidebar-overlay').classList.toggle('visible');
@@ -750,6 +752,7 @@ function toggleSidebar(){
     document.getElementById('sidebar').classList.toggle('collapsed',!sidebarOpen);
     document.getElementById('main-content').classList.toggle('expanded',!sidebarOpen);
     document.getElementById('audio-bar').classList.toggle('expanded',!sidebarOpen);
+    if(btn) btn.style.left=sidebarOpen?'256px':'16px';
   }
 }
 function closeSidebar(){
@@ -759,12 +762,22 @@ function closeSidebar(){
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 (async()=>{
+  // Always hide all pages first, show auth by default
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-auth').classList.add('active');
+  renderUserProfile();
+
   const t=localStorage.getItem('au_token'),u=localStorage.getItem('au_user');
   if(t&&u){
     S.token=t;S.user=JSON.parse(u);
-    try{const r=await authFetch(AUTH+'/me');if(r.ok){onSignedIn();}else{signOut();}}
-    catch{onSignedIn();}
-  }else{showAuthPage();renderUserProfile();}
+    try{
+      const r=await authFetch(AUTH+'/me');
+      if(r.ok){onSignedIn();}else{signOut();}
+    }catch{
+      // Offline — trust cached session
+      onSignedIn();
+    }
+  }
   document.getElementById('donate-close').onclick=()=>{document.getElementById('donate-banner').classList.add('hidden');localStorage.setItem('donate_done','1');};
 })();
 
