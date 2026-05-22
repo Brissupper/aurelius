@@ -346,16 +346,16 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
   <div class="sidebar-divider"></div>
   <nav>
     <div class="nav-section">Explore</div>
-    <button class="nav-btn" onclick="showPage('discover');closeSidebar()" id="nav-discover">
+    <button class="nav-btn" onclick="navTo('discover')" id="nav-discover">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253"/></svg>
       Discover <span class="nav-badge">NEW</span>
     </button>
-    <button class="nav-btn" onclick="showPage('archive');closeSidebar()" id="nav-archive">
+    <button class="nav-btn" onclick="navTo('archive')" id="nav-archive">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
       Internet Archive
     </button>
     <div class="nav-section">My Space</div>
-    <button class="nav-btn active" onclick="showPage('library');closeSidebar()" id="nav-library">
+    <button class="nav-btn active" onclick="navTo('library')" id="nav-library">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.966 8.966 0 00-6 2.292m0-14.25v14.25"/></svg>
       My Library
     </button>
@@ -363,11 +363,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
       Upload Book
     </button>
-    <button class="nav-btn" onclick="showPage('requests');closeSidebar()" id="nav-requests">
+    <button class="nav-btn" onclick="navTo('comics')" id="nav-comics">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0118 18a8.966 8.966 0 00-6 2.292m0-14.25v14.25"/></svg>
+      Comics
+    </button>
+    <button class="nav-btn" onclick="navTo('requests')" id="nav-requests">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/></svg>
       Request a Book <span class="nav-badge" id="requests-count" style="display:none"></span>
     </button>
-    <button class="nav-btn" onclick="showPage('player');closeSidebar()" id="nav-player" style="display:none">
+    <button class="nav-btn" onclick="navTo('player')" id="nav-player" style="display:none">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg>
       Now Playing
     </button>
@@ -529,6 +533,48 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
   </div>
 </div>
 
+<!-- COMICS PAGE -->
+<div class="page" id="page-comics">
+  <div class="discover-hero">
+    <div class="hero-eyebrow">Comics Library</div>
+    <h1 class="hero-title">Comics, manga &amp;<br>graphic novels.</h1>
+    <p class="hero-subtitle">Search thousands of free comics and graphic novels from the Internet Archive and Digital Comic Museum.</p>
+    <div class="hero-search">
+      <div class="hero-search-wrap">
+        <svg class="hero-search-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+        <input class="hero-search-input" type="text" id="comics-search" placeholder="Search comics, manga, graphic novels..." onkeydown="if(event.key==='Enter')searchComics()">
+      </div>
+      <button class="btn-search" onclick="searchComics()">Search</button>
+    </div>
+  </div>
+  <div class="stats-bar">
+    <div class="stat-item"><div class="stat-num">1M+</div><div class="stat-label">Comics</div></div>
+    <div class="stat-item"><div class="stat-num">Free</div><div class="stat-label">Public Domain</div></div>
+    <div class="stat-item"><div class="stat-num">All</div><div class="stat-label">Genres</div></div>
+  </div>
+  <div class="section-wrap" style="padding-bottom:14px;">
+    <div class="section-header"><div class="section-title">Browse by Genre</div></div>
+    <div class="cat-pills" id="comics-genre-pills">
+      <div class="cat-pill active" onclick="selectComicsGenre(this,'')">All</div>
+      <div class="cat-pill" onclick="selectComicsGenre(this,'superhero')">&#x1F9B8; Superhero</div>
+      <div class="cat-pill" onclick="selectComicsGenre(this,'fantasy')">&#x1F409; Fantasy</div>
+      <div class="cat-pill" onclick="selectComicsGenre(this,'adventure')">&#x2694;&#xFE0F; Adventure</div>
+      <div class="cat-pill" onclick="selectComicsGenre(this,'horror')">&#x1F47B; Horror</div>
+      <div class="cat-pill" onclick="selectComicsGenre(this,'science fiction')">&#x1F680; Sci-Fi</div>
+      <div class="cat-pill" onclick="selectComicsGenre(this,'romance')">&#x1F49B; Romance</div>
+      <div class="cat-pill" onclick="selectComicsGenre(this,'humor')">&#x1F602; Humor</div>
+      <div class="cat-pill" onclick="selectComicsGenre(this,'manga')">&#x1F1EF;&#x1F1F5; Manga</div>
+      <div class="cat-pill" onclick="selectComicsGenre(this,'mystery')">&#x1F50D; Mystery</div>
+      <div class="cat-pill" onclick="selectComicsGenre(this,'western')">&#x1F920; Western</div>
+    </div>
+  </div>
+  <div class="section-wrap" style="padding-top:14px;">
+    <div class="section-header"><div class="section-title" id="comics-section-title">Featured Comics</div></div>
+    <div id="comics-results"><div class="result-loading"><span class="spin pulsing">&#x27F3;</span> Loading comics...</div></div>
+    <div id="comics-pagination" style="display:flex;gap:10px;justify-content:center;margin-top:22px;"></div>
+  </div>
+</div>
+
 <!-- REQUESTS PAGE -->
 <div class="page" id="page-requests">
   <div class="page-header">
@@ -570,7 +616,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
   <button class="donate-banner-close" id="donate-close">&#x2715;</button>
   <div class="donate-banner-icon">&#x2764;&#xFE0F;</div>
   <div class="donate-banner-text"><strong>Aurelius is free forever.</strong> If you love it, consider supporting us to keep the servers running.</div>
-  <button class="donate-btn" onclick="window.open('https://www.paypal.com/donate','_blank')">
+  <button class="donate-btn" onclick="window.open('https://www.paypal.com/donate/?business=hotinferno12@gmail.com&currency_code=USD','_blank')">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7.076 21.337H2.47a.641.641 0 01-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 00-.607-.541c-.59 3.025-2.566 6.082-8.558 6.082H9.823l-1.38 8.73h3.886l.893-5.658h2.174c4.942 0 7.718-2.394 8.57-7.162a5.89 5.89 0 00-.744-1.705z"/></svg>
     Donate via PayPal
   </button>
@@ -867,14 +913,26 @@ function populateAllSelects(){
 }
 
 // ── Nav ───────────────────────────────────────────────────────────────────────
+function navTo(name){
+  // Close sidebar first on mobile, then navigate
+  if(window.innerWidth<=768){
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('visible');
+  }
+  showPage(name);
+}
+
 function showPage(name){
   if(!S.user&&name!=='auth'){showAuthPage();return;}
+  const page=document.getElementById('page-'+name);
+  if(!page)return;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
+  page.classList.add('active');
   const nb=document.getElementById('nav-'+name);if(nb)nb.classList.add('active');
   if(name==='library')loadLibrary();
   if(name==='archive')onShowArchive();
+  if(name==='comics')onShowComics();
   if(name==='requests'){populateDmcaBookSelect();loadRequests();}
 }
 
@@ -1206,6 +1264,119 @@ function fmtTime(s){if(!s||isNaN(s))return'0:00';return Math.floor(s/60)+':'+Str
 function playIcon(p){document.getElementById('play-icon').innerHTML=p?'<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>':'<path d="M8 5v14l11-7z"/>';}
 audio.addEventListener('timeupdate',()=>{const p=audio.duration?(audio.currentTime/audio.duration*100):0;document.getElementById('seeker').value=p;document.getElementById('time-cur').textContent=fmtTime(audio.currentTime);document.getElementById('time-dur').textContent=fmtTime(audio.duration);});
 audio.addEventListener('play',()=>playIcon(true));audio.addEventListener('pause',()=>playIcon(false));audio.addEventListener('ended',()=>playIcon(false));
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// COMICS
+// ══════════════════════════════════════════════════════════════════════════════
+let comicsState={genre:'',page:1,query:'',totalPages:1};
+let comicsLoaded=false;
+
+function onShowComics(){if(!comicsLoaded){comicsLoaded=true;fetchComics();}}
+
+async function searchComics(){
+  comicsState.query=document.getElementById('comics-search').value.trim();
+  comicsState.page=1;
+  const q=comicsState.query;
+  document.getElementById('comics-section-title').textContent=q?'Results for "'+q+'"':'Featured Comics';
+  await fetchComics();
+}
+
+function selectComicsGenre(el,genre){
+  document.querySelectorAll('#comics-genre-pills .cat-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');comicsState.genre=genre;comicsState.page=1;fetchComics();
+}
+
+async function fetchComics(){
+  const container=document.getElementById('comics-results');
+  container.innerHTML='<div class="result-loading"><span class="spin">&#x27F3;</span> Searching comics...</div>';
+  const{genre,page,query}=comicsState;
+  const rows=20,start=(page-1)*rows;
+  let q='mediatype:texts AND subject:(comic OR comics OR "graphic novel" OR manga)';
+  if(query)q+=' AND (title:('+query+') OR creator:('+query+'))';
+  if(genre)q+=' AND subject:('+genre+')';
+  q+=' AND -access-restricted-item:true';
+  const url='https://archive.org/advancedsearch.php?q='+encodeURIComponent(q)+'&fl[]=identifier,title,creator,year,subject,mediatype&sort[]=downloads+desc&rows='+rows+'&start='+start+'&output=json';
+  try{
+    const data=await fetch(url).then(r=>r.json());
+    const docs=data.response?.docs||[];
+    comicsState.totalPages=Math.ceil((data.response?.numFound||0)/rows);
+    if(!docs.length){container.innerHTML='<div class="result-empty"><p style="color:var(--muted)">No comics found. Try a different search.</p></div>';document.getElementById('comics-pagination').innerHTML='';return;}
+    renderComicsResults(docs,container);renderComicsPagination();
+  }catch(e){container.innerHTML='<div class="result-empty"><p style="color:var(--muted)">Could not reach comics library.</p></div>';}
+}
+
+function getComicsEmoji(subjects){
+  const s=(subjects||'').toLowerCase();
+  if(/superhero|super hero/.test(s))return'&#x1F9B8;';
+  if(/fantasy/.test(s))return'&#x1F409;';
+  if(/horror/.test(s))return'&#x1F47B;';
+  if(/sci.fi|science fiction/.test(s))return'&#x1F680;';
+  if(/romance/.test(s))return'&#x1F49B;';
+  if(/humor|comedy/.test(s))return'&#x1F602;';
+  if(/manga/.test(s))return'&#x1F1EF;&#x1F1F5;';
+  if(/western/.test(s))return'&#x1F920;';
+  if(/mystery/.test(s))return'&#x1F50D;';
+  if(/adventure/.test(s))return'&#x2694;&#xFE0F;';
+  return'&#x1F4D8;';
+}
+
+function renderComicsResults(docs,container){
+  const grid=document.createElement('div');grid.className='results-grid';
+  grid.innerHTML=docs.map(doc=>{
+    const title=doc.title||'Untitled';
+    const creator=Array.isArray(doc.creator)?doc.creator[0]:(doc.creator||'Unknown');
+    const subjects=Array.isArray(doc.subject)?doc.subject.join(' '):(doc.subject||'');
+    const emoji=getComicsEmoji(subjects);
+    const thumb='https://archive.org/services/img/'+doc.identifier;
+    return`<div class="shelf-card fadein" onclick="openComicModal(${JSON.stringify(doc).replace(/"/g,'&quot;')})">
+      <div class="shelf-cover cover-comics">
+        <div class="shelf-cover-spine"></div>
+        <img class="shelf-cover-img" src="${thumb}" alt="" onerror="this.style.display='none';this.parentNode.querySelector('.shelf-cover-placeholder').style.display='flex'">
+        <div class="shelf-cover-placeholder" style="display:none"><div class="shelf-cover-emoji">${emoji}</div><div class="shelf-cover-title">${esc(title)}</div></div>
+        ${doc.year?'<div class="shelf-badge">'+doc.year+'</div>':''}
+      </div>
+      <div class="shelf-title">${esc(title)}</div>
+      <div class="shelf-author">${esc(creator)}</div>
+    </div>`;
+  }).join('');
+  container.innerHTML='';container.appendChild(grid);
+}
+
+function renderComicsPagination(){
+  const{page,totalPages}=comicsState;
+  const el=document.getElementById('comics-pagination');
+  if(totalPages<=1){el.innerHTML='';return;}
+  let html='';
+  if(page>1)html+=`<button class="btn btn-ghost btn-sm" onclick="comicsPage(${page-1})">&#x2190; Prev</button>`;
+  html+=`<span style="font-size:12px;color:var(--muted);padding:6px 12px;">Page ${page} of ${totalPages}</span>`;
+  if(page<totalPages)html+=`<button class="btn btn-ghost btn-sm" onclick="comicsPage(${page+1})">Next &#x2192;</button>`;
+  el.innerHTML=html;
+}
+function comicsPage(p){comicsState.page=p;fetchComics();window.scrollTo(0,0);}
+
+let currentComic=null;
+function openComicModal(item){
+  if(typeof item==='string')item=JSON.parse(item);
+  currentComic=item;
+  // Reuse archive modal for comics
+  const creator=Array.isArray(item.creator)?item.creator[0]:(item.creator||'Unknown');
+  const subjects=Array.isArray(item.subject)?item.subject.join(' '):(item.subject||'');
+  const emoji=getComicsEmoji(subjects);
+  const thumb='https://archive.org/services/img/'+item.identifier;
+  const el=document.getElementById('am-cover');
+  el.innerHTML=`<img src="${thumb}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.parentNode.textContent='${emoji}'">`;
+  document.getElementById('am-title').textContent=item.title||'Untitled';
+  document.getElementById('am-creator').textContent='by '+creator;
+  document.getElementById('am-year').textContent=item.year?'Published: '+item.year:'';
+  // Set category to Comics
+  populateArchiveCategory();
+  setTimeout(()=>{
+    const sel=document.getElementById('am-category');
+    if(sel){for(let o of sel.options){if(o.value==='Comics'){o.selected=true;break;}}}
+  },50);
+  document.getElementById('archive-modal').classList.remove('hidden');
+}
 
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
