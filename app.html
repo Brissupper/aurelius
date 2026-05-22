@@ -8,366 +8,165 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0a0a14;
-  --surface: #12121f;
-  --surface2: #1a1a2e;
-  --border: #2a2a4a;
-  --accent: #c9a84c;
-  --accent2: #e8c97a;
-  --text: #e8e8f0;
-  --muted: #888899;
-  --danger: #e05252;
-  --success: #52c878;
-  --sidebar-w: 260px;
+  --bg: #0a0a14;--surface: #12121f;--surface2: #1a1a2e;--border: #2a2a4a;
+  --accent: #c9a84c;--accent2: #e8c97a;--text: #e8e8f0;--muted: #888899;
+  --danger: #e05252;--success: #52c878;--sidebar-w: 260px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:var(--bg);color:var(--text);}
-
-/* SIDEBAR */
-#sidebar{
-  position:fixed;top:0;left:0;width:var(--sidebar-w);height:100%;
-  background:#1a1a2e;border-right:1px solid var(--border);
-  display:flex;flex-direction:column;z-index:200;
-  transition:transform .3s ease;
-  overflow-y:auto;
-  box-shadow:4px 0 20px rgba(0,0,0,.5);
-}
+#sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100%;background:#1a1a2e;border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:200;transition:transform .3s ease;overflow-y:auto;box-shadow:4px 0 20px rgba(0,0,0,.5);}
 #sidebar.hidden{transform:translateX(-100%);}
 .sidebar-logo{padding:20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
 .sidebar-logo span{font-family:'Cinzel',serif;font-size:1.3rem;color:var(--accent);}
 .sidebar-logo .sub{font-size:.7rem;color:var(--muted);font-family:'Lato',sans-serif;}
 .nav-section{padding:10px 0;}
 .nav-section-title{padding:8px 20px;font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
-.nav-btn{
-  display:flex;align-items:center;gap:12px;
-  padding:14px 20px;width:100%;
-  background:none;border:none;color:var(--text);
-  font-family:'Lato',sans-serif;font-size:.95rem;
-  cursor:pointer;text-align:left;
-  transition:background .15s, color .15s;
-  min-height:50px;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-}
+.nav-btn{display:flex;align-items:center;gap:12px;padding:14px 20px;width:100%;background:none;border:none;color:var(--text);font-family:'Lato',sans-serif;font-size:.95rem;cursor:pointer;text-align:left;transition:background .15s,color .15s;min-height:50px;touch-action:manipulation;}
 .nav-btn:hover,.nav-btn.active{background:rgba(201,168,76,.12);color:var(--accent);}
 .nav-btn .icon{width:20px;text-align:center;font-size:1.1rem;flex-shrink:0;}
 .sidebar-bottom{margin-top:auto;padding:16px;border-top:1px solid var(--border);}
-
-/* OVERLAY */
-#overlay{
-  display:none;position:fixed;inset:0;
-  background:rgba(0,0,0,.6);z-index:150;
-  -webkit-tap-highlight-color:transparent;
-}
+#overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:150;}
 #overlay.show{display:block;}
-
-/* MAIN */
 #main{margin-left:var(--sidebar-w);height:100%;display:flex;flex-direction:column;transition:margin .3s;}
 #main.full{margin-left:0;}
-.topbar{
-  display:flex;align-items:center;gap:12px;
-  padding:12px 20px;background:var(--surface);
-  border-bottom:1px solid var(--border);flex-shrink:0;
-  min-height:56px;
-}
-.menu-btn{
-  background:none;border:none;color:var(--text);
-  font-size:1.4rem;cursor:pointer;padding:8px;
-  display:none;flex-shrink:0;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-  min-width:44px;min-height:44px;
-  display:flex;align-items:center;justify-content:center;
-}
+.topbar{display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;min-height:56px;}
+.menu-btn{background:none;border:none;color:var(--text);font-size:1.4rem;cursor:pointer;padding:8px;flex-shrink:0;touch-action:manipulation;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;}
 .topbar-title{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--accent);flex:1;}
 .search-wrap{position:relative;flex:2;}
-.search-wrap input{
-  width:100%;background:var(--surface2);border:1px solid var(--border);
-  color:var(--text);padding:9px 16px 9px 38px;
-  border-radius:8px;font-size:.9rem;font-family:'Lato',sans-serif;
-  outline:none;
-}
+.search-wrap input{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:9px 16px 9px 38px;border-radius:8px;font-size:.9rem;font-family:'Lato',sans-serif;outline:none;}
 .search-wrap input:focus{border-color:var(--accent);}
 .search-wrap .si{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;}
 .topbar-actions{display:flex;gap:8px;align-items:center;}
-.btn{
-  padding:8px 16px;border-radius:8px;border:none;
-  cursor:pointer;font-family:'Lato',sans-serif;font-weight:700;
-  font-size:.85rem;transition:all .15s;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-  min-height:40px;
-}
+.btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-family:'Lato',sans-serif;font-weight:700;font-size:.85rem;transition:all .15s;touch-action:manipulation;min-height:40px;}
 .btn-primary{background:var(--accent);color:#0a0a14;}
 .btn-primary:hover{background:var(--accent2);}
 .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text);}
 .btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
 .btn-sm{padding:6px 12px;font-size:.8rem;min-height:34px;}
 .btn-danger{background:var(--danger);color:#fff;}
-
-/* PAGE CONTENT */
 #pages{flex:1;overflow:hidden;}
 .page{display:none;height:100%;overflow-y:auto;padding:24px;}
 .page.active{display:block;}
-
-/* HERO */
-.hero{
-  background:linear-gradient(135deg,#1a1a2e 0%,#0d0d1a 60%,#1a1020 100%);
-  border:1px solid var(--border);border-radius:16px;
-  padding:40px 32px;margin-bottom:32px;position:relative;overflow:hidden;
-}
-.hero::before{
-  content:'';position:absolute;top:-50%;right:-10%;
-  width:400px;height:400px;border-radius:50%;
-  background:radial-gradient(circle,rgba(201,168,76,.08) 0%,transparent 70%);
-}
+.hero{background:linear-gradient(135deg,#1a1a2e 0%,#0d0d1a 60%,#1a1020 100%);border:1px solid var(--border);border-radius:16px;padding:40px 32px;margin-bottom:32px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;top:-50%;right:-10%;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.08) 0%,transparent 70%);}
 .hero h1{font-family:'Cinzel',serif;font-size:2rem;color:var(--accent);margin-bottom:8px;}
 .hero p{color:var(--muted);line-height:1.6;max-width:500px;}
-
-/* SECTION HEADERS */
 .section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
 .section-hdr h2{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--text);}
-
-/* CATEGORY PILLS */
 .cat-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
-.cat-pill{
-  padding:8px 16px;border-radius:20px;border:1px solid var(--border);
-  background:var(--surface2);color:var(--muted);
-  font-size:.82rem;cursor:pointer;
-  transition:all .15s;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-  min-height:38px;
-  display:inline-flex;align-items:center;justify-content:center;
-  user-select:none;
-  -webkit-user-select:none;
-}
-.cat-pill:hover,.cat-pill.active{
-  background:rgba(201,168,76,.2);
-  border-color:var(--accent);
-  color:var(--accent);
-}
-
-/* Adult sub-category pills */
-.adult-subpills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;padding:12px;background:rgba(201,168,76,.05);border:1px solid rgba(201,168,76,.15);border-radius:10px;}
-.adult-subpill{
-  padding:6px 14px;border-radius:20px;border:1px solid var(--border);
-  background:var(--surface2);color:var(--muted);
-  font-size:.78rem;cursor:pointer;
-  transition:all .15s;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-  min-height:34px;
-  display:inline-flex;align-items:center;justify-content:center;
-  user-select:none;
-}
-.adult-subpill:hover,.adult-subpill.active{
-  background:rgba(201,168,76,.2);
-  border-color:var(--accent);
-  color:var(--accent);
-}
-
-/* BOOK GRID */
+.cat-pill{padding:8px 16px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:.82rem;cursor:pointer;transition:all .15s;touch-action:manipulation;min-height:38px;display:inline-flex;align-items:center;justify-content:center;user-select:none;}
+.cat-pill:hover,.cat-pill.active{background:rgba(201,168,76,.2);border-color:var(--accent);color:var(--accent);}
+.adult-subrow{display:none;margin-bottom:20px;padding:12px 14px;background:rgba(201,168,76,.04);border:1px solid rgba(201,168,76,.15);border-radius:10px;gap:8px;flex-wrap:wrap;}
+.adult-subrow.show{display:flex;}
+.sub-pill{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:.78rem;cursor:pointer;transition:all .15s;touch-action:manipulation;min-height:34px;display:inline-flex;align-items:center;justify-content:center;user-select:none;}
+.sub-pill:hover,.sub-pill.active{background:rgba(201,168,76,.2);border-color:var(--accent);color:var(--accent);}
 .book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px;}
-.book-card{
-  background:var(--surface2);border:1px solid var(--border);
-  border-radius:12px;overflow:hidden;cursor:pointer;
-  transition:transform .2s,border-color .2s;
-}
+.book-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .2s,border-color .2s;}
 .book-card:hover{transform:translateY(-3px);border-color:var(--accent);}
 .book-cover{width:100%;aspect-ratio:2/3;object-fit:cover;background:var(--border);display:block;}
-.book-cover-placeholder{
-  width:100%;aspect-ratio:2/3;background:linear-gradient(135deg,var(--surface2),var(--border));
-  display:flex;align-items:center;justify-content:center;font-size:2.5rem;
-}
+.book-cover-placeholder{width:100%;aspect-ratio:2/3;background:linear-gradient(135deg,var(--surface2),var(--border));display:flex;align-items:center;justify-content:center;font-size:2.5rem;}
 .book-info{padding:10px;}
-.book-title{font-size:.82rem;font-weight:700;margin-bottom:4px;line-height:1.3;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.book-author{font-size:.75rem;color:var(--muted);
-  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;}
-
-/* COMIC GRID */
+.book-title{font-size:.82rem;font-weight:700;margin-bottom:4px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.book-author{font-size:.75rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;}
 .comic-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px;}
-.comic-card{
-  background:var(--surface2);border:1px solid var(--border);
-  border-radius:12px;overflow:hidden;cursor:pointer;
-  transition:transform .2s,border-color .2s;
-}
+.comic-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .2s,border-color .2s;}
 .comic-card:hover{transform:translateY(-3px);border-color:var(--accent);}
 .comic-cover{width:100%;aspect-ratio:2/3;object-fit:cover;background:var(--border);}
-.comic-cover-ph{
-  width:100%;aspect-ratio:2/3;
-  background:linear-gradient(135deg,#1a0a2e,#2e1a0a);
-  display:flex;align-items:center;justify-content:center;font-size:2.5rem;
-}
+.comic-cover-ph{width:100%;aspect-ratio:2/3;background:linear-gradient(135deg,#1a0a2e,#2e1a0a);display:flex;align-items:center;justify-content:center;font-size:2.5rem;}
 .comic-info{padding:10px;}
-.comic-title{font-size:.82rem;font-weight:700;margin-bottom:4px;line-height:1.3;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.comic-title{font-size:.82rem;font-weight:700;margin-bottom:4px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .comic-year{font-size:.75rem;color:var(--muted);}
-
 /* PAGINATION */
-.pagination{
-  display:flex;align-items:center;justify-content:center;
-  gap:12px;padding:28px 0 8px;
-}
-.pagination-info{font-size:.85rem;color:var(--muted);}
-.btn-page{
-  padding:10px 24px;border-radius:8px;border:1px solid var(--border);
-  background:var(--surface2);color:var(--text);
-  cursor:pointer;font-family:'Lato',sans-serif;font-weight:700;font-size:.88rem;
-  transition:all .15s;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-  min-height:42px;
-}
-.btn-page:hover:not(:disabled){border-color:var(--accent);color:var(--accent);}
-.btn-page:disabled{opacity:.35;cursor:not-allowed;}
-.btn-page.primary{background:var(--accent);color:#0a0a14;border-color:var(--accent);}
-.btn-page.primary:hover{background:var(--accent2);}
-
-/* LOADING */
+.pagination-bar{display:flex;align-items:center;justify-content:center;gap:14px;padding:28px 0 8px;}
+.page-info{font-size:.85rem;color:var(--muted);min-width:90px;text-align:center;}
+.btn-prev,.btn-next{padding:10px 22px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;font-family:'Lato',sans-serif;font-weight:700;font-size:.88rem;transition:all .15s;touch-action:manipulation;min-height:42px;}
+.btn-prev:hover:not([disabled]),.btn-next:hover:not([disabled]){border-color:var(--accent);color:var(--accent);}
+.btn-next{background:var(--accent);color:#0a0a14;border-color:var(--accent);}
+.btn-next:hover:not([disabled]){background:var(--accent2);border-color:var(--accent2);color:#0a0a14;}
+.btn-prev[disabled],.btn-next[disabled]{opacity:.3;cursor:not-allowed;}
 .loading{display:flex;flex-direction:column;align-items:center;padding:60px 20px;gap:16px;color:var(--muted);}
-.spinner{
-  width:36px;height:36px;border:3px solid var(--border);
-  border-top-color:var(--accent);border-radius:50%;
-  animation:spin .8s linear infinite;
-}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .empty{text-align:center;padding:60px 20px;color:var(--muted);}
 .empty .ei{font-size:3rem;margin-bottom:12px;}
-
-/* MODAL */
-.modal-overlay{
-  display:none;position:fixed;inset:0;
-  background:rgba(0,0,0,.75);z-index:500;
-  align-items:center;justify-content:center;padding:16px;
-  -webkit-tap-highlight-color:transparent;
-}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center;padding:16px;}
 .modal-overlay.show{display:flex;}
-.modal{
-  background:var(--surface2);border:1px solid var(--border);
-  border-radius:16px;width:100%;max-width:520px;
-  max-height:90vh;overflow-y:auto;
-  box-shadow:0 20px 60px rgba(0,0,0,.6);
-}
-.modal-hdr{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:20px 24px;border-bottom:1px solid var(--border);
-  position:sticky;top:0;background:var(--surface2);z-index:1;
-}
+.modal{background:var(--surface2);border:1px solid var(--border);border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.6);}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface2);z-index:1;}
 .modal-hdr h3{font-family:'Cinzel',serif;font-size:1rem;color:var(--accent);}
-.modal-close{
-  background:none;border:none;color:var(--muted);
-  font-size:1.4rem;cursor:pointer;padding:4px;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-  min-width:36px;min-height:36px;
-  display:flex;align-items:center;justify-content:center;
-}
+.modal-close{background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;padding:4px;touch-action:manipulation;min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center;}
 .modal-body{padding:24px;}
 .book-detail{display:flex;gap:20px;flex-wrap:wrap;}
-.book-detail-cover{
-  width:120px;flex-shrink:0;border-radius:8px;overflow:hidden;
-  aspect-ratio:2/3;object-fit:cover;background:var(--border);
-}
-.book-detail-cover-ph{
-  width:120px;flex-shrink:0;border-radius:8px;
-  aspect-ratio:2/3;background:linear-gradient(135deg,var(--surface),var(--border));
-  display:flex;align-items:center;justify-content:center;font-size:3rem;
-}
+.book-detail-cover{width:120px;flex-shrink:0;border-radius:8px;overflow:hidden;aspect-ratio:2/3;object-fit:cover;background:var(--border);}
+.book-detail-cover-ph{width:120px;flex-shrink:0;border-radius:8px;aspect-ratio:2/3;background:linear-gradient(135deg,var(--surface),var(--border));display:flex;align-items:center;justify-content:center;font-size:3rem;}
 .book-detail-info{flex:1;min-width:180px;}
 .book-detail-info h2{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--accent);margin-bottom:8px;}
 .book-detail-info .author{color:var(--muted);font-size:.9rem;margin-bottom:12px;}
 .book-detail-info .desc{font-size:.88rem;line-height:1.6;color:var(--text);margin-bottom:16px;}
 .modal-actions{display:flex;gap:10px;flex-wrap:wrap;}
-.badge{
-  display:inline-block;padding:3px 10px;border-radius:20px;
-  font-size:.75rem;background:rgba(201,168,76,.15);
-  color:var(--accent);border:1px solid rgba(201,168,76,.3);margin-bottom:8px;
-}
-
-/* LIBRARY PAGE */
-.lib-tabs{display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);border-radius:10px;overflow:hidden;width:fit-content;}
-.lib-tab{
-  padding:10px 20px;background:none;border:none;
-  color:var(--muted);font-family:'Lato',sans-serif;font-size:.9rem;
-  cursor:pointer;transition:all .15s;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-  min-height:44px;
-}
-.lib-tab.active{background:var(--accent);color:#0a0a14;font-weight:700;}
-
-/* UPLOAD AREA */
-.upload-area{
-  border:2px dashed var(--border);border-radius:12px;
-  padding:40px;text-align:center;cursor:pointer;
-  transition:border-color .2s;margin-bottom:24px;
-  -webkit-tap-highlight-color:transparent;
-}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.75rem;background:rgba(201,168,76,.15);color:var(--accent);border:1px solid rgba(201,168,76,.3);margin-bottom:8px;}
+.upload-area{border:2px dashed var(--border);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:24px;}
 .upload-area:hover{border-color:var(--accent);}
 .upload-area .ui{font-size:2.5rem;margin-bottom:12px;}
 .upload-area p{color:var(--muted);font-size:.9rem;}
-
-/* PROGRESS */
-.progress-bar{width:100%;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
-.progress-fill{height:100%;background:var(--accent);transition:width .3s;}
-
-/* TOAST */
-#toast{
-  position:fixed;bottom:24px;right:24px;z-index:900;
-  display:flex;flex-direction:column;gap:8px;
-}
-.toast-item{
-  padding:12px 18px;border-radius:10px;font-size:.88rem;
-  min-width:220px;animation:slideIn .3s ease;
-  display:flex;align-items:center;gap:10px;
-  box-shadow:0 4px 20px rgba(0,0,0,.4);
-}
+#toast{position:fixed;bottom:24px;right:24px;z-index:900;display:flex;flex-direction:column;gap:8px;}
+.toast-item{padding:12px 18px;border-radius:10px;font-size:.88rem;min-width:220px;animation:slideIn .3s ease;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.4);}
 .toast-item.success{background:#1a3a2a;border:1px solid var(--success);color:var(--success);}
 .toast-item.error{background:#3a1a1a;border:1px solid var(--danger);color:var(--danger);}
 .toast-item.info{background:#1a1a3a;border:1px solid var(--accent);color:var(--accent);}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
-
-/* DONATIONS */
-.donate-card{
-  background:linear-gradient(135deg,#1a1a2e,#12121f);
-  border:1px solid var(--border);border-radius:16px;
-  padding:32px;text-align:center;margin-bottom:24px;
-}
+.donate-card{background:linear-gradient(135deg,#1a1a2e,#12121f);border:1px solid var(--border);border-radius:16px;padding:32px;text-align:center;margin-bottom:24px;}
 .donate-card h2{font-family:'Cinzel',serif;font-size:1.4rem;color:var(--accent);margin-bottom:12px;}
 .donate-card p{color:var(--muted);margin-bottom:24px;line-height:1.6;}
 .donate-amounts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;}
-.donate-amt{
-  padding:10px 20px;border-radius:8px;border:1px solid var(--border);
-  background:var(--surface2);color:var(--text);
-  cursor:pointer;font-family:'Lato',sans-serif;font-weight:700;
-  transition:all .15s;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
-  min-height:44px;
-}
+.donate-amt{padding:10px 20px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;font-family:'Lato',sans-serif;font-weight:700;transition:all .15s;touch-action:manipulation;min-height:44px;}
 .donate-amt:hover,.donate-amt.active{background:rgba(201,168,76,.2);border-color:var(--accent);color:var(--accent);}
-
-/* SETTINGS */
 .settings-section{margin-bottom:28px;}
 .settings-section h3{font-family:'Cinzel',serif;font-size:.95rem;color:var(--accent);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);}
 .setting-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.04);}
 .setting-row label{font-size:.9rem;color:var(--text);}
 .toggle{position:relative;width:44px;height:24px;}
 .toggle input{opacity:0;width:0;height:0;}
-.toggle-slider{
-  position:absolute;inset:0;background:var(--border);
-  border-radius:12px;cursor:pointer;transition:.3s;
-}
+.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:12px;cursor:pointer;transition:.3s;}
 .toggle input:checked + .toggle-slider{background:var(--accent);}
-.toggle-slider::before{
-  content:'';position:absolute;width:18px;height:18px;
-  left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s;
-}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s;}
 .toggle input:checked + .toggle-slider::before{transform:translateX(20px);}
-
-/* RESPONSIVE */
+.downloads-list{display:flex;flex-direction:column;gap:12px;}
+.download-item{display:flex;align-items:center;gap:16px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
+.download-item .di-icon{font-size:2rem;flex-shrink:0;}
+.download-item .di-info{flex:1;min-width:0;}
+.download-item .di-title{font-weight:700;font-size:.9rem;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.download-item .di-meta{font-size:.78rem;color:var(--muted);}
+.download-item .di-actions{display:flex;gap:8px;flex-shrink:0;}
+#authModal .modal{max-width:420px;}
+.auth-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:24px;}
+.auth-tab{flex:1;padding:12px;background:none;border:none;color:var(--muted);font-family:'Lato',sans-serif;font-size:.9rem;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+.auth-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:6px;}
+.form-group input{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:.9rem;font-family:'Lato',sans-serif;outline:none;}
+.form-group input:focus{border-color:var(--accent);}
+.divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--muted);font-size:.8rem;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.google-signin-wrap{display:flex;justify-content:center;align-items:center;width:100%;min-height:44px;margin-bottom:4px;}
+.google-signin-wrap > div,.google-signin-wrap iframe{width:100% !important;}
+#readerFrame{width:100%;height:75vh;border:none;border-radius:8px;background:#fff;}
+.narrate-player{text-align:center;padding:8px 0;}
+.narrate-title{font-family:'Cinzel',serif;font-size:1rem;color:var(--accent);margin-bottom:6px;}
+.narrate-author{color:var(--muted);font-size:.85rem;margin-bottom:20px;}
+.narrate-controls{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:20px;}
+.narrate-btn{width:52px;height:52px;border-radius:50%;border:none;background:var(--accent);color:#0a0a14;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s,background .15s;touch-action:manipulation;}
+.narrate-btn:hover{background:var(--accent2);transform:scale(1.05);}
+.narrate-btn.secondary{background:var(--surface);border:1px solid var(--border);color:var(--text);width:40px;height:40px;font-size:1rem;}
+.narrate-progress{width:100%;height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:10px;cursor:pointer;}
+.narrate-progress-fill{height:100%;background:var(--accent);transition:width .5s linear;border-radius:3px;}
+.narrate-text-preview{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:.85rem;line-height:1.6;color:var(--text);max-height:140px;overflow-y:auto;text-align:left;margin-bottom:12px;}
+.narrate-text-preview .highlight{background:rgba(201,168,76,.25);border-radius:3px;padding:0 2px;}
+.narrate-speed{display:flex;align-items:center;gap:10px;justify-content:center;font-size:.82rem;color:var(--muted);}
+.narrate-speed select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-family:'Lato',sans-serif;}
+.narrate-voice{display:flex;align-items:center;gap:10px;justify-content:center;font-size:.82rem;color:var(--muted);margin-top:8px;}
+.narrate-voice select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-family:'Lato',sans-serif;max-width:200px;}
+.result-count{font-size:.85rem;color:var(--muted);margin-bottom:16px;}
 @media(max-width:768px){
   #sidebar{width:85%;max-width:320px;}
   #main{margin-left:0 !important;}
@@ -380,98 +179,14 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
   .comic-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;}
   .modal{max-height:95vh;}
 }
-
-/* AUTH MODAL */
-#authModal .modal{max-width:420px;}
-.auth-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:24px;}
-.auth-tab{
-  flex:1;padding:12px;background:none;border:none;
-  color:var(--muted);font-family:'Lato',sans-serif;font-size:.9rem;
-  cursor:pointer;border-bottom:2px solid transparent;
-  transition:all .15s;
-  -webkit-tap-highlight-color:transparent;
-}
-.auth-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
-.form-group{margin-bottom:16px;}
-.form-group label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:6px;}
-.form-group input{
-  width:100%;background:var(--surface);border:1px solid var(--border);
-  color:var(--text);padding:10px 14px;border-radius:8px;
-  font-size:.9rem;font-family:'Lato',sans-serif;outline:none;
-}
-.form-group input:focus{border-color:var(--accent);}
-.divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--muted);font-size:.8rem;}
-.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
-
-/* READER */
-#readerModal .modal{max-width:90vw;width:900px;}
-#readerFrame{width:100%;height:75vh;border:none;border-radius:8px;background:#fff;}
-
-/* NARRATION MODAL */
-#narrateModal .modal{max-width:460px;}
-.narrate-player{text-align:center;padding:8px 0;}
-.narrate-title{font-family:'Cinzel',serif;font-size:1rem;color:var(--accent);margin-bottom:6px;}
-.narrate-author{color:var(--muted);font-size:.85rem;margin-bottom:20px;}
-.narrate-controls{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:20px;}
-.narrate-btn{
-  width:52px;height:52px;border-radius:50%;border:none;
-  background:var(--accent);color:#0a0a14;font-size:1.3rem;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:transform .15s,background .15s;
-  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-}
-.narrate-btn:hover{background:var(--accent2);transform:scale(1.05);}
-.narrate-btn.secondary{background:var(--surface);border:1px solid var(--border);color:var(--text);width:40px;height:40px;font-size:1rem;}
-.narrate-progress{width:100%;height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:10px;cursor:pointer;}
-.narrate-progress-fill{height:100%;background:var(--accent);transition:width .5s linear;border-radius:3px;}
-.narrate-text-preview{
-  background:var(--surface);border:1px solid var(--border);border-radius:10px;
-  padding:14px;font-size:.85rem;line-height:1.6;color:var(--text);
-  max-height:140px;overflow-y:auto;text-align:left;margin-bottom:12px;
-}
-.narrate-text-preview .highlight{background:rgba(201,168,76,.25);border-radius:3px;padding:0 2px;}
-.narrate-speed{display:flex;align-items:center;gap:10px;justify-content:center;font-size:.82rem;color:var(--muted);}
-.narrate-speed select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-family:'Lato',sans-serif;}
-.narrate-voice{display:flex;align-items:center;gap:10px;justify-content:center;font-size:.82rem;color:var(--muted);margin-top:8px;}
-.narrate-voice select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-family:'Lato',sans-serif;max-width:200px;}
-
-.google-signin-wrap{
-  display:flex;justify-content:center;align-items:center;
-  width:100%;min-height:44px;margin-bottom:4px;
-}
-.google-signin-wrap > div,
-.google-signin-wrap iframe {
-  width: 100% !important;
-}
-
-/* SEARCH RESULTS PAGE */
-.result-count{font-size:.85rem;color:var(--muted);margin-bottom:16px;}
-
-/* DOWNLOADED BOOKS */
-.downloads-list{display:flex;flex-direction:column;gap:12px;}
-.download-item{
-  display:flex;align-items:center;gap:16px;
-  background:var(--surface2);border:1px solid var(--border);
-  border-radius:12px;padding:14px 16px;
-}
-.download-item .di-icon{font-size:2rem;flex-shrink:0;}
-.download-item .di-info{flex:1;min-width:0;}
-.download-item .di-title{font-weight:700;font-size:.9rem;margin-bottom:3px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.download-item .di-meta{font-size:.78rem;color:var(--muted);}
-.download-item .di-actions{display:flex;gap:8px;flex-shrink:0;}
 </style>
 </head>
 <body>
 
-<!-- SIDEBAR -->
 <nav id="sidebar" class="hidden">
   <div class="sidebar-logo">
     <span style="font-size:1.6rem">📚</span>
-    <div>
-      <div><span>Aurelius</span></div>
-      <div class="sub">World Library</div>
-    </div>
+    <div><div><span style="font-family:'Cinzel',serif;color:var(--accent)">Aurelius</span></div><div class="sub">World Library</div></div>
   </div>
   <div class="nav-section">
     <div class="nav-section-title">Explore</div>
@@ -495,10 +210,9 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
 </nav>
 <div id="overlay" onclick="closeSidebar()"></div>
 
-<!-- MAIN -->
 <div id="main" class="full">
   <div class="topbar">
-    <button class="menu-btn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
     <span class="topbar-title">Aurelius</span>
     <div class="search-wrap">
       <span class="si">🔍</span>
@@ -511,103 +225,89 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
 
   <div id="pages">
 
-    <!-- DISCOVER PAGE -->
+    <!-- DISCOVER -->
     <div class="page active" id="page-discover">
       <div class="hero">
         <h1>📚 World Library</h1>
         <p>Millions of books, comics & manuscripts from across history — free to explore and read.</p>
       </div>
       <div class="cat-pills" id="discoverPills">
-        <button class="cat-pill active" data-cat="fiction" onclick="selectDiscoverCat(this,'fiction')">📖 Fiction</button>
-        <button class="cat-pill" data-cat="science" onclick="selectDiscoverCat(this,'science')">🔬 Science</button>
-        <button class="cat-pill" data-cat="history" onclick="selectDiscoverCat(this,'history')">🏛️ History</button>
-        <button class="cat-pill" data-cat="philosophy" onclick="selectDiscoverCat(this,'philosophy')">🧠 Philosophy</button>
-        <button class="cat-pill" data-cat="biography" onclick="selectDiscoverCat(this,'biography')">👤 Biography</button>
-        <button class="cat-pill" data-cat="mystery" onclick="selectDiscoverCat(this,'mystery')">🕵️ Mystery</button>
-        <button class="cat-pill" data-cat="romance" onclick="selectDiscoverCat(this,'romance')">💕 Romance</button>
-        <button class="cat-pill" data-cat="self-help" onclick="selectDiscoverCat(this,'self-help')">⭐ Self-Help</button>
-        <button class="cat-pill" data-cat="technology" onclick="selectDiscoverCat(this,'technology')">💻 Technology</button>
-        <button class="cat-pill" data-cat="children" onclick="selectDiscoverCat(this,'children')">🧒 Children</button>
+        <button class="cat-pill active" onclick="selectDiscoverCat(this,'fiction')">📖 Fiction</button>
+        <button class="cat-pill" onclick="selectDiscoverCat(this,'science')">🔬 Science</button>
+        <button class="cat-pill" onclick="selectDiscoverCat(this,'history')">🏛️ History</button>
+        <button class="cat-pill" onclick="selectDiscoverCat(this,'philosophy')">🧠 Philosophy</button>
+        <button class="cat-pill" onclick="selectDiscoverCat(this,'biography')">👤 Biography</button>
+        <button class="cat-pill" onclick="selectDiscoverCat(this,'mystery')">🕵️ Mystery</button>
+        <button class="cat-pill" onclick="selectDiscoverCat(this,'romance')">💕 Romance</button>
+        <button class="cat-pill" onclick="selectDiscoverCat(this,'self-help')">⭐ Self-Help</button>
+        <button class="cat-pill" onclick="selectDiscoverCat(this,'technology')">💻 Technology</button>
+        <button class="cat-pill" onclick="selectDiscoverCat(this,'children')">🧒 Children</button>
       </div>
-      <div class="section-hdr">
-        <h2 id="discoverHeading">Fiction Books</h2>
-      </div>
+      <div class="section-hdr"><h2 id="discoverHeading">Fiction Books</h2></div>
       <div id="discoverGrid" class="book-grid"><div class="loading"><div class="spinner"></div><span>Loading books…</span></div></div>
       <div id="discoverPagination"></div>
     </div>
 
-    <!-- INTERNET ARCHIVE PAGE -->
+    <!-- INTERNET ARCHIVE -->
     <div class="page" id="page-archive">
       <div class="hero" style="padding:28px 32px;margin-bottom:24px;">
         <h1 style="font-size:1.4rem">🏛️ Internet Archive</h1>
         <p>Millions of digitized books, historical texts and rare manuscripts.</p>
       </div>
       <div class="cat-pills" id="archivePills">
-        <button class="cat-pill active" data-cat="books" onclick="selectArchiveCat(this,'books')">📚 Books</button>
-        <button class="cat-pill" data-cat="texts" onclick="selectArchiveCat(this,'texts')">📜 Texts</button>
-        <button class="cat-pill" data-cat="periodicals" onclick="selectArchiveCat(this,'periodicals')">📰 Periodicals</button>
-        <button class="cat-pill" data-cat="audio" onclick="selectArchiveCat(this,'audio')">🎙️ Audio</button>
-        <button class="cat-pill" data-cat="manuscripts" onclick="selectArchiveCat(this,'manuscripts')">📋 Manuscripts</button>
+        <button class="cat-pill active" onclick="selectArchiveCat(this,'books')">📚 Books</button>
+        <button class="cat-pill" onclick="selectArchiveCat(this,'texts')">📜 Texts</button>
+        <button class="cat-pill" onclick="selectArchiveCat(this,'periodicals')">📰 Periodicals</button>
+        <button class="cat-pill" onclick="selectArchiveCat(this,'audio')">🎙️ Audio</button>
+        <button class="cat-pill" onclick="selectArchiveCat(this,'manuscripts')">📋 Manuscripts</button>
       </div>
-      <div class="section-hdr">
-        <h2 id="archiveHeading">Books</h2>
-      </div>
+      <div class="section-hdr"><h2 id="archiveHeading">Books</h2></div>
       <div id="archiveGrid" class="book-grid"><div class="loading"><div class="spinner"></div><span>Loading…</span></div></div>
       <div id="archivePagination"></div>
     </div>
 
-    <!-- COMICS PAGE -->
+    <!-- COMICS -->
     <div class="page" id="page-comics">
       <div class="hero" style="padding:28px 32px;margin-bottom:24px;">
         <h1 style="font-size:1.4rem">💥 Comics</h1>
         <p>Superhero epics, manga, graphic novels and more from the Internet Archive.</p>
       </div>
       <div class="cat-pills" id="comicPills">
-        <button class="cat-pill active" data-cat="superhero" onclick="selectComicCat(this,'superhero')">🦸 Superhero</button>
-        <button class="cat-pill" data-cat="manga" onclick="selectComicCat(this,'manga')">⛩️ Manga</button>
-        <button class="cat-pill" data-cat="horror" onclick="selectComicCat(this,'horror')">👻 Horror</button>
-        <button class="cat-pill" data-cat="sci-fi" onclick="selectComicCat(this,'sci-fi')">🚀 Sci-Fi</button>
-        <button class="cat-pill" data-cat="fantasy" onclick="selectComicCat(this,'fantasy')">🐉 Fantasy</button>
-        <button class="cat-pill" data-cat="romance" onclick="selectComicCat(this,'romance')">💕 Romance</button>
-        <button class="cat-pill" data-cat="war" onclick="selectComicCat(this,'war')">🪖 War</button>
-        <button class="cat-pill" data-cat="western" onclick="selectComicCat(this,'western')">🤠 Western</button>
-        <button class="cat-pill" data-cat="crime" onclick="selectComicCat(this,'crime')">🔫 Crime</button>
-        <button class="cat-pill" data-cat="adult" onclick="selectComicCat(this,'adult')">🔞 Adult</button>
+        <button class="cat-pill active" onclick="selectComicCat(this,'superhero')">🦸 Superhero</button>
+        <button class="cat-pill" onclick="selectComicCat(this,'manga')">⛩️ Manga</button>
+        <button class="cat-pill" onclick="selectComicCat(this,'horror')">👻 Horror</button>
+        <button class="cat-pill" onclick="selectComicCat(this,'sci-fi')">🚀 Sci-Fi</button>
+        <button class="cat-pill" onclick="selectComicCat(this,'fantasy')">🐉 Fantasy</button>
+        <button class="cat-pill" onclick="selectComicCat(this,'romance')">💕 Romance</button>
+        <button class="cat-pill" onclick="selectComicCat(this,'war')">🪖 War</button>
+        <button class="cat-pill" onclick="selectComicCat(this,'western')">🤠 Western</button>
+        <button class="cat-pill" onclick="selectComicCat(this,'crime')">🔫 Crime</button>
+        <button class="cat-pill" onclick="selectComicCat(this,'adult')">🔞 Adult</button>
       </div>
-      <!-- Adult sub-categories (shown only when adult pill active) -->
-      <div id="adultSubPills" style="display:none">
-        <div class="adult-subpills" id="adultSubPillsInner">
-          <button class="adult-subpill active" data-sub="all" onclick="selectAdultSub(this,'all')">🔥 All Adult</button>
-          <button class="adult-subpill" data-sub="straight" onclick="selectAdultSub(this,'straight')">♂♀ Straight</button>
-          <button class="adult-subpill" data-sub="gay" onclick="selectAdultSub(this,'gay')">🏳️‍🌈 Gay</button>
-          <button class="adult-subpill" data-sub="lesbian" onclick="selectAdultSub(this,'lesbian')">👩‍❤️‍👩 Lesbian</button>
-          <button class="adult-subpill" data-sub="trans" onclick="selectAdultSub(this,'trans')">⚧ Trans</button>
-          <button class="adult-subpill" data-sub="bisexual" onclick="selectAdultSub(this,'bisexual')">💜 Bisexual</button>
-          <button class="adult-subpill" data-sub="interracial" onclick="selectAdultSub(this,'interracial')">🌍 Interracial</button>
-          <button class="adult-subpill" data-sub="milf" onclick="selectAdultSub(this,'milf')">🌹 MILF</button>
-          <button class="adult-subpill" data-sub="bbw" onclick="selectAdultSub(this,'bbw')">💋 BBW</button>
-          <button class="adult-subpill" data-sub="bdsm" onclick="selectAdultSub(this,'bdsm')">⛓️ BDSM</button>
-          <button class="adult-subpill" data-sub="hentai" onclick="selectAdultSub(this,'hentai')">🇯🇵 Hentai</button>
-          <button class="adult-subpill" data-sub="underground" onclick="selectAdultSub(this,'underground')">🌀 Underground</button>
-        </div>
+      <div class="adult-subrow" id="adultSubRow">
+        <button class="sub-pill active" onclick="selectAdultSub(this,'all')">🔥 All Adult</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'straight')">♂♀ Straight</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'gay')">🏳️‍🌈 Gay</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'lesbian')">👩‍❤️‍👩 Lesbian</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'trans')">⚧ Trans</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'bisexual')">💜 Bisexual</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'interracial')">🌍 Interracial</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'milf')">🌹 MILF</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'bbw')">💋 BBW</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'bdsm')">⛓️ BDSM</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'hentai')">🇯🇵 Hentai</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'underground')">🌀 Underground</button>
       </div>
-      <div class="section-hdr">
-        <h2 id="comicsHeading">Superhero Comics</h2>
-      </div>
+      <div class="section-hdr"><h2 id="comicsHeading">Superhero Comics</h2></div>
       <div id="comicsGrid" class="comic-grid"><div class="loading"><div class="spinner"></div><span>Loading comics…</span></div></div>
       <div id="comicsPagination"></div>
     </div>
 
-    <!-- SEARCH PAGE -->
+    <!-- SEARCH -->
     <div class="page" id="page-search">
-      <div class="hero" style="padding:24px 28px;margin-bottom:20px;">
-        <h1 style="font-size:1.3rem">🔎 Search</h1>
-      </div>
+      <div class="hero" style="padding:24px 28px;margin-bottom:20px;"><h1 style="font-size:1.3rem">🔎 Search</h1></div>
       <div style="display:flex;gap:10px;margin-bottom:20px;">
-        <div class="search-wrap" style="flex:1">
-          <span class="si">🔍</span>
-          <input type="search" id="mainSearch" placeholder="Title, author, subject…" onkeydown="if(event.key==='Enter')doSearch(this.value)" style="width:100%">
-        </div>
+        <div class="search-wrap" style="flex:1"><span class="si">🔍</span><input type="search" id="mainSearch" placeholder="Title, author, subject…" onkeydown="if(event.key==='Enter')doSearch(this.value)" style="width:100%"></div>
         <button class="btn btn-primary" onclick="doSearch(document.getElementById('mainSearch').value)">Search</button>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:16px;">
@@ -618,51 +318,31 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
       <div id="searchResults"></div>
     </div>
 
-    <!-- LIBRARY PAGE -->
+    <!-- LIBRARY -->
     <div class="page" id="page-library">
-      <div class="hero" style="padding:24px 28px;margin-bottom:20px;">
-        <h1 style="font-size:1.3rem">📖 My Library</h1>
-        <p>Books you've uploaded — your personal collection.</p>
-      </div>
+      <div class="hero" style="padding:24px 28px;margin-bottom:20px;"><h1 style="font-size:1.3rem">📖 My Library</h1><p>Books you've uploaded — your personal collection.</p></div>
       <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-        <div class="ui">📤</div>
-        <p><strong>Upload a Book</strong></p>
+        <div class="ui">📤</div><p><strong>Upload a Book</strong></p>
         <p style="font-size:.8rem;margin-top:6px;">PDF, EPUB, MOBI, TXT · Click or tap to browse</p>
         <input type="file" id="fileInput" accept=".pdf,.epub,.mobi,.txt,.doc,.docx" style="display:none" onchange="handleUpload(event)">
       </div>
-      <div class="section-hdr">
-        <h2>Uploaded Books</h2>
-        <span id="uploadedCount" style="font-size:.82rem;color:var(--muted)">0 books</span>
-      </div>
-      <div id="libraryGrid" class="book-grid">
-        <div class="empty"><div class="ei">📚</div><p>No uploads yet.<br>Upload your first book above.</p></div>
-      </div>
+      <div class="section-hdr"><h2>Uploaded Books</h2><span id="uploadedCount" style="font-size:.82rem;color:var(--muted)">0 books</span></div>
+      <div id="libraryGrid" class="book-grid"><div class="empty"><div class="ei">📚</div><p>No uploads yet.</p></div></div>
     </div>
 
-    <!-- DOWNLOADS PAGE -->
+    <!-- DOWNLOADS -->
     <div class="page" id="page-downloads">
-      <div class="hero" style="padding:24px 28px;margin-bottom:20px;">
-        <h1 style="font-size:1.3rem">⬇️ Downloads</h1>
-        <p>Books you've saved from Discover, Archive and Comics.</p>
-      </div>
-      <div class="section-hdr">
-        <h2>Saved Books</h2>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <span id="downloadsCount" style="font-size:.82rem;color:var(--muted)">0 books</span>
-          <button class="btn btn-sm btn-ghost" onclick="clearAllDownloads()" id="clearDownloadsBtn" style="display:none">Clear All</button>
-        </div>
-      </div>
-      <div id="downloadsList">
-        <div class="empty"><div class="ei">⬇️</div><p>No saved books yet.<br>Browse Discover or Archive and tap Save.</p></div>
-      </div>
+      <div class="hero" style="padding:24px 28px;margin-bottom:20px;"><h1 style="font-size:1.3rem">⬇️ Downloads</h1><p>Books you've saved from Discover, Archive and Comics.</p></div>
+      <div class="section-hdr"><h2>Saved Books</h2><div style="display:flex;gap:8px;align-items:center;"><span id="downloadsCount" style="font-size:.82rem;color:var(--muted)">0 books</span><button class="btn btn-sm btn-ghost" onclick="clearAllDownloads()" id="clearDownloadsBtn" style="display:none">Clear All</button></div></div>
+      <div id="downloadsList"><div class="empty"><div class="ei">⬇️</div><p>No saved books yet.</p></div></div>
     </div>
 
-    <!-- DONATE PAGE -->
+    <!-- DONATE -->
     <div class="page" id="page-donate">
       <div class="donate-card">
         <div style="font-size:3rem;margin-bottom:12px">💛</div>
         <h2>Support Aurelius</h2>
-        <p>Help us keep knowledge free for everyone. Every donation goes toward maintaining the library and expanding our collection.</p>
+        <p>Help us keep knowledge free for everyone.</p>
         <div class="donate-amounts">
           <button class="donate-amt" onclick="setDonateAmt(5,this)">$5</button>
           <button class="donate-amt active" onclick="setDonateAmt(10,this)">$10</button>
@@ -672,63 +352,25 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
         </div>
         <div style="display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:16px;">
           <span style="color:var(--muted);font-size:.9rem">Custom:</span>
-          <input type="number" id="customAmt" placeholder="Enter amount" min="1"
-            style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;width:140px;font-family:'Lato',sans-serif;">
+          <input type="number" id="customAmt" placeholder="Amount" min="1" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;width:140px;font-family:'Lato',sans-serif;">
         </div>
         <button class="btn btn-primary" style="padding:12px 40px;font-size:1rem" onclick="goPayPal()">💳 Donate via PayPal</button>
         <p style="font-size:.78rem;color:var(--muted);margin-top:12px;">Powered by PayPal · Secure & encrypted</p>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;">
-          <div style="font-size:2rem;margin-bottom:8px">📚</div>
-          <div style="font-weight:700;color:var(--accent)">3M+ Books</div>
-          <div style="font-size:.82rem;color:var(--muted)">Free to access</div>
-        </div>
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;">
-          <div style="font-size:2rem;margin-bottom:8px">🌍</div>
-          <div style="font-weight:700;color:var(--accent)">190+ Countries</div>
-          <div style="font-size:.82rem;color:var(--muted)">Readers worldwide</div>
-        </div>
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;">
-          <div style="font-size:2rem;margin-bottom:8px">🆓</div>
-          <div style="font-weight:700;color:var(--accent)">Always Free</div>
-          <div style="font-size:.82rem;color:var(--muted)">Knowledge for all</div>
-        </div>
-      </div>
     </div>
 
-    <!-- SETTINGS PAGE -->
+    <!-- SETTINGS -->
     <div class="page" id="page-settings">
-      <div class="hero" style="padding:24px 28px;margin-bottom:20px;">
-        <h1 style="font-size:1.3rem">⚙️ Settings</h1>
-      </div>
+      <div class="hero" style="padding:24px 28px;margin-bottom:20px;"><h1 style="font-size:1.3rem">⚙️ Settings</h1></div>
       <div class="settings-section">
         <h3>Reading Preferences</h3>
-        <div class="setting-row">
-          <label>Dark Mode</label>
-          <label class="toggle"><input type="checkbox" checked onchange="toggleDarkMode(this)"><span class="toggle-slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <label>Auto-download for offline</label>
-          <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
-        </div>
-        <div class="setting-row">
-          <label>Font Size</label>
-          <select style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-family:'Lato',sans-serif;">
-            <option>Small</option><option selected>Medium</option><option>Large</option>
-          </select>
-        </div>
+        <div class="setting-row"><label>Dark Mode</label><label class="toggle"><input type="checkbox" checked onchange="toggleDarkMode(this)"><span class="toggle-slider"></span></label></div>
+        <div class="setting-row"><label>Font Size</label><select style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-family:'Lato',sans-serif;"><option>Small</option><option selected>Medium</option><option>Large</option></select></div>
       </div>
       <div class="settings-section">
         <h3>Library</h3>
-        <div class="setting-row">
-          <label>Clear Downloads</label>
-          <button class="btn btn-sm btn-danger" onclick="clearAllDownloads();toast('Downloads cleared','success')">Clear</button>
-        </div>
-        <div class="setting-row">
-          <label>Clear Uploaded Books</label>
-          <button class="btn btn-sm btn-danger" onclick="clearLibrary()">Clear</button>
-        </div>
+        <div class="setting-row"><label>Clear Downloads</label><button class="btn btn-sm btn-danger" onclick="clearAllDownloads();toast('Downloads cleared','success')">Clear</button></div>
+        <div class="setting-row"><label>Clear Uploaded Books</label><button class="btn btn-sm btn-danger" onclick="clearLibrary()">Clear</button></div>
       </div>
       <div class="settings-section">
         <h3>About</h3>
@@ -737,16 +379,13 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
       </div>
     </div>
 
-  </div><!-- /pages -->
-</div><!-- /main -->
+  </div>
+</div>
 
-<!-- BOOK DETAIL MODAL -->
+<!-- BOOK MODAL -->
 <div class="modal-overlay" id="bookModal">
   <div class="modal">
-    <div class="modal-hdr">
-      <h3 id="bookModalTitle">Book Details</h3>
-      <button class="modal-close" onclick="closeModal('bookModal')">✕</button>
-    </div>
+    <div class="modal-hdr"><h3 id="bookModalTitle">Book Details</h3><button class="modal-close" onclick="closeModal('bookModal')">✕</button></div>
     <div class="modal-body">
       <div class="book-detail">
         <div id="bookModalCover"></div>
@@ -762,13 +401,10 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
   </div>
 </div>
 
-<!-- COMIC DETAIL MODAL -->
+<!-- COMIC MODAL -->
 <div class="modal-overlay" id="comicModal">
   <div class="modal">
-    <div class="modal-hdr">
-      <h3 id="comicModalTitle">Comic Details</h3>
-      <button class="modal-close" onclick="closeModal('comicModal')">✕</button>
-    </div>
+    <div class="modal-hdr"><h3 id="comicModalTitle">Comic Details</h3><button class="modal-close" onclick="closeModal('comicModal')">✕</button></div>
     <div class="modal-body">
       <div class="book-detail">
         <div id="comicModalCover"></div>
@@ -787,10 +423,7 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
-    <div class="modal-hdr">
-      <h3>Welcome to Aurelius</h3>
-      <button class="modal-close" onclick="closeModal('authModal')">✕</button>
-    </div>
+    <div class="modal-hdr"><h3>Welcome to Aurelius</h3><button class="modal-close" onclick="closeModal('authModal')">✕</button></div>
     <div class="modal-body">
       <div class="auth-tabs">
         <button class="auth-tab active" onclick="switchAuth('login',this)">Sign In</button>
@@ -825,50 +458,28 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
         <button class="modal-close" onclick="closeModal('readerModal')">✕</button>
       </div>
     </div>
-    <div class="modal-body" style="padding:0">
-      <iframe id="readerFrame" src="" allowfullscreen></iframe>
-    </div>
+    <div class="modal-body" style="padding:0"><iframe id="readerFrame" src="" allowfullscreen></iframe></div>
   </div>
 </div>
 
 <!-- NARRATION MODAL -->
 <div class="modal-overlay" id="narrateModal">
-  <div class="modal">
-    <div class="modal-hdr">
-      <h3>🎧 Audio Narration</h3>
-      <button class="modal-close" onclick="stopNarration();closeModal('narrateModal')">✕</button>
-    </div>
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-hdr"><h3>🎧 Audio Narration</h3><button class="modal-close" onclick="stopNarration();closeModal('narrateModal')">✕</button></div>
     <div class="modal-body">
       <div class="narrate-player">
         <div class="narrate-title" id="narrateTitle"></div>
         <div class="narrate-author" id="narrateAuthor"></div>
         <div class="narrate-text-preview" id="narratePreview">Loading text…</div>
-        <div class="narrate-progress" onclick="seekNarration(event)">
-          <div class="narrate-progress-fill" id="narrateProgressFill" style="width:0%"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);margin-bottom:16px;">
-          <span id="narratePos">0%</span>
-          <span id="narrateStatus">Ready</span>
-        </div>
+        <div class="narrate-progress" onclick="seekNarration(event)"><div class="narrate-progress-fill" id="narrateProgressFill" style="width:0%"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);margin-bottom:16px;"><span id="narratePos">0%</span><span id="narrateStatus">Ready</span></div>
         <div class="narrate-controls">
-          <button class="narrate-btn secondary" onclick="rewindNarration()" title="Rewind">⏮</button>
+          <button class="narrate-btn secondary" onclick="rewindNarration()">⏮</button>
           <button class="narrate-btn" id="narratePlayBtn" onclick="toggleNarration()">▶</button>
-          <button class="narrate-btn secondary" onclick="skipNarration()" title="Skip">⏭</button>
+          <button class="narrate-btn secondary" onclick="skipNarration()">⏭</button>
         </div>
-        <div class="narrate-speed">
-          <span>Speed:</span>
-          <select id="narrateSpeed" onchange="updateNarrateSpeed()">
-            <option value="0.75">0.75×</option>
-            <option value="1" selected>1×</option>
-            <option value="1.25">1.25×</option>
-            <option value="1.5">1.5×</option>
-            <option value="2">2×</option>
-          </select>
-        </div>
-        <div class="narrate-voice">
-          <span>Voice:</span>
-          <select id="narrateVoice" onchange="updateNarrateVoice()"></select>
-        </div>
+        <div class="narrate-speed"><span>Speed:</span><select id="narrateSpeed" onchange="updateNarrateSpeed()"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></div>
+        <div class="narrate-voice"><span>Voice:</span><select id="narrateVoice" onchange="updateNarrateVoice()"></select></div>
       </div>
     </div>
   </div>
@@ -877,853 +488,662 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
 <div id="toast"></div>
 
 <script>
-// ===== STATE =====
-let currentPage = 'discover';
-let currentDiscoverCat = 'fiction';
-let currentArchiveCat  = 'books';
-let currentComicCat    = 'superhero';
-let currentAdultSub    = 'all';
-let searchSrcMode      = 'gutenberg';
-let donateAmt          = 10;
-let user               = null;
-let uploadedBooks      = JSON.parse(localStorage.getItem('aurelius_library')   || '[]');
-let savedBooks         = JSON.parse(localStorage.getItem('aurelius_downloads') || '[]');
+// ============================================================
+// STATE
+// ============================================================
+let currentPage       = 'discover';
+let currentDiscoverCat= 'fiction';
+let currentArchiveCat = 'books';
+let currentComicCat   = 'superhero';
+let currentAdultSub   = 'all';
+let searchSrcMode     = 'gutenberg';
+let donateAmt         = 10;
+let user              = null;
+let uploadedBooks     = JSON.parse(localStorage.getItem('aurelius_library')   || '[]');
+let savedBooks        = JSON.parse(localStorage.getItem('aurelius_downloads') || '[]');
 
-// Pagination state per section
-const paging = {
-  discover: { page: 1, total: 0, perPage: 20, nextUrl: null },
-  archive:  { page: 1, total: 0, perPage: 20, offset: 0 },
-  comics:   { page: 1, total: 0, perPage: 20, offset: 0 }
+// Per-section pagination  — Gutenberg uses page number, Archive uses offset
+const pg = {
+  discover: { page: 1, perPage: 32, total: 0 },
+  archive:  { page: 1, perPage: 20, total: 0 },
+  comics:   { page: 1, perPage: 20, total: 0 }
 };
 
-// De-dup sets per section (track shown IDs to avoid repeats)
-const shownIds = { discover: new Set(), archive: new Set(), comics: new Set() };
-
-// ===== GOOGLE SIGN-IN =====
+// ============================================================
+// GOOGLE AUTH
+// ============================================================
 const GOOGLE_CLIENT_ID = '1017805317287-me5v533ju9kd0vcjq7d8u5add8mpniha.apps.googleusercontent.com';
-function initGoogleSignIn() {
-  if (!window.google || !window.google.accounts) return;
-  window.google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential, auto_select: false, cancel_on_tap_outside: true });
+function initGoogleSignIn(){
+  if(!window.google||!window.google.accounts) return;
+  window.google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:handleGoogleCredential,auto_select:false,cancel_on_tap_outside:true});
   renderGoogleButtons();
 }
-function renderGoogleButtons() {
-  if (!window.google || !window.google.accounts) return;
-  const cfg = { theme:'outline', size:'large', width:360, shape:'rectangular', logo_alignment:'left' };
-  const loginEl = document.getElementById('googleBtnLogin');
-  const regEl   = document.getElementById('googleBtnRegister');
-  if (loginEl)  window.google.accounts.id.renderButton(loginEl,  {...cfg, text:'signin_with'});
-  if (regEl)    window.google.accounts.id.renderButton(regEl,    {...cfg, text:'signup_with'});
+function renderGoogleButtons(){
+  if(!window.google||!window.google.accounts) return;
+  const cfg={theme:'outline',size:'large',width:360,shape:'rectangular',logo_alignment:'left'};
+  const l=document.getElementById('googleBtnLogin'); const r=document.getElementById('googleBtnRegister');
+  if(l) window.google.accounts.id.renderButton(l,{...cfg,text:'signin_with'});
+  if(r) window.google.accounts.id.renderButton(r,{...cfg,text:'signup_with'});
 }
-function handleGoogleCredential(response) {
-  try {
-    const payload = JSON.parse(atob(response.credential.split('.')[1]));
-    user = { name: payload.name || payload.email, email: payload.email, google: true, picture: payload.picture || '' };
-    updateUserUI(); closeModal('authModal'); toast('Signed in as ' + user.name, 'success');
-  } catch(err) { toast('Google sign-in failed. Try email sign-in.', 'error'); }
+function handleGoogleCredential(resp){
+  try{
+    const p=JSON.parse(atob(resp.credential.split('.')[1]));
+    user={name:p.name||p.email,email:p.email,google:true,picture:p.picture||''};
+    updateUserUI(); closeModal('authModal'); toast('Signed in as '+user.name,'success');
+  }catch(e){ toast('Google sign-in failed','error'); }
 }
-function waitForGoogleSDK() {
-  if (window.google && window.google.accounts) initGoogleSignIn(); else setTimeout(waitForGoogleSDK, 200);
-}
+function waitForGoogleSDK(){ window.google&&window.google.accounts ? initGoogleSignIn() : setTimeout(waitForGoogleSDK,200); }
 waitForGoogleSDK();
-function openAuth() { openModal('authModal'); setTimeout(renderGoogleButtons, 150); }
+function openAuth(){ openModal('authModal'); setTimeout(renderGoogleButtons,150); }
 
-// ===== SIDEBAR =====
-function toggleSidebar() {
-  const sb = document.getElementById('sidebar');
-  const ov = document.getElementById('overlay');
-  if (sb.classList.contains('hidden')) { sb.classList.remove('hidden'); ov.classList.add('show'); }
-  else closeSidebar();
+// ============================================================
+// SIDEBAR / NAV
+// ============================================================
+function toggleSidebar(){
+  const sb=document.getElementById('sidebar'),ov=document.getElementById('overlay');
+  sb.classList.contains('hidden') ? (sb.classList.remove('hidden'),ov.classList.add('show')) : closeSidebar();
 }
-function closeSidebar() { document.getElementById('sidebar').classList.add('hidden'); document.getElementById('overlay').classList.remove('show'); }
-function navTo(page) { closeSidebar(); setTimeout(() => showPage(page), 50); }
+function closeSidebar(){ document.getElementById('sidebar').classList.add('hidden'); document.getElementById('overlay').classList.remove('show'); }
+function navTo(page){ closeSidebar(); setTimeout(()=>showPage(page),50); }
 
-// ===== PAGES =====
-function showPage(page) {
-  currentPage = page;
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  const pg = document.getElementById('page-' + page);
-  if (pg) pg.classList.add('active');
-  const nb = document.getElementById('nav-' + page);
-  if (nb) nb.classList.add('active');
-  if (page === 'discover' && document.getElementById('discoverGrid').children.length <= 1) loadDiscover(currentDiscoverCat, 1);
-  if (page === 'archive'  && document.getElementById('archiveGrid').children.length  <= 1) loadArchive(currentArchiveCat, 1);
-  if (page === 'comics'   && document.getElementById('comicsGrid').children.length   <= 1) loadComics(currentComicCat, 1);
-  if (page === 'library')   renderLibrary();
-  if (page === 'downloads') renderDownloads();
+function showPage(page){
+  currentPage=page;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const pg2=document.getElementById('page-'+page); if(pg2) pg2.classList.add('active');
+  const nb=document.getElementById('nav-'+page);   if(nb)  nb.classList.add('active');
+  if(page==='discover' && !document.getElementById('discoverGrid').querySelector('.book-card')) loadDiscover(1);
+  if(page==='archive'  && !document.getElementById('archiveGrid').querySelector('.book-card'))  loadArchive(1);
+  if(page==='comics'   && !document.getElementById('comicsGrid').querySelector('.comic-card'))  loadComics(1);
+  if(page==='library')   renderLibrary();
+  if(page==='downloads') renderDownloads();
 }
 
-// ===== AUTH =====
-function switchAuth(mode, el) {
-  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active')); el.classList.add('active');
-  document.getElementById('authLoginForm').style.display    = mode === 'login'    ? '' : 'none';
-  document.getElementById('authRegisterForm').style.display = mode === 'register' ? '' : 'none';
-  setTimeout(renderGoogleButtons, 100);
+// ============================================================
+// AUTH (email)
+// ============================================================
+function switchAuth(mode,el){
+  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active')); el.classList.add('active');
+  document.getElementById('authLoginForm').style.display   =mode==='login'?'':'none';
+  document.getElementById('authRegisterForm').style.display=mode==='register'?'':'none';
+  setTimeout(renderGoogleButtons,100);
 }
-function doLogin() {
-  const email = document.getElementById('loginEmail').value;
-  const pass  = document.getElementById('loginPass').value;
-  if (!email || !pass) { toast('Fill in all fields', 'error'); return; }
-  user = { name: email.split('@')[0], email };
-  updateUserUI(); closeModal('authModal'); toast('Welcome, ' + user.name + '!', 'success');
+function doLogin(){
+  const e=document.getElementById('loginEmail').value,p=document.getElementById('loginPass').value;
+  if(!e||!p){toast('Fill in all fields','error');return;}
+  user={name:e.split('@')[0],email:e}; updateUserUI(); closeModal('authModal'); toast('Welcome, '+user.name+'!','success');
 }
-function doRegister() {
-  const name = document.getElementById('regName').value;
-  const email = document.getElementById('regEmail').value;
-  const pass  = document.getElementById('regPass').value;
-  if (!name || !email || !pass) { toast('Fill in all fields', 'error'); return; }
-  if (pass.length < 8) { toast('Password must be at least 8 characters', 'error'); return; }
-  user = { name, email }; updateUserUI(); closeModal('authModal'); toast('Account created! Welcome, ' + name + '!', 'success');
+function doRegister(){
+  const n=document.getElementById('regName').value,e=document.getElementById('regEmail').value,p=document.getElementById('regPass').value;
+  if(!n||!e||!p){toast('Fill in all fields','error');return;}
+  if(p.length<8){toast('Password must be at least 8 characters','error');return;}
+  user={name:n,email:e}; updateUserUI(); closeModal('authModal'); toast('Welcome, '+n+'!','success');
 }
-function updateUserUI() {
-  const area   = document.getElementById('sidebarUserArea');
-  const topBtn = document.getElementById('topAuthBtn');
-  if (user) {
-    const avatar = user.picture
-      ? `<img src="${user.picture}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;" onerror="this.outerHTML='<div style=width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:#0a0a14>${escHtml(user.name[0].toUpperCase())}</div>'">`
-      : `<div style="width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:#0a0a14">${escHtml(user.name[0].toUpperCase())}</div>`;
-    area.innerHTML = `<div style="display:flex;align-items:center;gap:10px;">${avatar}<div style="flex:1;min-width:0;"><div style="font-size:.9rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(user.name)}</div><button style="background:none;border:none;color:var(--muted);font-size:.75rem;cursor:pointer;padding:0" onclick="signOut()">Sign out</button></div></div>`;
-    topBtn.textContent = user.name[0].toUpperCase(); topBtn.style.borderRadius = '50%'; topBtn.style.width = '36px'; topBtn.style.height = '36px'; topBtn.style.padding = '0';
+function updateUserUI(){
+  const area=document.getElementById('sidebarUserArea'),topBtn=document.getElementById('topAuthBtn');
+  if(user){
+    const av=user.picture?`<img src="${user.picture}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">`
+      :`<div style="width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:#0a0a14">${escHtml(user.name[0].toUpperCase())}</div>`;
+    area.innerHTML=`<div style="display:flex;align-items:center;gap:10px;">${av}<div style="flex:1;min-width:0;"><div style="font-size:.9rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(user.name)}</div><button style="background:none;border:none;color:var(--muted);font-size:.75rem;cursor:pointer;padding:0" onclick="signOut()">Sign out</button></div></div>`;
+    topBtn.textContent=user.name[0].toUpperCase(); topBtn.style.borderRadius='50%'; topBtn.style.width='36px'; topBtn.style.height='36px'; topBtn.style.padding='0';
   }
 }
-function signOut() {
-  user = null;
-  if (window.google && window.google.accounts) window.google.accounts.id.disableAutoSelect();
-  document.getElementById('sidebarUserArea').innerHTML = `<button class="btn btn-primary" style="width:100%" onclick="closeSidebar();openAuth()">Sign In</button>`;
-  const btn = document.getElementById('topAuthBtn'); btn.textContent = 'Sign In'; btn.style = '';
-  toast('Signed out', 'info');
+function signOut(){
+  user=null; if(window.google&&window.google.accounts) window.google.accounts.id.disableAutoSelect();
+  document.getElementById('sidebarUserArea').innerHTML=`<button class="btn btn-primary" style="width:100%" onclick="closeSidebar();openAuth()">Sign In</button>`;
+  const b=document.getElementById('topAuthBtn'); b.textContent='Sign In'; b.style=''; toast('Signed out','info');
 }
 
-// ===== PAGINATION RENDERER =====
-function renderPagination(containerId, section, currentPg, totalItems, perPage, loadFn) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  const totalPages = Math.ceil(totalItems / perPage);
-  if (totalPages <= 1 && currentPg === 1) { container.innerHTML = ''; return; }
-  container.innerHTML = `
-    <div class="pagination">
-      <button class="btn-page" onclick="${loadFn}(${currentPg - 1})" ${currentPg <= 1 ? 'disabled' : ''}>← Previous</button>
-      <span class="pagination-info">Page ${currentPg}${totalPages > 0 ? ' of ' + totalPages : ''}</span>
-      <button class="btn-page primary" onclick="${loadFn}(${currentPg + 1})" ${totalPages > 0 && currentPg >= totalPages ? 'disabled' : ''}>Next →</button>
-    </div>`;
-  // Scroll page to top when paginating
-  container.closest('.page')?.scrollTo({ top: 0, behavior: 'smooth' });
+// ============================================================
+// PAGINATION HELPER
+// ============================================================
+function renderPagination(containerId, currentPg, total, perPage, loadFn){
+  const el=document.getElementById(containerId); if(!el) return;
+  const totalPages=Math.ceil(total/perPage);
+  if(total===0){ el.innerHTML=''; return; }
+  const prevDisabled = currentPg<=1 ? 'disabled' : '';
+  const nextDisabled = currentPg>=totalPages ? 'disabled' : '';
+  el.innerHTML=`<div class="pagination-bar">
+    <button class="btn-prev" ${prevDisabled} onclick="${loadFn}(${currentPg-1})">← Previous</button>
+    <span class="page-info">Page ${currentPg} of ${totalPages}</span>
+    <button class="btn-next" ${nextDisabled} onclick="${loadFn}(${currentPg+1})">Next →</button>
+  </div>`;
+}
+function scrollPageTop(pageId){ const p=document.getElementById(pageId); if(p) p.scrollTo({top:0,behavior:'smooth'}); }
+
+// ============================================================
+// DISCOVER  (Gutenberg — uses real page param, 32 per page)
+// ============================================================
+// Gutenberg subject map — each cat maps to a DIFFERENT subject query per page
+// We randomise within a pool to avoid identical page-1 every time
+const GUTENBERG_SUBJECTS = {
+  fiction:     ['subject=fiction','topic=novel','topic=short+stories','subject=adventure','subject=drama'],
+  science:     ['topic=science','subject=natural+history','subject=physics','subject=chemistry','subject=biology'],
+  history:     ['topic=history','subject=ancient+history','subject=world+history','subject=medieval','subject=biography'],
+  philosophy:  ['topic=philosophy','subject=ethics','subject=metaphysics','subject=logic','subject=epistemology'],
+  biography:   ['topic=biography','subject=autobiography','subject=memoir','subject=letters','subject=diaries'],
+  mystery:     ['topic=mystery','subject=detective','subject=crime+fiction','subject=thriller','subject=suspense'],
+  romance:     ['topic=romance','subject=love+stories','subject=courtship','subject=marriage','subject=sentimental'],
+  'self-help': ['topic=self+improvement','subject=conduct+of+life','subject=success','subject=happiness','subject=mind'],
+  technology:  ['topic=technology','subject=engineering','subject=inventions','subject=electricity','subject=mechanics'],
+  children:    ['topic=children','subject=fairy+tales','subject=juvenile+fiction','subject=fables','subject=nursery+rhymes']
+};
+
+function selectDiscoverCat(el,cat){
+  document.querySelectorAll('#discoverPills .cat-pill').forEach(p=>p.classList.remove('active')); el.classList.add('active');
+  currentDiscoverCat=cat; loadDiscover(1);
 }
 
-// ===== DISCOVER =====
-function selectDiscoverCat(el, cat) {
-  document.querySelectorAll('#discoverPills .cat-pill').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
-  currentDiscoverCat = cat;
-  shownIds.discover.clear();
-  loadDiscover(cat, 1);
-}
+async function loadDiscover(page){
+  if(!page) page=1;
+  pg.discover.page=page;
+  const grid=document.getElementById('discoverGrid');
+  const heading=document.getElementById('discoverHeading');
+  grid.innerHTML='<div class="loading"><div class="spinner"></div><span>Loading…</span></div>';
+  document.getElementById('discoverPagination').innerHTML='';
+  const labels={fiction:'Fiction',science:'Science',history:'History',philosophy:'Philosophy',biography:'Biography',mystery:'Mystery',romance:'Romance','self-help':'Self-Help',technology:'Technology',children:"Children's"};
+  heading.textContent=(labels[currentDiscoverCat]||currentDiscoverCat)+' Books';
 
-async function loadDiscover(cat, page) {
-  if (typeof cat === 'number') { page = cat; cat = currentDiscoverCat; }
-  if (!page) page = 1;
-  currentDiscoverCat = cat;
-  paging.discover.page = page;
+  // Build URL: use subject-based search for variety, rotate subjects by page
+  const subjects=GUTENBERG_SUBJECTS[currentDiscoverCat]||['topic=fiction'];
+  const subjectParam=subjects[(page-1) % subjects.length];
+  const url=`https://gutendex.com/books/?${subjectParam}&page=${page}`;
 
-  const grid    = document.getElementById('discoverGrid');
-  const heading = document.getElementById('discoverHeading');
-  grid.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading…</span></div>';
-  document.getElementById('discoverPagination').innerHTML = '';
-
-  const labels = { fiction:'Fiction', science:'Science', history:'History', philosophy:'Philosophy',
-    biography:'Biography', mystery:'Mystery', romance:'Romance', 'self-help':'Self-Help',
-    technology:'Technology', children:"Children's" };
-  heading.textContent = (labels[cat] || cat) + ' Books';
-
-  const catMap = { fiction:'fiction', science:'science', history:'history', philosophy:'philosophy',
-    biography:'biography', mystery:'mystery', romance:'romance', 'self-help':'self help',
-    technology:'technology', children:'children' };
-  const q = catMap[cat] || cat;
-
-  try {
-    const controller = new AbortController();
-    setTimeout(() => controller.abort(), 9000);
-    const url = `https://gutendex.com/books/?search=${encodeURIComponent(q)}&page=${page}`;
-    const r   = await fetch(url, { signal: controller.signal });
-    if (!r.ok) throw new Error('Failed');
-    const data = await r.json();
-
-    // De-dup: filter out any IDs already shown (relevant if navigating pages)
-    const seen = new Set();
-    const books = (data.results || []).filter(b => {
-      if (seen.has(b.id)) return false;
-      seen.add(b.id); return true;
-    });
-
-    if (!books.length) { grid.innerHTML = '<div class="empty"><div class="ei">📚</div><p>No more books in this category.</p></div>'; return; }
-
-    grid.innerHTML = books.map(b => buildBookCard(b, 'gutenberg')).join('');
-
-    const totalCount = data.count || 0;
-    paging.discover.total = totalCount;
-    renderPagination('discoverPagination', 'discover', page, totalCount, 32, 'loadDiscover');
-
-  } catch(e) {
-    try {
-      const fb = await loadGutenbergFallback(cat);
-      grid.innerHTML = fb.map(b => buildBookCard(b, 'gutenberg')).join('');
-    } catch {
-      grid.innerHTML = '<div class="empty"><div class="ei">⚠️</div><p>Could not load books.<br>Check your connection.</p></div>';
-    }
+  try{
+    const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),9000);
+    const r=await fetch(url,{signal:ctrl.signal}); if(!r.ok) throw new Error();
+    const data=await r.json();
+    const total=data.count||0;
+    // De-dup by ID within this batch
+    const seen=new Set();
+    const books=(data.results||[]).filter(b=>{ if(seen.has(b.id)) return false; seen.add(b.id); return true; });
+    if(!books.length){ grid.innerHTML='<div class="empty"><div class="ei">📚</div><p>No books found.</p></div>'; return; }
+    grid.innerHTML=books.map(b=>buildBookCard(b)).join('');
+    pg.discover.total=total;
+    renderPagination('discoverPagination',page,total,pg.discover.perPage,'loadDiscover');
+    if(page>1) scrollPageTop('page-discover');
+  }catch(e){
+    grid.innerHTML='<div class="empty"><div class="ei">⚠️</div><p>Could not load books.<br>Check your connection.</p></div>';
   }
 }
 
-async function loadGutenbergFallback(cat) {
-  const searches = {
-    fiction:['frankenstein','dracula','pride and prejudice','sherlock holmes'],
-    science:['darwin origin species','einstein','newton'],
-    history:['caesar','herodotus history','gibbon roman empire'],
-    philosophy:['plato republic','aristotle','nietzsche'],
-    biography:['autobiography benjamin franklin','lincoln'],
-    mystery:['sherlock holmes','edgar poe'],
-    romance:['jane austen','bronte'],
-    'self-help':['marcus aurelius meditations','stoic'],
-    technology:['computing','engineering'],
-    children:['alice wonderland','grimm fairy tales','wizard oz']
-  };
-  const terms = searches[cat] || ['classic literature'];
-  const q = terms[Math.floor(Math.random() * terms.length)];
-  const r = await fetch(`https://gutendex.com/books/?search=${encodeURIComponent(q)}`);
-  const d = await r.json();
-  return (d.results || []);
-}
-
-function buildBookCard(b, src) {
-  const title  = b.title || 'Unknown Title';
-  const author = (b.authors && b.authors[0]) ? b.authors[0].name : 'Unknown Author';
-  const cover  = b.formats && (b.formats['image/jpeg'] || b.formats['image/png'] || '');
-  const id     = b.id;
-  const dataStr = escAttr(JSON.stringify({id, title, author, cover, src, formats: b.formats || {}}));
-  return `<div class="book-card" onclick="openBookModal('${dataStr}')" data-id="${id}">
-    ${cover ? `<img class="book-cover" src="${cover}" alt="${escHtml(title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
-    <div class="book-cover-placeholder" ${cover ? 'style="display:none"' : ''}>📖</div>
-    <div class="book-info">
-      <div class="book-title">${escHtml(title)}</div>
-      <div class="book-author">${escHtml(author)}</div>
-    </div>
+function buildBookCard(b){
+  const title=b.title||'Unknown Title';
+  const author=(b.authors&&b.authors[0])?b.authors[0].name:'Unknown Author';
+  const cover=b.formats&&(b.formats['image/jpeg']||b.formats['image/png']||'');
+  const id=b.id;
+  const d=escAttr(JSON.stringify({id,title,author,cover,src:'gutenberg',formats:b.formats||{}}));
+  return `<div class="book-card" onclick="openBookModal('${d}')">
+    ${cover?`<img class="book-cover" src="${cover}" alt="${escHtml(title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:``}
+    <div class="book-cover-placeholder" ${cover?'style="display:none"':''}>📖</div>
+    <div class="book-info"><div class="book-title">${escHtml(title)}</div><div class="book-author">${escHtml(author)}</div></div>
   </div>`;
 }
 
-// ===== ARCHIVE =====
-function selectArchiveCat(el, cat) {
-  document.querySelectorAll('#archivePills .cat-pill').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
-  currentArchiveCat = cat;
-  shownIds.archive.clear();
-  loadArchive(cat, 1);
+// ============================================================
+// INTERNET ARCHIVE  (uses rows + start offset — guaranteed unique per page)
+// ============================================================
+const ARCHIVE_QUERIES={
+  books:       'subject:book AND mediatype:texts AND language:eng',
+  texts:       'mediatype:texts AND subject:literature AND language:eng',
+  periodicals: 'mediatype:texts AND subject:periodicals',
+  audio:       'mediatype:audio AND collection:librivoxaudio',
+  manuscripts: 'subject:manuscripts AND mediatype:texts'
+};
+
+function selectArchiveCat(el,cat){
+  document.querySelectorAll('#archivePills .cat-pill').forEach(p=>p.classList.remove('active')); el.classList.add('active');
+  currentArchiveCat=cat; loadArchive(1);
 }
 
-async function loadArchive(cat, page) {
-  if (typeof cat === 'number') { page = cat; cat = currentArchiveCat; }
-  if (!page) page = 1;
-  currentArchiveCat = cat;
-  paging.archive.page = page;
+async function loadArchive(page){
+  if(!page) page=1;
+  pg.archive.page=page;
+  const grid=document.getElementById('archiveGrid');
+  const heading=document.getElementById('archiveHeading');
+  const labels={books:'Books',texts:'Texts',periodicals:'Periodicals',audio:'Audio Books',manuscripts:'Manuscripts'};
+  heading.textContent=labels[currentArchiveCat]||currentArchiveCat;
+  grid.innerHTML='<div class="loading"><div class="spinner"></div><span>Loading…</span></div>';
+  document.getElementById('archivePagination').innerHTML='';
 
-  const grid    = document.getElementById('archiveGrid');
-  const heading = document.getElementById('archiveHeading');
-  const labels  = { books:'Books', texts:'Texts', periodicals:'Periodicals', audio:'Audio Books', manuscripts:'Manuscripts' };
-  heading.textContent = labels[cat] || cat;
-  grid.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading…</span></div>';
-  document.getElementById('archivePagination').innerHTML = '';
+  const q=ARCHIVE_QUERIES[currentArchiveCat]||'mediatype:texts';
+  const perPg=pg.archive.perPage;
+  const start=(page-1)*perPg;
 
-  const catQuery = {
-    books:       'subject:books AND mediatype:texts',
-    texts:       'mediatype:texts AND subject:literature',
-    periodicals: 'mediatype:texts AND subject:periodicals',
-    audio:       'mediatype:audio AND subject:librivox',
-    manuscripts: 'subject:manuscripts AND mediatype:texts'
-  };
-  const q      = catQuery[cat] || 'mediatype:texts';
-  const perPg  = paging.archive.perPage;
-  const offset = (page - 1) * perPg;
-
-  try {
-    const controller = new AbortController();
-    setTimeout(() => controller.abort(), 9000);
-    const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier,title,creator,description,subject&rows=${perPg}&start=${offset}&output=json&sort=downloads+desc`;
-    const r   = await fetch(url, { signal: controller.signal });
-    if (!r.ok) throw new Error();
-    const data = await r.json();
-    const resp = data.response || {};
-    const docs = resp.docs || [];
-    const totalFound = resp.numFound || 0;
-
-    // De-dup within current page
-    const seen = new Set();
-    const unique = docs.filter(d => { if (seen.has(d.identifier)) return false; seen.add(d.identifier); return true; });
-
-    if (!unique.length) { grid.innerHTML = '<div class="empty"><div class="ei">🏛️</div><p>No items found.</p></div>'; return; }
-
-    grid.innerHTML = unique.map(d => buildArchiveCard(d)).join('');
-    paging.archive.total = totalFound;
-    renderPagination('archivePagination', 'archive', page, totalFound, perPg, 'loadArchive');
-
-  } catch {
-    grid.innerHTML = '<div class="empty"><div class="ei">⚠️</div><p>Could not load Archive items.<br>Check your connection.</p></div>';
+  try{
+    const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),10000);
+    // IMPORTANT: we request rows+start so each page is a completely different offset
+    const url=`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier,title,creator,description,subject&rows=${perPg}&start=${start}&output=json&sort[]=downloads+desc`;
+    const r=await fetch(url,{signal:ctrl.signal}); if(!r.ok) throw new Error();
+    const data=await r.json();
+    const resp=data.response||{};
+    const total=resp.numFound||0;
+    // De-dup identifiers within the page
+    const seen=new Set();
+    const docs=(resp.docs||[]).filter(d=>{ if(seen.has(d.identifier)) return false; seen.add(d.identifier); return true; });
+    if(!docs.length){ grid.innerHTML='<div class="empty"><div class="ei">🏛️</div><p>No items found.</p></div>'; return; }
+    grid.innerHTML=docs.map(d=>buildArchiveCard(d)).join('');
+    pg.archive.total=total;
+    renderPagination('archivePagination',page,total,perPg,'loadArchive');
+    if(page>1) scrollPageTop('page-archive');
+  }catch(e){
+    grid.innerHTML='<div class="empty"><div class="ei">⚠️</div><p>Could not load Archive items.<br>Check your connection.</p></div>';
   }
 }
 
-function buildArchiveCard(d) {
-  const title   = d.title || 'Unknown';
-  const creator = Array.isArray(d.creator) ? d.creator[0] : (d.creator || 'Internet Archive');
-  const id      = d.identifier;
-  const cover   = `https://archive.org/services/img/${id}`;
+function buildArchiveCard(d){
+  const title=d.title||'Unknown';
+  const creator=Array.isArray(d.creator)?d.creator[0]:(d.creator||'Internet Archive');
+  const id=d.identifier;
+  const cover=`https://archive.org/services/img/${id}`;
   return `<div class="book-card" onclick="openArchiveModal('${escJs(id)}','${escJs(title)}','${escJs(creator)}')">
     <img class="book-cover" src="${cover}" alt="${escHtml(title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
     <div class="book-cover-placeholder" style="display:none">📜</div>
-    <div class="book-info">
-      <div class="book-title">${escHtml(title)}</div>
-      <div class="book-author">${escHtml(creator)}</div>
-    </div>
+    <div class="book-info"><div class="book-title">${escHtml(title)}</div><div class="book-author">${escHtml(creator)}</div></div>
   </div>`;
 }
 
-// ===== COMICS =====
-function selectComicCat(el, cat) {
-  document.querySelectorAll('#comicPills .cat-pill').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
-  currentComicCat = cat;
-  currentAdultSub = 'all';
-  shownIds.comics.clear();
-  // Show/hide adult sub-pills
-  const subPills = document.getElementById('adultSubPills');
-  if (cat === 'adult') {
-    subPills.style.display = 'block';
-    // Reset sub-pill active state
-    document.querySelectorAll('.adult-subpill').forEach(p => p.classList.remove('active'));
-    document.querySelector('.adult-subpill[data-sub="all"]').classList.add('active');
-  } else {
-    subPills.style.display = 'none';
+// ============================================================
+// COMICS  (Archive — precise queries, offset pagination)
+// ============================================================
+
+// Main non-adult queries
+const COMIC_QUERIES={
+  superhero:  'collection:(ComicBookPlus OR dccomics OR marvel_comics) AND mediatype:texts AND subject:(superhero OR batman OR superman OR avengers OR xmen)',
+  manga:      'mediatype:texts AND (subject:manga OR subject:"manga" OR collection:manga)',
+  horror:     'mediatype:texts AND subject:(comics OR "comic book") AND subject:(horror OR terror OR vampire OR zombie)',
+  'sci-fi':   'mediatype:texts AND subject:(comics OR "comic book") AND subject:("science fiction" OR "sci-fi" OR space OR robot)',
+  fantasy:    'mediatype:texts AND subject:(comics OR "comic book") AND subject:(fantasy OR dragon OR magic OR sword)',
+  romance:    'mediatype:texts AND subject:(comics OR "comic book") AND subject:(romance OR love)',
+  war:        'mediatype:texts AND subject:(comics OR "comic book") AND subject:(war OR military OR soldier OR combat)',
+  western:    'mediatype:texts AND subject:(comics OR "comic book") AND subject:(western OR cowboy OR outlaw)',
+  crime:      'mediatype:texts AND subject:(comics OR "comic book") AND subject:(crime OR detective OR noir OR gangster)'
+};
+
+// Adult sub-category queries — specific enough to return genuine content
+const ADULT_QUERIES={
+  all:         'mediatype:texts AND (collection:"adult_comics" OR subject:"underground comix" OR subject:"adult comics" OR subject:"erotic comics")',
+  straight:    'mediatype:texts AND (subject:"underground comix" OR subject:"adult comics") AND (subject:heterosexual OR subject:straight OR subject:"man and woman")',
+  gay:         'mediatype:texts AND (subject:"underground comix" OR subject:"adult comics" OR subject:"gay comics") AND subject:gay',
+  lesbian:     'mediatype:texts AND (subject:"underground comix" OR subject:"adult comics" OR subject:"lesbian comics") AND subject:lesbian',
+  trans:       'mediatype:texts AND (subject:"adult comics" OR subject:"underground comix") AND (subject:transgender OR subject:trans OR subject:"gender")',
+  bisexual:    'mediatype:texts AND (subject:"adult comics" OR subject:"underground comix") AND subject:bisexual',
+  interracial: 'mediatype:texts AND (subject:"adult comics" OR subject:"underground comix") AND subject:interracial',
+  milf:        'mediatype:texts AND (subject:"adult comics" OR subject:"underground comix") AND (subject:mature OR subject:milf)',
+  bbw:         'mediatype:texts AND (subject:"adult comics" OR subject:"underground comix") AND (subject:bbw OR subject:"plus size")',
+  bdsm:        'mediatype:texts AND (subject:"adult comics" OR subject:"underground comix") AND (subject:bdsm OR subject:bondage OR subject:fetish)',
+  hentai:      'mediatype:texts AND (subject:hentai OR subject:"adult manga" OR collection:hentai)',
+  underground: 'mediatype:texts AND (subject:"underground comix" OR collection:"underground_comix" OR subject:"comix")'
+};
+
+function selectComicCat(el,cat){
+  document.querySelectorAll('#comicPills .cat-pill').forEach(p=>p.classList.remove('active')); el.classList.add('active');
+  currentComicCat=cat; currentAdultSub='all';
+  const subRow=document.getElementById('adultSubRow');
+  if(cat==='adult'){
+    subRow.classList.add('show');
+    document.querySelectorAll('.sub-pill').forEach(p=>p.classList.remove('active'));
+    document.querySelector('.sub-pill').classList.add('active');
+  }else{
+    subRow.classList.remove('show');
   }
-  loadComics(cat, 1);
+  loadComics(1);
 }
 
-function selectAdultSub(el, sub) {
-  document.querySelectorAll('.adult-subpill').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
-  currentAdultSub = sub;
-  shownIds.comics.clear();
-  loadComics('adult', 1);
+function selectAdultSub(el,sub){
+  document.querySelectorAll('.sub-pill').forEach(p=>p.classList.remove('active')); el.classList.add('active');
+  currentAdultSub=sub; loadComics(1);
 }
 
-async function loadComics(cat, page) {
-  if (typeof cat === 'number') { page = cat; cat = currentComicCat; }
-  if (!page) page = 1;
-  currentComicCat = cat;
-  paging.comics.page = page;
+async function loadComics(page){
+  if(!page) page=1;
+  pg.comics.page=page;
+  const grid=document.getElementById('comicsGrid');
+  const heading=document.getElementById('comicsHeading');
 
-  const grid    = document.getElementById('comicsGrid');
-  const heading = document.getElementById('comicsHeading');
+  const mainLabels={superhero:'Superhero',manga:'Manga',horror:'Horror','sci-fi':'Sci-Fi',fantasy:'Fantasy',romance:'Romance',war:'War',western:'Western',crime:'Crime',adult:'Adult'};
+  const subLabels={all:'Adult',straight:'Straight',gay:'Gay',lesbian:'Lesbian',trans:'Trans',bisexual:'Bisexual',interracial:'Interracial',milf:'MILF',bbw:'BBW',bdsm:'BDSM',hentai:'Hentai',underground:'Underground'};
+  heading.textContent=(currentComicCat==='adult' ? subLabels[currentAdultSub] : mainLabels[currentComicCat])+' Comics';
 
-  const mainLabels = { superhero:'Superhero', manga:'Manga', horror:'Horror', 'sci-fi':'Sci-Fi',
-    fantasy:'Fantasy', romance:'Romance', war:'War', western:'Western', crime:'Crime', adult:'Adult' };
-  const subLabels  = { all:'Adult', straight:'Straight Adult', gay:'Gay', lesbian:'Lesbian',
-    trans:'Trans', bisexual:'Bisexual', interracial:'Interracial', milf:'MILF',
-    bbw:'BBW', bdsm:'BDSM', hentai:'Hentai', underground:'Underground' };
+  grid.innerHTML='<div class="loading"><div class="spinner"></div><span>Loading comics…</span></div>';
+  document.getElementById('comicsPagination').innerHTML='';
 
-  const headLabel = cat === 'adult'
-    ? (subLabels[currentAdultSub] || 'Adult') + ' Comics'
-    : (mainLabels[cat] || cat) + ' Comics';
-  heading.textContent = headLabel;
+  const q = currentComicCat==='adult' ? ADULT_QUERIES[currentAdultSub]||ADULT_QUERIES.all : COMIC_QUERIES[currentComicCat]||'mediatype:texts AND subject:comics';
+  const perPg=pg.comics.perPage;
+  const start=(page-1)*perPg;
 
-  grid.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading comics…</span></div>';
-  document.getElementById('comicsPagination').innerHTML = '';
+  try{
+    const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),11000);
+    const url=`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier,title,creator,date,subject&rows=${perPg}&start=${start}&output=json&sort[]=downloads+desc`;
+    const r=await fetch(url,{signal:ctrl.signal}); if(!r.ok) throw new Error();
+    const data=await r.json();
+    const resp=data.response||{};
+    const total=resp.numFound||0;
 
-  // Build query
-  const mainQueries = {
-    superhero:  'subject:(comics OR "comic book") AND (subject:superhero OR subject:batman OR subject:superman OR subject:marvel)',
-    manga:      'subject:manga OR subject:"japanese comics"',
-    horror:     'subject:(comics OR "comic book") AND subject:horror',
-    'sci-fi':   'subject:(comics OR "comic book") AND subject:(science fiction OR "sci-fi")',
-    fantasy:    'subject:(comics OR "comic book") AND subject:fantasy',
-    romance:    'subject:(comics OR "comic book") AND subject:romance',
-    war:        'subject:(comics OR "comic book") AND subject:war',
-    western:    'subject:(comics OR "comic book") AND subject:western',
-    crime:      'subject:(comics OR "comic book") AND subject:(crime OR detective)',
-    adult:      'subject:(comics OR "adult comics" OR "underground comix") AND subject:(adult OR mature OR erotic)'
-  };
+    // De-dup
+    const seen=new Set();
+    let docs=(resp.docs||[]).filter(d=>{ if(seen.has(d.identifier)) return false; seen.add(d.identifier); return true; });
 
-  const adultSubQueries = {
-    all:          'subject:(comics OR "adult comics" OR "underground comix") AND subject:(adult OR mature OR erotic)',
-    straight:     'subject:(comics OR "adult comics") AND subject:(heterosexual OR straight OR man woman)',
-    gay:          'subject:(comics OR "adult comics") AND subject:(gay OR homosexual OR men)',
-    lesbian:      'subject:(comics OR "adult comics") AND subject:(lesbian OR women)',
-    trans:        'subject:(comics OR "adult comics") AND subject:(transgender OR trans)',
-    bisexual:     'subject:(comics OR "adult comics") AND subject:(bisexual OR bi)',
-    interracial:  'subject:(comics OR "adult comics") AND subject:(interracial)',
-    milf:         'subject:(comics OR "adult comics") AND subject:(mature OR milf OR older woman)',
-    bbw:          'subject:(comics OR "adult comics") AND subject:(bbw OR plus size OR voluptuous)',
-    bdsm:         'subject:(comics OR "adult comics") AND subject:(bdsm OR bondage OR fetish)',
-    hentai:       'subject:(manga OR hentai OR "adult manga") AND subject:(adult OR mature OR erotic)',
-    underground:  'subject:("underground comix" OR "underground comics") AND subject:(adult OR mature)'
-  };
-
-  const q = cat === 'adult'
-    ? (adultSubQueries[currentAdultSub] || adultSubQueries.all)
-    : (mainQueries[cat] || 'subject:comics mediatype:texts');
-
-  const perPg  = paging.comics.perPage;
-  const offset = (page - 1) * perPg;
-
-  try {
-    const controller = new AbortController();
-    setTimeout(() => controller.abort(), 11000);
-    const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(q + ' AND mediatype:texts')}&fl[]=identifier,title,creator,description,date,subject&rows=${perPg}&start=${offset}&output=json&sort=downloads+desc`;
-    const r   = await fetch(url, { signal: controller.signal });
-    if (!r.ok) throw new Error();
-    const data = await r.json();
-    const resp = data.response || {};
-    const docs = resp.docs || [];
-    const totalFound = resp.numFound || 0;
-
-    // De-dup within page
-    const seen = new Set();
-    const unique = docs.filter(d => { if (seen.has(d.identifier)) return false; seen.add(d.identifier); return true; });
-
-    if (!unique.length) {
-      // Fallback for empty results
-      const r2   = await fetch(`https://archive.org/advancedsearch.php?q=subject:comics+mediatype:texts&fl[]=identifier,title,creator,date&rows=${perPg}&start=${offset}&output=json&sort=downloads+desc`);
-      const d2   = await r2.json();
-      const docs2 = (d2.response && d2.response.docs) || [];
-      const seen2 = new Set();
-      const unique2 = docs2.filter(d => { if (seen2.has(d.identifier)) return false; seen2.add(d.identifier); return true; });
-      if (unique2.length) {
-        grid.innerHTML = unique2.map(buildComicCard).join('');
-        const total2 = (d2.response && d2.response.numFound) || 0;
-        renderPagination('comicsPagination', 'comics', page, total2, perPg, 'loadComics');
-      } else {
-        grid.innerHTML = '<div class="empty"><div class="ei">💥</div><p>No comics found for this category.</p></div>';
+    if(!docs.length){
+      // Fallback: generic comics query with same offset
+      const fb=await fetch(`https://archive.org/advancedsearch.php?q=mediatype:texts+AND+subject:comics&fl[]=identifier,title,creator,date&rows=${perPg}&start=${start}&output=json&sort[]=downloads+desc`);
+      const fd=await fb.json();
+      const seen2=new Set();
+      docs=((fd.response&&fd.response.docs)||[]).filter(d=>{ if(seen2.has(d.identifier)) return false; seen2.add(d.identifier); return true; });
+      const total2=(fd.response&&fd.response.numFound)||0;
+      if(docs.length){
+        grid.innerHTML=docs.map(buildComicCard).join('');
+        renderPagination('comicsPagination',page,total2,perPg,'loadComics');
+        if(page>1) scrollPageTop('page-comics');
+      }else{
+        grid.innerHTML='<div class="empty"><div class="ei">💥</div><p>No comics found for this category.</p></div>';
       }
       return;
     }
 
-    grid.innerHTML = unique.map(buildComicCard).join('');
-    paging.comics.total = totalFound;
-    renderPagination('comicsPagination', 'comics', page, totalFound, perPg, 'loadComics');
-
-  } catch {
-    grid.innerHTML = '<div class="empty"><div class="ei">⚠️</div><p>Could not load comics.<br>Check your connection.</p></div>';
+    grid.innerHTML=docs.map(buildComicCard).join('');
+    pg.comics.total=total;
+    renderPagination('comicsPagination',page,total,perPg,'loadComics');
+    if(page>1) scrollPageTop('page-comics');
+  }catch(e){
+    grid.innerHTML='<div class="empty"><div class="ei">⚠️</div><p>Could not load comics.<br>Check your connection.</p></div>';
   }
 }
 
-function buildComicCard(d) {
-  const title   = d.title || 'Unknown Comic';
-  const creator = Array.isArray(d.creator) ? d.creator[0] : (d.creator || '');
-  const year    = d.date ? d.date.substring(0,4) : '';
-  const id      = d.identifier;
-  const cover   = `https://archive.org/services/img/${id}`;
+function buildComicCard(d){
+  const title=d.title||'Unknown Comic';
+  const creator=Array.isArray(d.creator)?d.creator[0]:(d.creator||'');
+  const year=d.date?d.date.substring(0,4):'';
+  const id=d.identifier;
+  const cover=`https://archive.org/services/img/${id}`;
   return `<div class="comic-card" onclick="openComicModal('${escJs(id)}','${escJs(title)}','${escJs(creator)}','${year}')">
     <img class="comic-cover" src="${cover}" alt="${escHtml(title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
     <div class="comic-cover-ph" style="display:none">💥</div>
-    <div class="comic-info">
-      <div class="comic-title">${escHtml(title)}</div>
-      <div class="comic-year">${year || creator || 'Internet Archive'}</div>
-    </div>
+    <div class="comic-info"><div class="comic-title">${escHtml(title)}</div><div class="comic-year">${year||creator||'Internet Archive'}</div></div>
   </div>`;
 }
 
-// ===== BOOK MODAL (Gutenberg) =====
-function openBookModal(dataStr) {
-  let b;
-  try { b = JSON.parse(dataStr); } catch { return; }
-  document.getElementById('bookModalTitle').textContent  = 'Book Details';
-  document.getElementById('bookModalName').textContent   = b.title;
-  document.getElementById('bookModalAuthor').textContent = b.author || '';
-  document.getElementById('bookModalBadges').innerHTML   = '<span class="badge">Project Gutenberg</span>';
-  document.getElementById('bookModalDesc').textContent   = 'Classic literature from Project Gutenberg — free to read, download and share.';
-  const coverEl = document.getElementById('bookModalCover');
-  if (b.cover) {
-    coverEl.innerHTML = `<img class="book-detail-cover" src="${b.cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>📖</div>'">`;
-  } else { coverEl.innerHTML = '<div class="book-detail-cover-ph">📖</div>'; }
-  const f      = b.formats || {};
-  const readUrl = f['text/html'] || f['application/xhtml+xml'] || f['text/plain'] || f['application/pdf'] || '';
-  const dlUrl   = f['application/epub+zip'] || f['application/x-mobipocket-ebook'] || f['application/pdf'] || readUrl;
-  const isSaved = savedBooks.some(s => s.id == b.id);
-  const bJson   = escAttr(JSON.stringify(b));
-  document.getElementById('bookModalActions').innerHTML = `
-    ${readUrl ? `<button class="btn btn-primary" onclick="openReader('${escJs(readUrl)}','${escJs(b.title)}')">📖 Read Now</button>` : ''}
-    ${dlUrl   ? `<a class="btn btn-ghost" href="${dlUrl}" target="_blank" rel="noopener">⬇️ Download</a>` : ''}
+// ============================================================
+// BOOK MODAL
+// ============================================================
+function openBookModal(dataStr){
+  let b; try{ b=JSON.parse(dataStr); }catch{ return; }
+  document.getElementById('bookModalTitle').textContent='Book Details';
+  document.getElementById('bookModalName').textContent=b.title;
+  document.getElementById('bookModalAuthor').textContent=b.author||'';
+  document.getElementById('bookModalBadges').innerHTML='<span class="badge">Project Gutenberg</span>';
+  document.getElementById('bookModalDesc').textContent='Classic literature from Project Gutenberg — free to read, download and share.';
+  const ce=document.getElementById('bookModalCover');
+  ce.innerHTML=b.cover?`<img class="book-detail-cover" src="${b.cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>📖</div>'">`:`<div class="book-detail-cover-ph">📖</div>`;
+  const f=b.formats||{};
+  const readUrl=f['text/html']||f['application/xhtml+xml']||f['text/plain']||f['application/pdf']||'';
+  const dlUrl=f['application/epub+zip']||f['application/x-mobipocket-ebook']||f['application/pdf']||readUrl;
+  const isSaved=savedBooks.some(s=>s.id==b.id);
+  document.getElementById('bookModalActions').innerHTML=`
+    ${readUrl?`<button class="btn btn-primary" onclick="openReader('${escJs(readUrl)}','${escJs(b.title)}')">📖 Read Now</button>`:''}
+    ${dlUrl?`<a class="btn btn-ghost" href="${dlUrl}" target="_blank" rel="noopener">⬇️ Download</a>`:''}
     <button class="btn btn-ghost" onclick="openNarration('${escJs(b.title)}','${escJs(b.author||'')}','gutenberg','${b.id}','')">🎧 Listen</button>
-    <button class="btn btn-ghost" onclick="saveBook('${bJson}')">
-      ${isSaved ? '✅ Saved' : '🔖 Save'}
+    <button class="btn btn-ghost" onclick="saveBook('${escAttr(JSON.stringify(b))}')">
+      ${isSaved?'✅ Saved':'🔖 Save'}
     </button>`;
   openModal('bookModal');
 }
 
-// ===== ARCHIVE MODAL =====
-async function openArchiveModal(id, title, creator) {
-  document.getElementById('bookModalTitle').textContent  = 'Loading…';
-  document.getElementById('bookModalName').textContent   = title;
-  document.getElementById('bookModalAuthor').textContent = creator;
-  document.getElementById('bookModalBadges').innerHTML   = '<span class="badge">Internet Archive</span>';
-  document.getElementById('bookModalDesc').textContent   = 'Loading details…';
-  const cover = `https://archive.org/services/img/${id}`;
-  document.getElementById('bookModalCover').innerHTML    = `<img class="book-detail-cover" src="${cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>📜</div>'">`;
-  document.getElementById('bookModalActions').innerHTML  = '<div class="loading" style="padding:10px"><div class="spinner"></div></div>';
+// ============================================================
+// ARCHIVE MODAL
+// ============================================================
+async function openArchiveModal(id,title,creator){
+  document.getElementById('bookModalTitle').textContent='Loading…';
+  document.getElementById('bookModalName').textContent=title;
+  document.getElementById('bookModalAuthor').textContent=creator;
+  document.getElementById('bookModalBadges').innerHTML='<span class="badge">Internet Archive</span>';
+  document.getElementById('bookModalDesc').textContent='Loading details…';
+  const cover=`https://archive.org/services/img/${id}`;
+  document.getElementById('bookModalCover').innerHTML=`<img class="book-detail-cover" src="${cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>📜</div>'">`;
+  document.getElementById('bookModalActions').innerHTML='<div class="loading" style="padding:10px"><div class="spinner"></div></div>';
   openModal('bookModal');
-  try {
-    const controller = new AbortController(); setTimeout(() => controller.abort(), 6000);
-    const r    = await fetch(`https://archive.org/metadata/${id}`, { signal: controller.signal });
-    const meta = await r.json();
-    const desc = (meta.metadata && (meta.metadata.description || meta.metadata.subject)) || 'From the Internet Archive collection.';
-    const descText = Array.isArray(desc) ? desc.join(', ') : String(desc).replace(/<[^>]+>/g,'').substring(0,300);
-    document.getElementById('bookModalTitle').textContent = 'Book Details';
-    document.getElementById('bookModalDesc').textContent  = descText;
-  } catch { document.getElementById('bookModalDesc').textContent = 'From the Internet Archive collection.'; }
-  const readUrl = `https://archive.org/embed/${id}`;
-  const pageUrl = `https://archive.org/details/${id}`;
-  const isSaved = savedBooks.some(s => s.id === id);
-  const bookObj = escAttr(JSON.stringify({id, title, author: creator, cover, src:'archive', readUrl, pageUrl}));
-  document.getElementById('bookModalActions').innerHTML = `
+  try{
+    const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),6000);
+    const meta=(await(await fetch(`https://archive.org/metadata/${id}`,{signal:ctrl.signal})).json()).metadata||{};
+    const raw=meta.description||meta.subject||'From the Internet Archive.';
+    document.getElementById('bookModalTitle').textContent='Book Details';
+    document.getElementById('bookModalDesc').textContent=(Array.isArray(raw)?raw.join(', '):String(raw).replace(/<[^>]+>/g,'')).substring(0,300);
+  }catch{ document.getElementById('bookModalDesc').textContent='From the Internet Archive collection.'; }
+  const readUrl=`https://archive.org/embed/${id}`;
+  const pageUrl=`https://archive.org/details/${id}`;
+  const isSaved=savedBooks.some(s=>s.id===id);
+  const obj=escAttr(JSON.stringify({id,title,author:creator,cover,src:'archive',readUrl,pageUrl}));
+  document.getElementById('bookModalActions').innerHTML=`
     <button class="btn btn-primary" onclick="openReader('${escJs(readUrl)}','${escJs(title)}')">📖 Read Now</button>
     <a class="btn btn-ghost" href="${pageUrl}" target="_blank" rel="noopener">🏛️ View on Archive</a>
     <button class="btn btn-ghost" onclick="openNarration('${escJs(title)}','${escJs(creator)}','archive','${escJs(id)}','')">🎧 Listen</button>
-    <button class="btn btn-ghost" onclick="saveBook('${bookObj}')">
-      ${isSaved ? '✅ Saved' : '🔖 Save'}
-    </button>`;
+    <button class="btn btn-ghost" onclick="saveBook('${obj}')">${isSaved?'✅ Saved':'🔖 Save'}</button>`;
 }
 
-// ===== COMIC MODAL =====
-async function openComicModal(id, title, creator, year) {
-  document.getElementById('comicModalTitle').textContent = 'Loading…';
-  document.getElementById('comicModalName').textContent  = title;
-  document.getElementById('comicModalMeta').textContent  = [creator, year].filter(Boolean).join(' · ');
-  document.getElementById('comicModalBadges').innerHTML  = '<span class="badge">Internet Archive</span>';
-  document.getElementById('comicModalDesc').textContent  = 'Loading details…';
-  const cover = `https://archive.org/services/img/${id}`;
-  document.getElementById('comicModalCover').innerHTML   = `<img class="book-detail-cover" src="${cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>💥</div>'">`;
-  document.getElementById('comicModalActions').innerHTML = '<div class="loading" style="padding:10px"><div class="spinner"></div></div>';
+// ============================================================
+// COMIC MODAL
+// ============================================================
+async function openComicModal(id,title,creator,year){
+  document.getElementById('comicModalTitle').textContent='Loading…';
+  document.getElementById('comicModalName').textContent=title;
+  document.getElementById('comicModalMeta').textContent=[creator,year].filter(Boolean).join(' · ');
+  document.getElementById('comicModalBadges').innerHTML='<span class="badge">Internet Archive</span>';
+  document.getElementById('comicModalDesc').textContent='Loading details…';
+  const cover=`https://archive.org/services/img/${id}`;
+  document.getElementById('comicModalCover').innerHTML=`<img class="book-detail-cover" src="${cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>💥</div>'">`;
+  document.getElementById('comicModalActions').innerHTML='<div class="loading" style="padding:10px"><div class="spinner"></div></div>';
   openModal('comicModal');
-  try {
-    const controller = new AbortController(); setTimeout(() => controller.abort(), 6000);
-    const r    = await fetch(`https://archive.org/metadata/${id}`, { signal: controller.signal });
-    const meta = await r.json();
-    const raw  = meta.metadata;
-    if (raw) {
-      document.getElementById('comicModalName').textContent = raw.title || title;
-      if (raw.description) {
-        const d = Array.isArray(raw.description) ? raw.description[0] : raw.description;
-        document.getElementById('comicModalDesc').textContent = d.replace(/<[^>]+>/g,'').substring(0,300);
-      }
-    }
-  } catch {}
-  document.getElementById('comicModalTitle').textContent = 'Comic Details';
-  const readUrl = `https://archive.org/embed/${id}`;
-  const pageUrl = `https://archive.org/details/${id}`;
-  const isSaved = savedBooks.some(s => s.id === id);
-  const comicObj = escAttr(JSON.stringify({id, title, author: creator, year, cover, src:'comic', readUrl, pageUrl}));
-  document.getElementById('comicModalActions').innerHTML = `
+  try{
+    const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),6000);
+    const meta=(await(await fetch(`https://archive.org/metadata/${id}`,{signal:ctrl.signal})).json()).metadata||{};
+    if(meta.title) document.getElementById('comicModalName').textContent=meta.title;
+    if(meta.description){
+      const d=Array.isArray(meta.description)?meta.description[0]:meta.description;
+      document.getElementById('comicModalDesc').textContent=d.replace(/<[^>]+>/g,'').substring(0,300);
+    }else{ document.getElementById('comicModalDesc').textContent='From the Internet Archive collection.'; }
+  }catch{ document.getElementById('comicModalDesc').textContent='From the Internet Archive collection.'; }
+  document.getElementById('comicModalTitle').textContent='Comic Details';
+  const readUrl=`https://archive.org/embed/${id}`;
+  const pageUrl=`https://archive.org/details/${id}`;
+  const isSaved=savedBooks.some(s=>s.id===id);
+  const obj=escAttr(JSON.stringify({id,title,author:creator,year,cover,src:'comic',readUrl,pageUrl}));
+  document.getElementById('comicModalActions').innerHTML=`
     <button class="btn btn-primary" onclick="openReader('${escJs(readUrl)}','${escJs(title)}')">📖 Read Now</button>
     <a class="btn btn-ghost" href="${pageUrl}" target="_blank" rel="noopener">🏛️ View on Archive</a>
     <button class="btn btn-ghost" onclick="openNarration('${escJs(title)}','${escJs(creator)}','archive','${escJs(id)}','')">🎧 Listen</button>
-    <button class="btn btn-ghost" onclick="saveBook('${comicObj}')">
-      ${isSaved ? '✅ Saved' : '🔖 Save'}
-    </button>`;
+    <button class="btn btn-ghost" onclick="saveBook('${obj}')">${isSaved?'✅ Saved':'🔖 Save'}</button>`;
 }
 
-// ===== READER =====
-function openReader(url, title) {
+// ============================================================
+// READER
+// ============================================================
+function openReader(url,title){
   closeModal('bookModal'); closeModal('comicModal');
-  if (url.includes('gutenberg.org') && !url.includes('embed')) { window.open(url, '_blank'); return; }
-  document.getElementById('readerTitle').textContent = title || 'Reading';
-  document.getElementById('readerFrame').src         = url;
-  document.getElementById('readerOpenLink').href     = url.replace('/embed/', '/details/');
+  if(url.includes('gutenberg.org')&&!url.includes('embed')){ window.open(url,'_blank'); return; }
+  document.getElementById('readerTitle').textContent=title||'Reading';
+  document.getElementById('readerFrame').src=url;
+  document.getElementById('readerOpenLink').href=url.replace('/embed/','/details/');
   openModal('readerModal');
 }
 
-// ===== SEARCH =====
-function setSearchSrc(src, el) {
-  searchSrcMode = src;
-  document.querySelectorAll('#page-search .cat-pill').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
+// ============================================================
+// SEARCH
+// ============================================================
+function setSearchSrc(src,el){
+  searchSrcMode=src;
+  document.querySelectorAll('#page-search .cat-pill').forEach(p=>p.classList.remove('active')); el.classList.add('active');
 }
-async function doSearch(q) {
-  if (!q || !q.trim()) return;
+async function doSearch(q){
+  if(!q||!q.trim()) return;
   showPage('search');
-  document.getElementById('mainSearch').value = q;
-  document.getElementById('topSearch').value  = q;
-  const res = document.getElementById('searchResults');
-  res.innerHTML = '<div class="loading"><div class="spinner"></div><span>Searching…</span></div>';
-  const results = []; const promises = [];
-  if (searchSrcMode === 'gutenberg' || searchSrcMode === 'both') {
-    promises.push(
-      fetch(`https://gutendex.com/books/?search=${encodeURIComponent(q)}&page=1`)
-        .then(r => r.json()).then(d => {
-          (d.results || []).slice(0,10).forEach(b => results.push({
-            type:'book', id:b.id, title:b.title,
-            author:(b.authors&&b.authors[0])?b.authors[0].name:'Unknown',
-            cover:b.formats&&(b.formats['image/jpeg']||''),
-            src:'gutenberg', formats:b.formats||{}
-          }));
-        }).catch(()=>{})
-    );
+  document.getElementById('mainSearch').value=q; document.getElementById('topSearch').value=q;
+  const res=document.getElementById('searchResults');
+  res.innerHTML='<div class="loading"><div class="spinner"></div><span>Searching…</span></div>';
+  const results=[]; const promises=[];
+  if(searchSrcMode==='gutenberg'||searchSrcMode==='both'){
+    promises.push(fetch(`https://gutendex.com/books/?search=${encodeURIComponent(q)}&page=1`).then(r=>r.json()).then(d=>{
+      (d.results||[]).slice(0,10).forEach(b=>results.push({type:'book',id:b.id,title:b.title,author:(b.authors&&b.authors[0])?b.authors[0].name:'Unknown',cover:b.formats&&(b.formats['image/jpeg']||''),src:'gutenberg',formats:b.formats||{}}));
+    }).catch(()=>{}));
   }
-  if (searchSrcMode === 'archive' || searchSrcMode === 'both') {
-    promises.push(
-      fetch(`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}+AND+mediatype:texts&fl[]=identifier,title,creator&rows=10&output=json&sort=downloads+desc`)
-        .then(r => r.json()).then(d => {
-          ((d.response&&d.response.docs)||[]).forEach(doc => results.push({
-            type:'archive', id:doc.identifier, title:doc.title,
-            author:Array.isArray(doc.creator)?doc.creator[0]:(doc.creator||'Internet Archive'),
-            cover:`https://archive.org/services/img/${doc.identifier}`, src:'archive'
-          }));
-        }).catch(()=>{})
-    );
+  if(searchSrcMode==='archive'||searchSrcMode==='both'){
+    promises.push(fetch(`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}+AND+mediatype:texts&fl[]=identifier,title,creator&rows=10&output=json&sort[]=downloads+desc`).then(r=>r.json()).then(d=>{
+      ((d.response&&d.response.docs)||[]).forEach(doc=>results.push({type:'archive',id:doc.identifier,title:doc.title,author:Array.isArray(doc.creator)?doc.creator[0]:(doc.creator||'Internet Archive'),cover:`https://archive.org/services/img/${doc.identifier}`,src:'archive'}));
+    }).catch(()=>{}));
   }
   await Promise.all(promises);
-  // De-dup search results by ID
-  const seenSearch = new Set();
-  const dedupedResults = results.filter(r => { if (seenSearch.has(r.id)) return false; seenSearch.add(r.id); return true; });
-  if (!dedupedResults.length) { res.innerHTML = '<div class="empty"><div class="ei">🔎</div><p>No results found for "' + escHtml(q) + '"</p></div>'; return; }
-  res.innerHTML = `<div class="result-count">${dedupedResults.length} result${dedupedResults.length!==1?'s':''} for "${escHtml(q)}"</div>
-    <div class="book-grid">${dedupedResults.map(b => {
-      if (b.src === 'gutenberg') return buildBookCard(b, 'gutenberg');
-      return buildArchiveCard({identifier:b.id, title:b.title, creator:b.author});
-    }).join('')}</div>`;
+  const seen=new Set();
+  const dedup=results.filter(r=>{ if(seen.has(String(r.id))) return false; seen.add(String(r.id)); return true; });
+  if(!dedup.length){ res.innerHTML=`<div class="empty"><div class="ei">🔎</div><p>No results for "${escHtml(q)}"</p></div>`; return; }
+  res.innerHTML=`<div class="result-count">${dedup.length} result${dedup.length!==1?'s':''} for "${escHtml(q)}"</div>
+    <div class="book-grid">${dedup.map(b=>b.src==='gutenberg'?buildBookCard(b):buildArchiveCard({identifier:b.id,title:b.title,creator:b.author})).join('')}</div>`;
 }
 
-// ===== LIBRARY =====
-function handleUpload(event) {
-  const file = event.target.files[0]; if (!file) return;
-  const entry = { id:Date.now(), title:file.name.replace(/\.[^.]+$/,''), author:'Uploaded', size:(file.size/1024/1024).toFixed(1)+' MB', type:file.name.split('.').pop().toUpperCase(), date:new Date().toLocaleDateString(), dataUrl:null };
-  const reader = new FileReader();
-  reader.onload = e => {
-    entry.dataUrl = e.target.result;
-    uploadedBooks.unshift(entry);
-    localStorage.setItem('aurelius_library', JSON.stringify(uploadedBooks.slice(0,50)));
-    renderLibrary(); toast('Book uploaded: ' + entry.title, 'success');
-  };
-  reader.readAsDataURL(file); event.target.value = '';
+// ============================================================
+// LIBRARY
+// ============================================================
+function handleUpload(event){
+  const file=event.target.files[0]; if(!file) return;
+  const entry={id:Date.now(),title:file.name.replace(/\.[^.]+$/,''),author:'Uploaded',size:(file.size/1024/1024).toFixed(1)+' MB',type:file.name.split('.').pop().toUpperCase(),date:new Date().toLocaleDateString(),dataUrl:null};
+  const reader=new FileReader();
+  reader.onload=e=>{ entry.dataUrl=e.target.result; uploadedBooks.unshift(entry); localStorage.setItem('aurelius_library',JSON.stringify(uploadedBooks.slice(0,50))); renderLibrary(); toast('Uploaded: '+entry.title,'success'); };
+  reader.readAsDataURL(file); event.target.value='';
 }
-function renderLibrary() {
-  const grid  = document.getElementById('libraryGrid');
-  const count = document.getElementById('uploadedCount');
-  count.textContent = uploadedBooks.length + ' book' + (uploadedBooks.length !== 1 ? 's' : '');
-  if (!uploadedBooks.length) { grid.innerHTML = '<div class="empty"><div class="ei">📚</div><p>No uploads yet.<br>Upload your first book above.</p></div>'; return; }
-  grid.innerHTML = uploadedBooks.map(b => `
-    <div class="book-card">
-      <div class="book-cover-placeholder">📄</div>
-      <div class="book-info">
-        <div class="book-title">${escHtml(b.title)}</div>
-        <div class="book-author" style="margin-bottom:8px">${b.type} · ${b.size}</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          ${b.dataUrl ? `<button class="btn btn-sm btn-primary" onclick="readUploaded(${b.id})">📖 Read</button>` : ''}
-          <button class="btn btn-sm btn-ghost" onclick="openNarration('${escJs(b.title)}','Uploaded','uploaded',${b.id},'${b.dataUrl ? 'has-data' : ''}')">🎧 Listen</button>
-          <button class="btn btn-sm btn-ghost" onclick="removeUploaded(${b.id})">🗑️</button>
-        </div>
-      </div>
-    </div>`).join('');
+function renderLibrary(){
+  const grid=document.getElementById('libraryGrid'),count=document.getElementById('uploadedCount');
+  count.textContent=uploadedBooks.length+' book'+(uploadedBooks.length!==1?'s':'');
+  if(!uploadedBooks.length){ grid.innerHTML='<div class="empty"><div class="ei">📚</div><p>No uploads yet.</p></div>'; return; }
+  grid.innerHTML=uploadedBooks.map(b=>`<div class="book-card">
+    <div class="book-cover-placeholder">📄</div>
+    <div class="book-info"><div class="book-title">${escHtml(b.title)}</div><div class="book-author" style="margin-bottom:8px">${b.type} · ${b.size}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+      ${b.dataUrl?`<button class="btn btn-sm btn-primary" onclick="readUploaded(${b.id})">📖 Read</button>`:''}
+      <button class="btn btn-sm btn-ghost" onclick="openNarration('${escJs(b.title)}','Uploaded','uploaded',${b.id},'')">🎧 Listen</button>
+      <button class="btn btn-sm btn-ghost" onclick="removeUploaded(${b.id})">🗑️</button>
+    </div></div></div>`).join('');
 }
-function readUploaded(id) {
-  const b = uploadedBooks.find(x => x.id === id); if (!b || !b.dataUrl) return;
-  if (b.type === 'PDF') {
-    document.getElementById('readerTitle').textContent = b.title;
-    document.getElementById('readerFrame').src         = b.dataUrl;
-    document.getElementById('readerOpenLink').href     = b.dataUrl;
-    openModal('readerModal');
-  } else {
-    const win = window.open('', '_blank');
-    if (win) win.document.write(`<html><head><title>${escHtml(b.title)}</title><meta charset="UTF-8"><style>body{font-family:Georgia,serif;max-width:720px;margin:40px auto;padding:20px;line-height:1.8;font-size:1.1rem;}</style></head><body><h1>${escHtml(b.title)}</h1><pre style="white-space:pre-wrap;font-family:Georgia,serif">${escHtml(atob(b.dataUrl.split(',')[1]))}</pre></body></html>`);
-  }
+function readUploaded(id){
+  const b=uploadedBooks.find(x=>x.id===id); if(!b||!b.dataUrl) return;
+  if(b.type==='PDF'){ document.getElementById('readerTitle').textContent=b.title; document.getElementById('readerFrame').src=b.dataUrl; document.getElementById('readerOpenLink').href=b.dataUrl; openModal('readerModal'); }
+  else{ const w=window.open('','_blank'); if(w) w.document.write(`<html><head><title>${escHtml(b.title)}</title><meta charset="UTF-8"><style>body{font-family:Georgia,serif;max-width:720px;margin:40px auto;padding:20px;line-height:1.8;}</style></head><body><h1>${escHtml(b.title)}</h1><pre style="white-space:pre-wrap">${escHtml(atob(b.dataUrl.split(',')[1]))}</pre></body></html>`); }
 }
-function removeUploaded(id) { uploadedBooks = uploadedBooks.filter(b => b.id !== id); localStorage.setItem('aurelius_library', JSON.stringify(uploadedBooks)); renderLibrary(); }
-function clearLibrary() { if (confirm('Remove all uploaded books?')) { uploadedBooks = []; localStorage.setItem('aurelius_library', JSON.stringify([])); renderLibrary(); toast('Library cleared', 'info'); } }
+function removeUploaded(id){ uploadedBooks=uploadedBooks.filter(b=>b.id!==id); localStorage.setItem('aurelius_library',JSON.stringify(uploadedBooks)); renderLibrary(); }
+function clearLibrary(){ if(confirm('Remove all uploaded books?')){ uploadedBooks=[]; localStorage.setItem('aurelius_library',JSON.stringify([])); renderLibrary(); toast('Library cleared','info'); } }
 
-// ===== DOWNLOADS =====
-function saveBook(jsonStr) {
-  let b; try { b = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr; } catch { return; }
-  if (!savedBooks.some(s => s.id == b.id)) {
-    savedBooks.unshift({...b, savedAt: new Date().toLocaleDateString()});
-    localStorage.setItem('aurelius_downloads', JSON.stringify(savedBooks.slice(0,100)));
-    toast('Saved to Downloads', 'success');
-  } else { toast('Already saved', 'info'); }
+// ============================================================
+// DOWNLOADS
+// ============================================================
+function saveBook(jsonStr){
+  let b; try{ b=typeof jsonStr==='string'?JSON.parse(jsonStr):jsonStr; }catch{ return; }
+  if(!savedBooks.some(s=>s.id==b.id)){ savedBooks.unshift({...b,savedAt:new Date().toLocaleDateString()}); localStorage.setItem('aurelius_downloads',JSON.stringify(savedBooks.slice(0,100))); toast('Saved to Downloads','success'); }
+  else toast('Already saved','info');
 }
-function renderDownloads() {
-  const list     = document.getElementById('downloadsList');
-  const count    = document.getElementById('downloadsCount');
-  const clearBtn = document.getElementById('clearDownloadsBtn');
-  count.textContent      = savedBooks.length + ' book' + (savedBooks.length !== 1 ? 's' : '');
-  clearBtn.style.display = savedBooks.length ? 'block' : 'none';
-  if (!savedBooks.length) { list.innerHTML = '<div class="empty"><div class="ei">⬇️</div><p>No saved books yet.<br>Browse Discover or Archive and tap Save.</p></div>'; return; }
-  list.innerHTML = '<div class="downloads-list">' + savedBooks.map(b => `
-    <div class="download-item">
-      <div class="di-icon">${b.src === 'comic' ? '💥' : b.src === 'archive' ? '🏛️' : '📖'}</div>
-      <div class="di-info">
-        <div class="di-title">${escHtml(b.title)}</div>
-        <div class="di-meta">${b.author || ''} ${b.src ? '· ' + b.src : ''} ${b.savedAt ? '· Saved ' + b.savedAt : ''}</div>
-      </div>
-      <div class="di-actions">
-        ${b.readUrl ? `<button class="btn btn-sm btn-primary" onclick="openReader('${escJs(b.readUrl)}','${escJs(b.title)}')">📖 Read</button>` : ''}
-        <button class="btn btn-sm btn-ghost" onclick="removeDownload('${b.id}')">🗑️</button>
-      </div>
-    </div>`).join('') + '</div>';
+function renderDownloads(){
+  const list=document.getElementById('downloadsList'),count=document.getElementById('downloadsCount'),btn=document.getElementById('clearDownloadsBtn');
+  count.textContent=savedBooks.length+' book'+(savedBooks.length!==1?'s':''); btn.style.display=savedBooks.length?'block':'none';
+  if(!savedBooks.length){ list.innerHTML='<div class="empty"><div class="ei">⬇️</div><p>No saved books yet.</p></div>'; return; }
+  list.innerHTML='<div class="downloads-list">'+savedBooks.map(b=>`<div class="download-item">
+    <div class="di-icon">${b.src==='comic'?'💥':b.src==='archive'?'🏛️':'📖'}</div>
+    <div class="di-info"><div class="di-title">${escHtml(b.title)}</div><div class="di-meta">${b.author||''} ${b.src?'· '+b.src:''} ${b.savedAt?'· Saved '+b.savedAt:''}</div></div>
+    <div class="di-actions">
+      ${b.readUrl?`<button class="btn btn-sm btn-primary" onclick="openReader('${escJs(b.readUrl)}','${escJs(b.title)}')">📖 Read</button>`:''}
+      <button class="btn btn-sm btn-ghost" onclick="removeDownload('${b.id}')">🗑️</button>
+    </div></div>`).join('')+'</div>';
 }
-function removeDownload(id) { savedBooks = savedBooks.filter(b => b.id != id); localStorage.setItem('aurelius_downloads', JSON.stringify(savedBooks)); renderDownloads(); }
-function clearAllDownloads() { if (confirm('Remove all saved books?')) { savedBooks = []; localStorage.setItem('aurelius_downloads', JSON.stringify([])); renderDownloads(); toast('Downloads cleared', 'info'); } }
+function removeDownload(id){ savedBooks=savedBooks.filter(b=>b.id!=id); localStorage.setItem('aurelius_downloads',JSON.stringify(savedBooks)); renderDownloads(); }
+function clearAllDownloads(){ if(confirm('Remove all saved books?')){ savedBooks=[]; localStorage.setItem('aurelius_downloads',JSON.stringify([])); renderDownloads(); toast('Downloads cleared','info'); } }
 
-// ===== DONATE =====
-function setDonateAmt(amt, el) { donateAmt = amt; document.querySelectorAll('.donate-amt').forEach(b => b.classList.remove('active')); el.classList.add('active'); document.getElementById('customAmt').value = ''; }
-function goPayPal() {
-  const custom = document.getElementById('customAmt').value;
-  const amount = custom ? parseFloat(custom) : donateAmt;
-  if (!amount || amount < 1) { toast('Please enter a valid amount', 'error'); return; }
-  window.open(`https://www.paypal.com/donate/?business=hotinferno12%40gmail.com&amount=${amount}&currency_code=USD&item_name=Aurelius+Library+Donation`, '_blank');
+// ============================================================
+// DONATE / SETTINGS
+// ============================================================
+function setDonateAmt(amt,el){ donateAmt=amt; document.querySelectorAll('.donate-amt').forEach(b=>b.classList.remove('active')); el.classList.add('active'); document.getElementById('customAmt').value=''; }
+function goPayPal(){ const c=document.getElementById('customAmt').value; const a=c?parseFloat(c):donateAmt; if(!a||a<1){ toast('Please enter a valid amount','error'); return; } window.open(`https://www.paypal.com/donate/?business=hotinferno12%40gmail.com&amount=${a}&currency_code=USD&item_name=Aurelius+Library+Donation`,'_blank'); }
+function toggleDarkMode(cb){
+  if(!cb.checked){ document.documentElement.style.setProperty('--bg','#f5f5f0'); document.documentElement.style.setProperty('--surface','#ffffff'); document.documentElement.style.setProperty('--surface2','#f0f0e8'); document.documentElement.style.setProperty('--text','#1a1a14'); document.documentElement.style.setProperty('--muted','#666655'); }
+  else{ document.documentElement.style.setProperty('--bg','#0a0a14'); document.documentElement.style.setProperty('--surface','#12121f'); document.documentElement.style.setProperty('--surface2','#1a1a2e'); document.documentElement.style.setProperty('--text','#e8e8f0'); document.documentElement.style.setProperty('--muted','#888899'); }
 }
 
-// ===== MODAL UTILS =====
-function openModal(id)  { const el = document.getElementById(id); if (el) { el.classList.add('show'); document.body.style.overflow = 'hidden'; } }
-function closeModal(id) {
-  const el = document.getElementById(id); if (el) el.classList.remove('show');
-  if (!document.querySelector('.modal-overlay.show')) document.body.style.overflow = '';
-  if (id === 'readerModal') document.getElementById('readerFrame').src = '';
-}
-document.querySelectorAll('.modal-overlay').forEach(ov => { ov.addEventListener('click', function(e) { if (e.target === this) closeModal(this.id); }); });
+// ============================================================
+// MODAL UTILS
+// ============================================================
+function openModal(id){ const el=document.getElementById(id); if(el){ el.classList.add('show'); document.body.style.overflow='hidden'; } }
+function closeModal(id){ const el=document.getElementById(id); if(el) el.classList.remove('show'); if(!document.querySelector('.modal-overlay.show')) document.body.style.overflow=''; if(id==='readerModal') document.getElementById('readerFrame').src=''; }
+document.querySelectorAll('.modal-overlay').forEach(ov=>{ ov.addEventListener('click',function(e){ if(e.target===this) closeModal(this.id); }); });
 
-// ===== SETTINGS =====
-function toggleDarkMode(cb) {
-  if (!cb.checked) {
-    document.documentElement.style.setProperty('--bg','#f5f5f0'); document.documentElement.style.setProperty('--surface','#ffffff');
-    document.documentElement.style.setProperty('--surface2','#f0f0e8'); document.documentElement.style.setProperty('--text','#1a1a14');
-    document.documentElement.style.setProperty('--muted','#666655');
-  } else {
-    document.documentElement.style.setProperty('--bg','#0a0a14'); document.documentElement.style.setProperty('--surface','#12121f');
-    document.documentElement.style.setProperty('--surface2','#1a1a2e'); document.documentElement.style.setProperty('--text','#e8e8f0');
-    document.documentElement.style.setProperty('--muted','#888899');
-  }
-}
-
-// ===== TOAST =====
-function toast(msg, type='info') {
-  const icons = {success:'✅', error:'❌', info:'ℹ️'};
-  const el    = document.createElement('div');
-  el.className = `toast-item ${type}`;
-  el.innerHTML = `<span>${icons[type]||''}</span><span>${escHtml(msg)}</span>`;
+// ============================================================
+// TOAST
+// ============================================================
+function toast(msg,type='info'){
+  const icons={success:'✅',error:'❌',info:'ℹ️'};
+  const el=document.createElement('div'); el.className=`toast-item ${type}`;
+  el.innerHTML=`<span>${icons[type]||''}</span><span>${escHtml(msg)}</span>`;
   document.getElementById('toast').appendChild(el);
-  setTimeout(() => { el.style.opacity='0'; el.style.transition='opacity .4s'; setTimeout(()=>el.remove(),400); }, 3000);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .4s'; setTimeout(()=>el.remove(),400); },3000);
 }
 
-// ===== UTILS =====
-function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function escJs(s)   { return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"').replace(/\n/g,'\\n').replace(/\r/g,'\\r'); }
-function escAttr(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+// ============================================================
+// UTILS
+// ============================================================
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escJs(s){   return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"').replace(/\n/g,'\\n').replace(/\r/g,'\\r'); }
+function escAttr(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
-// ===== NARRATION ENGINE =====
-let tts = { utterance:null, sentences:[], currentIdx:0, isPlaying:false, title:'', author:'', fullText:'', voices:[], selectedVoice:null };
-function loadVoices() {
-  const voices = window.speechSynthesis.getVoices();
-  if (voices.length) {
-    tts.voices = voices;
-    const sel = document.getElementById('narrateVoice'); if (!sel) return;
-    sel.innerHTML = voices.map((v,i) => `<option value="${i}">${v.name} (${v.lang})</option>`).join('');
-    const engIdx = voices.findIndex(v => v.lang.startsWith('en'));
-    if (engIdx >= 0) { sel.value = engIdx; tts.selectedVoice = voices[engIdx]; }
-  }
-}
-window.speechSynthesis.onvoiceschanged = loadVoices;
-async function openNarration(title, author, src, id, extra) {
-  stopNarration();
-  tts.title = title; tts.author = author; tts.sentences = []; tts.currentIdx = 0; tts.isPlaying = false;
-  document.getElementById('narrateTitle').textContent  = title;
-  document.getElementById('narrateAuthor').textContent = author || '';
-  document.getElementById('narratePlayBtn').textContent = '▶';
-  document.getElementById('narrateProgressFill').style.width = '0%';
-  document.getElementById('narratePos').textContent    = '0%';
-  document.getElementById('narrateStatus').textContent = 'Loading text…';
-  document.getElementById('narratePreview').textContent = 'Fetching text, please wait…';
+// ============================================================
+// NARRATION ENGINE
+// ============================================================
+let tts={utterance:null,sentences:[],currentIdx:0,isPlaying:false,title:'',author:'',fullText:'',voices:[],selectedVoice:null};
+function loadVoices(){ const v=window.speechSynthesis.getVoices(); if(v.length){ tts.voices=v; const sel=document.getElementById('narrateVoice'); if(!sel) return; sel.innerHTML=v.map((x,i)=>`<option value="${i}">${x.name} (${x.lang})</option>`).join(''); const ei=v.findIndex(x=>x.lang.startsWith('en')); if(ei>=0){ sel.value=ei; tts.selectedVoice=v[ei]; } } }
+window.speechSynthesis.onvoiceschanged=loadVoices;
+async function openNarration(title,author,src,id,extra){
+  stopNarration(); tts.title=title; tts.author=author; tts.sentences=[]; tts.currentIdx=0; tts.isPlaying=false;
+  document.getElementById('narrateTitle').textContent=title; document.getElementById('narrateAuthor').textContent=author||'';
+  document.getElementById('narratePlayBtn').textContent='▶'; document.getElementById('narrateProgressFill').style.width='0%';
+  document.getElementById('narratePos').textContent='0%'; document.getElementById('narrateStatus').textContent='Loading text…';
+  document.getElementById('narratePreview').textContent='Fetching text, please wait…';
   openModal('narrateModal'); loadVoices();
-  let text = '';
-  if (src === 'uploaded') {
-    const book = uploadedBooks.find(b => b.id == id);
-    if (book && book.dataUrl) {
-      if (book.type === 'TXT') { try { text = atob(book.dataUrl.split(',')[1]); } catch { text = ''; } }
-      else if (book.type === 'PDF') { text = `This is "${title}". Audio narration works best with text files.`; }
-      else { text = `Now reading: ${title}. This file type may not fully support text extraction.`; }
-    }
-    if (!text) text = `Unable to extract text from "${title}". Try uploading a plain text (.txt) file.`;
-  } else if (src === 'gutenberg') {
-    try {
-      const controller = new AbortController(); setTimeout(() => controller.abort(), 10000);
-      const r    = await fetch(`https://gutendex.com/books/${id}`, { signal: controller.signal });
-      const data = await r.json();
-      const f    = data.formats || {};
-      const textUrl = f['text/plain; charset=utf-8'] || f['text/plain'] || f['text/plain; charset=us-ascii'] || '';
-      if (textUrl) {
-        const tr  = await fetch(textUrl, { signal: controller.signal });
-        let raw   = await tr.text();
-        const startMarkers = ['*** START OF','***START OF','START OF THE PROJECT','START OF THIS PROJECT'];
-        const endMarkers   = ['*** END OF',  '***END OF',  'END OF THE PROJECT',  'END OF THIS PROJECT'];
-        let start = 0, end = raw.length;
-        for (const m of startMarkers) { const i = raw.indexOf(m); if (i !== -1) { const nl = raw.indexOf('\n', i); start = nl !== -1 ? nl+1 : i+m.length; break; } }
-        for (const m of endMarkers)   { const i = raw.indexOf(m); if (i !== -1) { end = i; break; } }
-        text = raw.substring(start, end).replace(/\r\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
-        if (text.length > 50000) text = text.substring(0, 50000) + '\n\n[Text continues — showing first portion]';
-      }
-    } catch { text = ''; }
-    if (!text) text = `Now narrating "${title}" by ${author}. The full text could not be loaded.`;
-  } else {
-    try {
-      const controller = new AbortController(); setTimeout(() => controller.abort(), 6000);
-      const r    = await fetch(`https://archive.org/metadata/${id}`, { signal: controller.signal });
-      const meta = await r.json();
-      const m    = meta.metadata || {};
-      const desc = m.description || m.notes || '';
-      const descText = Array.isArray(desc) ? desc.join(' ') : String(desc).replace(/<[^>]+>/g,' ');
-      text = `${title}. ${author ? 'By ' + author + '. ' : ''}${descText || 'From the Internet Archive collection.'}`;
-    } catch { text = `${title}. ${author ? 'By ' + author + '.' : ''} From the Internet Archive collection.`; }
-  }
-  tts.fullText  = text;
-  tts.sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-  tts.sentences = tts.sentences.filter(s => s.trim().length > 2);
-  if (!tts.sentences.length) tts.sentences = [text];
-  document.getElementById('narratePreview').textContent  = text.substring(0, 400) + (text.length > 400 ? '…' : '');
-  document.getElementById('narrateStatus').textContent   = 'Ready · ' + tts.sentences.length + ' sentences';
-  document.getElementById('narratePlayBtn').textContent  = '▶';
+  let text='';
+  if(src==='uploaded'){ const book=uploadedBooks.find(b=>b.id==id); if(book&&book.dataUrl&&book.type==='TXT'){ try{ text=atob(book.dataUrl.split(',')[1]); }catch{} } if(!text) text=`Unable to extract text from "${title}". Try uploading a plain text file.`; }
+  else if(src==='gutenberg'){
+    try{
+      const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),10000);
+      const data=(await(await fetch(`https://gutendex.com/books/${id}`,{signal:ctrl.signal})).json());
+      const f=data.formats||{}; const turl=f['text/plain; charset=utf-8']||f['text/plain']||'';
+      if(turl){ let raw=await(await fetch(turl,{signal:ctrl.signal})).text(); const sm=['*** START OF','***START OF']; const em=['*** END OF','***END OF']; let s=0,e=raw.length; for(const m of sm){const i=raw.indexOf(m);if(i!==-1){const nl=raw.indexOf('\n',i);s=nl!==-1?nl+1:i+m.length;break;}} for(const m of em){const i=raw.indexOf(m);if(i!==-1){e=i;break;}} text=raw.substring(s,e).replace(/\r\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim(); if(text.length>50000) text=text.substring(0,50000)+'\n\n[Showing first portion]'; }
+    }catch{}
+    if(!text) text=`Now narrating "${title}" by ${author}. The full text could not be loaded.`;
+  }else{ try{ const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),6000); const meta=(await(await fetch(`https://archive.org/metadata/${id}`,{signal:ctrl.signal})).json()).metadata||{}; const desc=meta.description||meta.notes||''; text=`${title}. ${author?'By '+author+'. ':''}${(Array.isArray(desc)?desc.join(' '):String(desc).replace(/<[^>]+>/g,' '))||'From the Internet Archive.'}`; }catch{ text=`${title}. ${author?'By '+author+'.':''} From the Internet Archive.`; } }
+  tts.fullText=text; tts.sentences=(text.match(/[^.!?]+[.!?]+/g)||[text]).filter(s=>s.trim().length>2); if(!tts.sentences.length) tts.sentences=[text];
+  document.getElementById('narratePreview').textContent=text.substring(0,400)+(text.length>400?'…':'');
+  document.getElementById('narrateStatus').textContent='Ready · '+tts.sentences.length+' sentences';
 }
-function toggleNarration() { tts.isPlaying ? pauseNarration() : playNarration(); }
-function playNarration() { if (!('speechSynthesis' in window)) { toast('Text-to-speech not supported', 'error'); return; } if (tts.currentIdx >= tts.sentences.length) tts.currentIdx = 0; speakFrom(tts.currentIdx); }
-function speakFrom(idx) { window.speechSynthesis.cancel(); tts.isPlaying = true; document.getElementById('narratePlayBtn').textContent = '⏸'; document.getElementById('narrateStatus').textContent = 'Playing…'; speakSentence(idx); }
-function speakSentence(idx) {
-  if (idx >= tts.sentences.length) {
-    tts.isPlaying = false; tts.currentIdx = 0;
-    document.getElementById('narratePlayBtn').textContent = '▶'; document.getElementById('narrateStatus').textContent = 'Finished';
-    document.getElementById('narrateProgressFill').style.width = '100%'; document.getElementById('narratePos').textContent = '100%'; return;
-  }
-  tts.currentIdx = idx;
-  const sentence = tts.sentences[idx];
-  const pct = Math.round((idx / tts.sentences.length) * 100);
-  document.getElementById('narrateProgressFill').style.width = pct + '%'; document.getElementById('narratePos').textContent = pct + '%';
-  const preview = document.getElementById('narratePreview');
-  const textPos = tts.fullText.indexOf(sentence.substring(0, 40));
-  if (textPos !== -1 && textPos < 400) {
-    preview.innerHTML = escHtml(tts.fullText.substring(0, textPos)) + `<span class="highlight">${escHtml(sentence)}</span>` + escHtml(tts.fullText.substring(textPos + sentence.length, 400));
-    preview.querySelector('.highlight')?.scrollIntoView({block:'nearest'});
-  }
-  const u = new SpeechSynthesisUtterance(sentence);
-  u.rate = parseFloat(document.getElementById('narrateSpeed')?.value || '1');
-  const voiceSel = document.getElementById('narrateVoice');
-  if (voiceSel && tts.voices[voiceSel.value]) u.voice = tts.voices[voiceSel.value];
-  u.onend = () => { if (tts.isPlaying) speakSentence(idx + 1); };
-  u.onerror = () => { if (tts.isPlaying) speakSentence(idx + 1); };
-  tts.utterance = u; window.speechSynthesis.speak(u);
+function toggleNarration(){ tts.isPlaying?pauseNarration():playNarration(); }
+function playNarration(){ if(!('speechSynthesis' in window)){toast('Text-to-speech not supported','error');return;} if(tts.currentIdx>=tts.sentences.length) tts.currentIdx=0; speakFrom(tts.currentIdx); }
+function speakFrom(idx){ window.speechSynthesis.cancel(); tts.isPlaying=true; document.getElementById('narratePlayBtn').textContent='⏸'; document.getElementById('narrateStatus').textContent='Playing…'; speakSentence(idx); }
+function speakSentence(idx){
+  if(idx>=tts.sentences.length){ tts.isPlaying=false; tts.currentIdx=0; document.getElementById('narratePlayBtn').textContent='▶'; document.getElementById('narrateStatus').textContent='Finished'; document.getElementById('narrateProgressFill').style.width='100%'; document.getElementById('narratePos').textContent='100%'; return; }
+  tts.currentIdx=idx; const sentence=tts.sentences[idx]; const pct=Math.round((idx/tts.sentences.length)*100);
+  document.getElementById('narrateProgressFill').style.width=pct+'%'; document.getElementById('narratePos').textContent=pct+'%';
+  const preview=document.getElementById('narratePreview'); const tp=tts.fullText.indexOf(sentence.substring(0,40));
+  if(tp!==-1&&tp<400){ preview.innerHTML=escHtml(tts.fullText.substring(0,tp))+`<span class="highlight">${escHtml(sentence)}</span>`+escHtml(tts.fullText.substring(tp+sentence.length,400)); preview.querySelector('.highlight')?.scrollIntoView({block:'nearest'}); }
+  const u=new SpeechSynthesisUtterance(sentence); u.rate=parseFloat(document.getElementById('narrateSpeed')?.value||'1');
+  const vs=document.getElementById('narrateVoice'); if(vs&&tts.voices[vs.value]) u.voice=tts.voices[vs.value];
+  u.onend=()=>{ if(tts.isPlaying) speakSentence(idx+1); }; u.onerror=()=>{ if(tts.isPlaying) speakSentence(idx+1); };
+  tts.utterance=u; window.speechSynthesis.speak(u);
 }
-function pauseNarration() { window.speechSynthesis.cancel(); tts.isPlaying = false; document.getElementById('narratePlayBtn').textContent = '▶'; document.getElementById('narrateStatus').textContent = 'Paused'; }
-function stopNarration() { window.speechSynthesis.cancel(); tts.isPlaying = false; tts.currentIdx = 0; const btn = document.getElementById('narratePlayBtn'); if (btn) btn.textContent = '▶'; }
-function rewindNarration() { const was = tts.isPlaying; window.speechSynthesis.cancel(); tts.isPlaying = false; tts.currentIdx = Math.max(0, tts.currentIdx - 5); if (was) speakFrom(tts.currentIdx); else { const pct = Math.round((tts.currentIdx / Math.max(1, tts.sentences.length)) * 100); document.getElementById('narrateProgressFill').style.width = pct + '%'; document.getElementById('narratePos').textContent = pct + '%'; } }
-function skipNarration() { const was = tts.isPlaying; window.speechSynthesis.cancel(); tts.isPlaying = false; tts.currentIdx = Math.min(tts.sentences.length - 1, tts.currentIdx + 5); if (was) speakFrom(tts.currentIdx); }
-function seekNarration(e) { const bar = e.currentTarget; const pct = e.offsetX / bar.offsetWidth; const was = tts.isPlaying; window.speechSynthesis.cancel(); tts.isPlaying = false; tts.currentIdx = Math.floor(pct * tts.sentences.length); if (was) speakFrom(tts.currentIdx); else { document.getElementById('narrateProgressFill').style.width = Math.round(pct * 100) + '%'; document.getElementById('narratePos').textContent = Math.round(pct * 100) + '%'; } }
-function updateNarrateSpeed() { if (tts.utterance) tts.utterance.rate = parseFloat(document.getElementById('narrateSpeed').value); if (tts.isPlaying) { const idx = tts.currentIdx; window.speechSynthesis.cancel(); tts.isPlaying = false; speakFrom(idx); } }
-function updateNarrateVoice() { const sel = document.getElementById('narrateVoice'); tts.selectedVoice = tts.voices[sel.value] || null; if (tts.isPlaying) { const idx = tts.currentIdx; window.speechSynthesis.cancel(); tts.isPlaying = false; speakFrom(idx); } }
-document.getElementById('narrateModal').addEventListener('click', function(e) { if (e.target === this) { stopNarration(); closeModal('narrateModal'); } });
+function pauseNarration(){ window.speechSynthesis.cancel(); tts.isPlaying=false; document.getElementById('narratePlayBtn').textContent='▶'; document.getElementById('narrateStatus').textContent='Paused'; }
+function stopNarration(){ window.speechSynthesis.cancel(); tts.isPlaying=false; tts.currentIdx=0; const b=document.getElementById('narratePlayBtn'); if(b) b.textContent='▶'; }
+function rewindNarration(){ const was=tts.isPlaying; window.speechSynthesis.cancel(); tts.isPlaying=false; tts.currentIdx=Math.max(0,tts.currentIdx-5); if(was) speakFrom(tts.currentIdx); else{ const p=Math.round((tts.currentIdx/Math.max(1,tts.sentences.length))*100); document.getElementById('narrateProgressFill').style.width=p+'%'; document.getElementById('narratePos').textContent=p+'%'; } }
+function skipNarration(){ const was=tts.isPlaying; window.speechSynthesis.cancel(); tts.isPlaying=false; tts.currentIdx=Math.min(tts.sentences.length-1,tts.currentIdx+5); if(was) speakFrom(tts.currentIdx); }
+function seekNarration(e){ const bar=e.currentTarget; const pct=e.offsetX/bar.offsetWidth; const was=tts.isPlaying; window.speechSynthesis.cancel(); tts.isPlaying=false; tts.currentIdx=Math.floor(pct*tts.sentences.length); if(was) speakFrom(tts.currentIdx); else{ document.getElementById('narrateProgressFill').style.width=Math.round(pct*100)+'%'; document.getElementById('narratePos').textContent=Math.round(pct*100)+'%'; } }
+function updateNarrateSpeed(){ if(tts.isPlaying){ const i=tts.currentIdx; window.speechSynthesis.cancel(); tts.isPlaying=false; speakFrom(i); } }
+function updateNarrateVoice(){ const s=document.getElementById('narrateVoice'); tts.selectedVoice=tts.voices[s.value]||null; if(tts.isPlaying){ const i=tts.currentIdx; window.speechSynthesis.cancel(); tts.isPlaying=false; speakFrom(i); } }
+document.getElementById('narrateModal').addEventListener('click',function(e){ if(e.target===this){ stopNarration(); closeModal('narrateModal'); } });
 
-// ===== INIT =====
-(function init() {
-  if (window.innerWidth > 768) { document.getElementById('sidebar').classList.remove('hidden'); document.getElementById('main').classList.remove('full'); }
-  loadDiscover('fiction', 1);
+// ============================================================
+// INIT
+// ============================================================
+(function init(){
+  if(window.innerWidth>768){ document.getElementById('sidebar').classList.remove('hidden'); document.getElementById('main').classList.remove('full'); }
+  loadDiscover(1);
 })();
 </script>
 </body>
