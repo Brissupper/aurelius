@@ -2,1388 +2,1488 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Aurelius — World Library</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#080810;--surface:#0f0f1a;--surface2:#161625;--surface3:#1e1e30;
-  --border:#ffffff0f;--border2:#ffffff18;
-  --gold:#d4a843;--gold2:#f0c96a;--gold3:#b8922e;
-  --violet:#7c5cbf;--violet2:#9b7de0;
-  --text:#f0ede6;--muted:#7a7890;--muted2:#5a5870;
-  --green:#4caf8a;--red:#e57373;
-  --radius:14px;--sidebar:240px;
+:root {
+  --bg: #0a0a14;
+  --surface: #12121f;
+  --surface2: #1a1a2e;
+  --border: #2a2a4a;
+  --accent: #c9a84c;
+  --accent2: #e8c97a;
+  --text: #e8e8f0;
+  --muted: #888899;
+  --danger: #e05252;
+  --success: #52c878;
+  --sidebar-w: 260px;
 }
-*{box-sizing:border-box;margin:0;padding:0;}
-html{scroll-behavior:smooth;}
-body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden;}
-.bg-orbs{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
-.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.15;animation:drift 20s ease-in-out infinite;}
-.orb1{width:600px;height:600px;background:radial-gradient(circle,#7c5cbf,transparent);top:-200px;left:-100px;}
-.orb2{width:500px;height:500px;background:radial-gradient(circle,#d4a843,transparent);bottom:-150px;right:-100px;animation-delay:-7s;}
-.orb3{width:400px;height:400px;background:radial-gradient(circle,#4c6abf,transparent);top:40%;left:40%;animation-delay:-13s;}
-@keyframes drift{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(40px,-30px) scale(1.05);}66%{transform:translate(-20px,40px) scale(.95);}}
-body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1;opacity:.4;}
-/* Layout */
-.shell{display:flex;min-height:100vh;position:relative;z-index:2;}
-aside{width:var(--sidebar);min-height:100vh;background:#12121f;backdrop-filter:blur(20px);border-right:1px solid var(--border2);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform .3s ease;}
-aside.collapsed{transform:translateX(-100%);}
-main{margin-left:var(--sidebar);flex:1;transition:margin-left .3s ease;}
-main.expanded{margin-left:0;}
-.page{display:none;min-height:100vh;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:var(--bg);color:var(--text);}
+
+/* SIDEBAR */
+#sidebar{
+  position:fixed;top:0;left:0;width:var(--sidebar-w);height:100%;
+  background:#1a1a2e;border-right:1px solid var(--border);
+  display:flex;flex-direction:column;z-index:200;
+  transition:transform .3s ease;
+  overflow-y:auto;
+  box-shadow:4px 0 20px rgba(0,0,0,.5);
+}
+#sidebar.hidden{transform:translateX(-100%);}
+.sidebar-logo{padding:20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.sidebar-logo span{font-family:'Cinzel',serif;font-size:1.3rem;color:var(--accent);}
+.sidebar-logo .sub{font-size:.7rem;color:var(--muted);font-family:'Lato',sans-serif;}
+.nav-section{padding:10px 0;}
+.nav-section-title{padding:8px 20px;font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
+.nav-btn{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 20px;width:100%;
+  background:none;border:none;color:var(--text);
+  font-family:'Lato',sans-serif;font-size:.95rem;
+  cursor:pointer;text-align:left;
+  transition:background .15s, color .15s;
+  min-height:50px;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.nav-btn:hover,.nav-btn.active{background:rgba(201,168,76,.12);color:var(--accent);}
+.nav-btn .icon{width:20px;text-align:center;font-size:1.1rem;flex-shrink:0;}
+.sidebar-bottom{margin-top:auto;padding:16px;border-top:1px solid var(--border);}
+
+/* OVERLAY */
+#overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.6);z-index:150;
+  -webkit-tap-highlight-color:transparent;
+}
+#overlay.show{display:block;}
+
+/* MAIN */
+#main{margin-left:var(--sidebar-w);height:100%;display:flex;flex-direction:column;transition:margin .3s;}
+#main.full{margin-left:0;}
+.topbar{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 20px;background:var(--surface);
+  border-bottom:1px solid var(--border);flex-shrink:0;
+  min-height:56px;
+}
+.menu-btn{
+  background:none;border:none;color:var(--text);
+  font-size:1.4rem;cursor:pointer;padding:8px;
+  display:none;flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  min-width:44px;min-height:44px;
+  display:flex;align-items:center;justify-content:center;
+}
+.topbar-title{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--accent);flex:1;}
+.search-wrap{position:relative;flex:2;}
+.search-wrap input{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);padding:9px 16px 9px 38px;
+  border-radius:8px;font-size:.9rem;font-family:'Lato',sans-serif;
+  outline:none;
+}
+.search-wrap input:focus{border-color:var(--accent);}
+.search-wrap .si{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;}
+.topbar-actions{display:flex;gap:8px;align-items:center;}
+.btn{
+  padding:8px 16px;border-radius:8px;border:none;
+  cursor:pointer;font-family:'Lato',sans-serif;font-weight:700;
+  font-size:.85rem;transition:all .15s;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  min-height:40px;
+}
+.btn-primary{background:var(--accent);color:#0a0a14;}
+.btn-primary:hover{background:var(--accent2);}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-sm{padding:6px 12px;font-size:.8rem;min-height:34px;}
+.btn-danger{background:var(--danger);color:#fff;}
+
+/* PAGE CONTENT */
+#pages{flex:1;overflow:hidden;}
+.page{display:none;height:100%;overflow-y:auto;padding:24px;}
 .page.active{display:block;}
-/* Sidebar toggle */
-.sidebar-toggle{position:fixed;top:16px;left:256px;z-index:200;background:rgba(10,10,20,.85);backdrop-filter:blur(10px);border:1px solid var(--border2);border-radius:10px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s ease;color:var(--muted);}
-.sidebar-toggle:hover{border-color:rgba(212,168,67,.3);color:var(--gold);}
-aside.collapsed ~ * .sidebar-toggle, main.expanded .sidebar-toggle{left:16px;}
-/* Sidebar */
-.logo{padding:28px 24px 16px;}
-.logo-mark{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
-.logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--gold3),var(--gold2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
-.logo h1{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--gold2);letter-spacing:.06em;white-space:nowrap;}
-.logo p{font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;padding-left:42px;}
-.sidebar-divider{height:1px;background:var(--border);margin:0 16px 12px;}
-nav{padding:8px 12px;flex:1;overflow-y:auto;}
-.nav-section{font-size:9px;color:var(--muted2);letter-spacing:.14em;text-transform:uppercase;padding:10px 8px 5px;}
-.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;background:none;border:none;border-radius:10px;color:var(--muted);font-family:'Outfit',sans-serif;font-size:14px;cursor:pointer;transition:all .2s;text-align:left;white-space:nowrap;-webkit-tap-highlight-color:rgba(212,168,67,.2);touch-action:manipulation;}
-.nav-btn:hover{background:var(--surface2);color:var(--text);}
-.nav-btn.active{background:linear-gradient(135deg,rgba(212,168,67,.12),rgba(124,92,191,.08));color:var(--gold2);border:1px solid rgba(212,168,67,.2);}
-.nav-btn svg{width:15px;height:15px;flex-shrink:0;opacity:.7;}
-.nav-btn.active svg{opacity:1;}
-.nav-badge{margin-left:auto;background:var(--gold3);color:#000;font-size:9px;font-weight:600;padding:2px 6px;border-radius:20px;}
-.sidebar-footer{padding:14px 12px;border-top:1px solid var(--border);}
-.engine-pill{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);margin-bottom:10px;}
-.engine-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);flex-shrink:0;}
-.engine-text{font-size:11px;color:var(--muted);}
-.engine-text span{color:var(--gold2);font-weight:500;}
-/* User profile */
-.user-profile{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);cursor:pointer;transition:all .2s;}
-.user-profile:hover{border-color:var(--border2);}
-.user-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;}
-.user-avatar-placeholder{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--gold3),var(--violet));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0;}
-.user-name{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.user-email{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-/* Auth page */
-.auth-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;z-index:10;}
-.auth-card{background:var(--surface);border:1px solid var(--border2);border-radius:24px;padding:48px 40px;max-width:440px;width:100%;text-align:center;}
-.auth-logo{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:28px;}
-.auth-logo-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--gold3),var(--gold2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;}
-.auth-logo h1{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:600;color:var(--gold2);}
-.auth-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;margin-bottom:8px;}
-.auth-subtitle{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:28px;}
-.auth-features{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:28px;text-align:left;}
-.auth-feature{padding:12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);}
-.auth-feature-icon{font-size:18px;margin-bottom:4px;}
-.auth-feature-title{font-size:12px;font-weight:500;color:var(--text);}
-.auth-feature-desc{font-size:10px;color:var(--muted);margin-top:2px;}
-.google-btn{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:14px;background:#fff;border:none;border-radius:12px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;color:#1f1f1f;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.3);}
-.google-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.4);}
-.google-btn img{width:20px;height:20px;}
-.auth-disclaimer{font-size:11px;color:var(--muted2);margin-top:14px;line-height:1.6;}
-/* Donate banner */
-.donate-banner{position:fixed;bottom:84px;right:20px;background:linear-gradient(135deg,rgba(212,168,67,.15),rgba(124,92,191,.1));backdrop-filter:blur(10px);border:1px solid rgba(212,168,67,.25);border-radius:14px;padding:14px 16px;max-width:250px;z-index:150;}
-.donate-banner.hidden{display:none;}
-.donate-banner-close{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;}
-.donate-banner-icon{font-size:18px;margin-bottom:5px;}
-.donate-banner-text{font-size:11px;color:var(--text);line-height:1.5;margin-bottom:10px;}
-.donate-banner-text strong{color:var(--gold2);}
-.donate-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:8px;background:linear-gradient(135deg,#003087,#009cde);border:none;border-radius:8px;color:#fff;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
-.donate-btn:hover{transform:translateY(-1px);}
-/* Page layout */
-.page-header{padding:48px 48px 0;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:28px;}
-.page-header-left h2{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:300;}
-.page-header-left p{color:var(--muted);font-size:13px;margin-top:4px;}
-.toolbar{padding:0 48px;display:flex;align-items:center;gap:10px;margin-bottom:22px;flex-wrap:wrap;}
-.books-wrap{padding:0 48px 140px;}
-.search-input{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 14px;font-size:13px;font-family:'Outfit',sans-serif;width:200px;outline:none;transition:all .2s;}
-.search-input:focus{border-color:rgba(212,168,67,.3);}
-.search-input::placeholder{color:var(--muted2);}
-.filter-select{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 12px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;outline:none;}
-.spacer{flex:1;}
-.toggle-view{display:flex;background:var(--surface2);border-radius:10px;border:1px solid var(--border);overflow:hidden;}
-.toggle-view button{background:none;border:none;color:var(--muted);padding:8px 12px;cursor:pointer;}
-.toggle-view button.active{background:var(--surface3);color:var(--gold);}
-/* Book cards */
-.book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:18px;}
-.book-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .25s;}
-.book-card:hover{border-color:rgba(212,168,67,.3);transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.4);}
-.book-cover{height:195px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
-.book-cover::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(15,15,26,.95));}
-.book-cover-text{font-family:'Cormorant Garamond',serif;font-size:13px;color:rgba(255,255,255,.8);padding:20px;text-align:center;line-height:1.5;z-index:1;position:relative;}
-.book-card-body{padding:12px 13px 13px;}
-.book-card-title{font-size:12px;font-weight:500;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.book-card-author{font-size:11px;color:var(--muted);margin-top:2px;}
-.book-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
-.book-list{display:flex;flex-direction:column;gap:8px;}
-.book-row{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 16px;display:flex;align-items:center;gap:13px;cursor:pointer;transition:all .15s;}
-.book-row:hover{border-color:rgba(212,168,67,.25);background:var(--surface2);}
-.book-row-icon{width:34px;height:46px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;}
-.book-row-info{flex:1;min-width:0;}
-.book-row-title{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.book-row-meta{font-size:11px;color:var(--muted);margin-top:2px;}
-.book-row-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;}
-/* Cover colors */
-.cover-fiction{background:linear-gradient(160deg,#1a0e2e,#2d1444,#1a0e2e);}
-.cover-philosophy{background:linear-gradient(160deg,#0e1a14,#1a3020,#0e1a14);}
-.cover-science{background:linear-gradient(160deg,#0e1420,#1a2040,#0e1420);}
-.cover-history{background:linear-gradient(160deg,#1a1000,#332000,#1a1000);}
-.cover-biography{background:linear-gradient(160deg,#1a0a0e,#331520,#1a0a0e);}
-.cover-selfhelp{background:linear-gradient(160deg,#0a1a1a,#102828,#0a1a1a);}
-.cover-spirituality{background:linear-gradient(160deg,#1a1020,#2a1a3a,#1a1020);}
-.cover-technology{background:linear-gradient(160deg,#0a0e1a,#101830,#0a0e1a);}
-.cover-comics{background:linear-gradient(160deg,#1a0800,#2a1200,#1a0800);}
-.cover-default{background:linear-gradient(160deg,#12101a,#1e1830,#12101a);}
-/* Badges */
-.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;}
-.badge-stored{background:var(--surface3);color:var(--muted);}
-.badge-ready{background:rgba(76,175,138,.12);color:var(--green);border:1px solid rgba(76,175,138,.2);}
-.badge-processing,.badge-pending{background:rgba(212,168,67,.1);color:var(--gold);border:1px solid rgba(212,168,67,.2);}
-.badge-failed{background:rgba(229,115,115,.1);color:var(--red);border:1px solid rgba(229,115,115,.2);}
-.badge-dmca_flagged{background:rgba(229,115,115,.15);color:var(--red);}
-/* Buttons */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:10px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;border:none;white-space:nowrap;}
-.btn-gold{background:linear-gradient(135deg,var(--gold3),var(--gold));color:#0a0a10;}
-.btn-gold:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(212,168,67,.3);}
-.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
-.btn-ghost:hover{border-color:var(--border2);}
-.btn-danger{background:rgba(229,115,115,.08);color:var(--red);border:1px solid rgba(229,115,115,.15);}
-.btn-danger:hover{background:rgba(229,115,115,.15);}
-.btn-violet{background:linear-gradient(135deg,var(--violet),var(--violet2));color:#fff;}
-.btn-violet:hover{transform:translateY(-1px);}
-.btn-green{background:rgba(76,175,138,.15);color:var(--green);border:1px solid rgba(76,175,138,.25);}
-.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
-.btn-sm{padding:5px 12px;font-size:11px;}
-/* Empty */
-.empty{text-align:center;padding:80px 40px;color:var(--muted);}
-.empty-icon{font-size:48px;margin-bottom:14px;opacity:.6;}
-.empty h3{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--text);margin-bottom:8px;font-weight:400;}
-.empty p{font-size:13px;line-height:1.7;}
-/* Discover hero */
-.discover-hero{padding:56px 48px 32px;position:relative;overflow:hidden;}
-.discover-hero::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(124,92,191,.06),rgba(212,168,67,.04));pointer-events:none;}
-.discover-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent);}
-.hero-eyebrow{font-size:10px;color:var(--gold);letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
-.hero-eyebrow::before{content:'';width:24px;height:1px;background:var(--gold);opacity:.5;}
-.hero-title{font-family:'Cormorant Garamond',serif;font-size:46px;font-weight:300;line-height:1.1;margin-bottom:12px;background:linear-gradient(135deg,var(--text) 0%,var(--gold2) 60%,var(--text) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-.hero-subtitle{font-size:14px;color:var(--muted);max-width:500px;line-height:1.7;margin-bottom:24px;}
-.hero-search{display:flex;gap:10px;max-width:560px;}
-.hero-search-wrap{flex:1;position:relative;}
-.hero-search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;}
-.hero-search-input{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border2);color:var(--text);border-radius:12px;padding:12px 14px 12px 42px;font-size:14px;font-family:'Outfit',sans-serif;outline:none;transition:all .2s;}
-.hero-search-input:focus{border-color:rgba(212,168,67,.4);box-shadow:0 0 0 3px rgba(212,168,67,.08);}
-.hero-search-input::placeholder{color:var(--muted2);}
-.btn-search{background:linear-gradient(135deg,var(--gold3),var(--gold));color:#0a0a10;border:none;border-radius:12px;padding:12px 20px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;}
-.btn-search:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(212,168,67,.25);}
-/* Stats bar */
-.stats-bar{display:flex;gap:24px;padding:16px 48px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
-.stat-item{display:flex;flex-direction:column;gap:2px;}
-.stat-num{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--gold2);}
-.stat-label{font-size:11px;color:var(--muted);}
-/* Category pills */
-.section-wrap{padding:24px 48px;}
-.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-.section-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;}
-.cat-pills{display:flex;gap:8px;flex-wrap:wrap;}
-.cat-pill{padding:6px 15px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .2s;white-space:nowrap;}
-.cat-pill:hover{border-color:var(--border2);color:var(--text);}
-.cat-pill.active{background:linear-gradient(135deg,rgba(212,168,67,.15),rgba(212,168,67,.08));border-color:rgba(212,168,67,.35);color:var(--gold2);}
-/* Shelf grid */
-.results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:16px;}
-.shelf-card{cursor:pointer;transition:transform .2s;-webkit-tap-highlight-color:rgba(212,168,67,.15);touch-action:manipulation;}
-.shelf-card:hover{transform:translateY(-4px);}
-.shelf-cover{height:205px;border-radius:10px;position:relative;overflow:hidden;margin-bottom:9px;box-shadow:0 8px 24px rgba(0,0,0,.4);}
-.shelf-cover-spine{position:absolute;left:0;top:0;bottom:0;width:6px;background:rgba(0,0,0,.3);z-index:2;}
-.shelf-cover-img{width:100%;height:100%;object-fit:cover;}
-.shelf-cover-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center;}
-.shelf-cover-emoji{font-size:30px;margin-bottom:8px;}
-.shelf-cover-title{font-family:'Cormorant Garamond',serif;font-size:12px;color:rgba(255,255,255,.85);line-height:1.4;}
-.shelf-title{font-size:12px;font-weight:500;color:var(--text);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.shelf-author{font-size:11px;color:var(--muted);margin-top:2px;}
-.shelf-badge{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);border-radius:6px;padding:3px 7px;font-size:9px;color:var(--gold2);font-weight:500;}
-.result-loading{display:flex;align-items:center;justify-content:center;padding:60px;color:var(--muted);font-size:13px;gap:10px;}
-.result-empty{text-align:center;padding:60px;}
-/* Player */
-.player-page-wrap{padding:36px 48px 140px;max-width:760px;}
-.back-btn{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;cursor:pointer;background:none;border:none;margin-bottom:24px;transition:color .15s;}
-.back-btn:hover{color:var(--text);}
-.player-book-title{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:300;margin-bottom:8px;line-height:1.2;}
-.player-book-meta{font-size:13px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:28px;}
-.chapter-list{display:flex;flex-direction:column;gap:6px;}
-.chapter-row{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:10px;cursor:pointer;transition:all .15s;border:1px solid transparent;}
-.chapter-row:hover{background:var(--surface);border-color:var(--border);}
-.chapter-row.playing{background:var(--surface);border-color:rgba(212,168,67,.25);}
-.chapter-row.no-audio{opacity:.35;cursor:not-allowed;}
-.ch-num{width:28px;height:28px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);flex-shrink:0;}
-.ch-info{flex:1;}
-.ch-title{font-size:13px;color:var(--text);}
-.ch-meta{font-size:11px;color:var(--muted);margin-top:2px;}
-.ch-play{color:var(--muted);transition:color .15s;}
-.chapter-row:hover .ch-play,.chapter-row.playing .ch-play{color:var(--gold);}
-/* Narr progress */
-.narr-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:22px;}
-.narr-card-top{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
-.narr-waveform{display:flex;align-items:center;gap:3px;height:30px;flex-shrink:0;}
-.narr-waveform span{display:block;width:3px;background:var(--gold);border-radius:2px;animation:wave 1.2s ease-in-out infinite;}
-.narr-waveform span:nth-child(1){animation-delay:0s;height:8px;} .narr-waveform span:nth-child(2){animation-delay:.1s;height:18px;} .narr-waveform span:nth-child(3){animation-delay:.2s;height:26px;} .narr-waveform span:nth-child(4){animation-delay:.3s;height:18px;} .narr-waveform span:nth-child(5){animation-delay:.4s;height:10px;} .narr-waveform span:nth-child(6){animation-delay:.15s;height:22px;} .narr-waveform span:nth-child(7){animation-delay:.25s;height:14px;}
-.narr-waveform.paused span{animation:none;height:4px!important;opacity:.4;}
-.narr-waveform.done span{animation:none;background:var(--green);}
-@keyframes wave{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
-.narr-info{flex:1;} .narr-status{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px;} .narr-step{font-size:12px;color:var(--muted);}
-.narr-pct-big{font-size:24px;font-weight:700;color:var(--gold);font-family:'Cormorant Garamond',serif;}
-.narr-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:12px;}
-.narr-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold3),var(--gold2));border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1);}
-.narr-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-.narr-stat{background:var(--surface2);border-radius:10px;padding:10px 13px;border:1px solid var(--border);}
-.narr-stat-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}
-.narr-stat-value{font-size:14px;font-weight:500;color:var(--text);font-variant-numeric:tabular-nums;}
-.narr-stat-value.gold{color:var(--gold);}
-.narr-chapter-list{margin-top:12px;border-top:1px solid var(--border);padding-top:10px;max-height:150px;overflow-y:auto;}
-.narr-ch-row{display:flex;align-items:center;gap:10px;padding:4px;font-size:12px;color:var(--muted);border-radius:6px;}
-.narr-ch-row.done{color:var(--green);} .narr-ch-row.active{color:var(--gold);background:var(--surface2);padding-left:8px;}
-.narr-ch-dot{width:6px;height:6px;border-radius:50%;background:var(--border);flex-shrink:0;}
-.narr-ch-row.done .narr-ch-dot{background:var(--green);} .narr-ch-row.active .narr-ch-dot{background:var(--gold);box-shadow:0 0 6px var(--gold);}
-/* Audio bar */
-#audio-bar{position:fixed;bottom:0;left:var(--sidebar);right:0;background:rgba(10,10,20,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:12px 28px;display:none;align-items:center;gap:16px;z-index:200;transition:left .3s ease;}
-#audio-bar.expanded{left:0;}
-#audio-bar.visible{display:flex;}
-.audio-info{flex:1;min-width:0;} .audio-title{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;} .audio-book{font-size:11px;color:var(--muted);}
-.audio-controls{display:flex;align-items:center;gap:10px;}
-.ctrl-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:6px;border-radius:8px;transition:color .15s;}
-.ctrl-btn:hover{color:var(--gold);}
-.ctrl-btn.main{background:linear-gradient(135deg,var(--gold3),var(--gold));color:#0a0a10;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;}
-.ctrl-btn.main:hover{transform:scale(1.05);}
-.seek-wrap{flex:2;display:flex;align-items:center;gap:10px;}
-.time-lbl{font-size:11px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;}
-input[type=range]{-webkit-appearance:none;width:100%;height:3px;background:var(--border);border-radius:2px;outline:none;cursor:pointer;}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--gold);cursor:pointer;}
-.speed-sel{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:4px 8px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;}
-/* Modals */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
-.modal-overlay.hidden{display:none;}
-.modal{background:var(--surface);border:1px solid var(--border2);border-radius:18px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;}
-.modal-header{padding:22px 24px 0;display:flex;align-items:center;justify-content:space-between;}
-.modal-header h3{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;}
-.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px;line-height:1;}
-.modal-close:hover{color:var(--text);}
-.modal-body{padding:20px 24px;} .modal-footer{padding:0 24px 22px;display:flex;gap:10px;justify-content:flex-end;}
-.form-group{margin-bottom:14px;}
-.form-label{display:block;font-size:10px;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:.08em;text-transform:uppercase;}
-.form-input,.form-select{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 13px;font-size:13px;font-family:'Outfit',sans-serif;outline:none;transition:all .2s;}
-.form-input:focus,.form-select:focus{border-color:rgba(212,168,67,.35);}
-.form-input::placeholder{color:var(--muted2);}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.upload-zone{border:1.5px dashed var(--border2);border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2);position:relative;margin-bottom:4px;}
-.upload-zone:hover,.upload-zone.drag{border-color:rgba(212,168,67,.4);}
-.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;}
-.upload-zone-icon{font-size:26px;margin-bottom:8px;}
-.upload-zone h4{font-size:14px;font-weight:500;color:var(--text);}
-.upload-zone p{font-size:12px;color:var(--muted);margin-top:4px;}
-.file-pill{display:inline-flex;align-items:center;gap:8px;padding:7px 13px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text);margin-top:10px;}
-.voice-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-.voice-card{border:1.5px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;transition:all .15s;background:var(--surface2);}
-.voice-card:hover{border-color:var(--border2);}
-.voice-card.sel{border-color:rgba(212,168,67,.4);background:rgba(212,168,67,.06);}
-.voice-name{font-size:12px;font-weight:500;color:var(--text);}
-.voice-meta{font-size:10px;color:var(--muted);margin-top:2px;}
-/* Toast */
-#toast{position:fixed;bottom:80px;right:24px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:11px 16px;border-radius:12px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:9000;}
-#toast.show{opacity:1;}
-/* Anim */
-@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.fadein{animation:fadein .3s ease forwards;}
-@keyframes spin{to{transform:rotate(360deg)}}
-.spin{animation:spin 1s linear infinite;display:inline-block;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-.pulsing{animation:pulse 1.5s ease-in-out infinite;}
-::-webkit-scrollbar{width:5px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
-/* Mobile */
-.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:98;}
-@media(max-width:768px){
-  :root{--sidebar:0px;}
-  aside{width:280px;transform:translateX(-100%);background:#1a1a2e!important;box-shadow:4px 0 24px rgba(0,0,0,.6);}
-  aside.open{transform:translateX(0)!important;}
-  main{margin-left:0!important;}
-  #audio-bar{left:0!important;}
-  .sidebar-overlay.visible{display:block;}
-  .sidebar-toggle{top:12px;left:12px;left:12px!important;}
-  .discover-hero{padding:48px 20px 24px;}
-  .hero-title{font-size:30px;}
-  .hero-search{flex-direction:column;}
-  .stats-bar{padding:12px 20px;gap:14px;}
-  .section-wrap{padding:18px 20px;}
-  .page-header{padding:24px 20px 0;}
-  .toolbar{padding:0 20px;}
-  .books-wrap{padding:0 20px 140px;}
-  .book-grid{grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:12px;}
-  .player-page-wrap{padding:24px 20px 140px;}
-  .player-book-title{font-size:24px;}
-  .results-grid{grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:12px;}
-  .narr-stats{grid-template-columns:1fr 1fr;}
-  .voice-grid{grid-template-columns:repeat(2,1fr);}
-  .form-row{grid-template-columns:1fr;}
-  .modal{max-width:100%;border-radius:14px;}
-  .auth-card{padding:32px 20px;}
-  .auth-features{grid-template-columns:1fr;}
-  .donate-banner{right:10px;bottom:88px;max-width:220px;}
-  .page-header-left h2{font-size:26px;}
-  .audio-controls .speed-sel{display:none;}
+
+/* HERO */
+.hero{
+  background:linear-gradient(135deg,#1a1a2e 0%,#0d0d1a 60%,#1a1020 100%);
+  border:1px solid var(--border);border-radius:16px;
+  padding:40px 32px;margin-bottom:32px;position:relative;overflow:hidden;
 }
+.hero::before{
+  content:'';position:absolute;top:-50%;right:-10%;
+  width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,rgba(201,168,76,.08) 0%,transparent 70%);
+}
+.hero h1{font-family:'Cinzel',serif;font-size:2rem;color:var(--accent);margin-bottom:8px;}
+.hero p{color:var(--muted);line-height:1.6;max-width:500px;}
+
+/* SECTION HEADERS */
+.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.section-hdr h2{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--text);}
+
+/* CATEGORY PILLS */
+.cat-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+.cat-pill{
+  padding:8px 16px;border-radius:20px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--muted);
+  font-size:.82rem;cursor:pointer;
+  transition:all .15s;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  min-height:38px;
+  display:inline-flex;align-items:center;justify-content:center;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.cat-pill:hover,.cat-pill.active{
+  background:rgba(201,168,76,.2);
+  border-color:var(--accent);
+  color:var(--accent);
+}
+
+/* BOOK GRID */
+.book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px;}
+.book-card{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;cursor:pointer;
+  transition:transform .2s,border-color .2s;
+}
+.book-card:hover{transform:translateY(-3px);border-color:var(--accent);}
+.book-cover{width:100%;aspect-ratio:2/3;object-fit:cover;background:var(--border);display:block;}
+.book-cover-placeholder{
+  width:100%;aspect-ratio:2/3;background:linear-gradient(135deg,var(--surface2),var(--border));
+  display:flex;align-items:center;justify-content:center;font-size:2.5rem;
+}
+.book-info{padding:10px;}
+.book-title{font-size:.82rem;font-weight:700;margin-bottom:4px;line-height:1.3;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.book-author{font-size:.75rem;color:var(--muted);
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;}
+
+/* COMIC GRID */
+.comic-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px;}
+.comic-card{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;cursor:pointer;
+  transition:transform .2s,border-color .2s;
+}
+.comic-card:hover{transform:translateY(-3px);border-color:var(--accent);}
+.comic-cover{width:100%;aspect-ratio:2/3;object-fit:cover;background:var(--border);}
+.comic-cover-ph{
+  width:100%;aspect-ratio:2/3;
+  background:linear-gradient(135deg,#1a0a2e,#2e1a0a);
+  display:flex;align-items:center;justify-content:center;font-size:2.5rem;
+}
+.comic-info{padding:10px;}
+.comic-title{font-size:.82rem;font-weight:700;margin-bottom:4px;line-height:1.3;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.comic-year{font-size:.75rem;color:var(--muted);}
+
+/* LOADING */
+.loading{display:flex;flex-direction:column;align-items:center;padding:60px 20px;gap:16px;color:var(--muted);}
+.spinner{
+  width:36px;height:36px;border:3px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty .ei{font-size:3rem;margin-bottom:12px;}
+
+/* MODAL */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.75);z-index:500;
+  align-items:center;justify-content:center;padding:16px;
+  -webkit-tap-highlight-color:transparent;
+}
+.modal-overlay.show{display:flex;}
+.modal{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:16px;width:100%;max-width:520px;
+  max-height:90vh;overflow-y:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+}
+.modal-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 24px;border-bottom:1px solid var(--border);
+  position:sticky;top:0;background:var(--surface2);z-index:1;
+}
+.modal-hdr h3{font-family:'Cinzel',serif;font-size:1rem;color:var(--accent);}
+.modal-close{
+  background:none;border:none;color:var(--muted);
+  font-size:1.4rem;cursor:pointer;padding:4px;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  min-width:36px;min-height:36px;
+  display:flex;align-items:center;justify-content:center;
+}
+.modal-body{padding:24px;}
+.book-detail{display:flex;gap:20px;flex-wrap:wrap;}
+.book-detail-cover{
+  width:120px;flex-shrink:0;border-radius:8px;overflow:hidden;
+  aspect-ratio:2/3;object-fit:cover;background:var(--border);
+}
+.book-detail-cover-ph{
+  width:120px;flex-shrink:0;border-radius:8px;
+  aspect-ratio:2/3;background:linear-gradient(135deg,var(--surface),var(--border));
+  display:flex;align-items:center;justify-content:center;font-size:3rem;
+}
+.book-detail-info{flex:1;min-width:180px;}
+.book-detail-info h2{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--accent);margin-bottom:8px;}
+.book-detail-info .author{color:var(--muted);font-size:.9rem;margin-bottom:12px;}
+.book-detail-info .desc{font-size:.88rem;line-height:1.6;color:var(--text);margin-bottom:16px;}
+.modal-actions{display:flex;gap:10px;flex-wrap:wrap;}
+.badge{
+  display:inline-block;padding:3px 10px;border-radius:20px;
+  font-size:.75rem;background:rgba(201,168,76,.15);
+  color:var(--accent);border:1px solid rgba(201,168,76,.3);margin-bottom:8px;
+}
+
+/* LIBRARY PAGE */
+.lib-tabs{display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);border-radius:10px;overflow:hidden;width:fit-content;}
+.lib-tab{
+  padding:10px 20px;background:none;border:none;
+  color:var(--muted);font-family:'Lato',sans-serif;font-size:.9rem;
+  cursor:pointer;transition:all .15s;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  min-height:44px;
+}
+.lib-tab.active{background:var(--accent);color:#0a0a14;font-weight:700;}
+
+/* UPLOAD AREA */
+.upload-area{
+  border:2px dashed var(--border);border-radius:12px;
+  padding:40px;text-align:center;cursor:pointer;
+  transition:border-color .2s;margin-bottom:24px;
+  -webkit-tap-highlight-color:transparent;
+}
+.upload-area:hover{border-color:var(--accent);}
+.upload-area .ui{font-size:2.5rem;margin-bottom:12px;}
+.upload-area p{color:var(--muted);font-size:.9rem;}
+
+/* PROGRESS */
+.progress-bar{width:100%;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--accent);transition:width .3s;}
+
+/* TOAST */
+#toast{
+  position:fixed;bottom:24px;right:24px;z-index:900;
+  display:flex;flex-direction:column;gap:8px;
+}
+.toast-item{
+  padding:12px 18px;border-radius:10px;font-size:.88rem;
+  min-width:220px;animation:slideIn .3s ease;
+  display:flex;align-items:center;gap:10px;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
+}
+.toast-item.success{background:#1a3a2a;border:1px solid var(--success);color:var(--success);}
+.toast-item.error{background:#3a1a1a;border:1px solid var(--danger);color:var(--danger);}
+.toast-item.info{background:#1a1a3a;border:1px solid var(--accent);color:var(--accent);}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+
+/* DONATIONS */
+.donate-card{
+  background:linear-gradient(135deg,#1a1a2e,#12121f);
+  border:1px solid var(--border);border-radius:16px;
+  padding:32px;text-align:center;margin-bottom:24px;
+}
+.donate-card h2{font-family:'Cinzel',serif;font-size:1.4rem;color:var(--accent);margin-bottom:12px;}
+.donate-card p{color:var(--muted);margin-bottom:24px;line-height:1.6;}
+.donate-amounts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;}
+.donate-amt{
+  padding:10px 20px;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--text);
+  cursor:pointer;font-family:'Lato',sans-serif;font-weight:700;
+  transition:all .15s;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  min-height:44px;
+}
+.donate-amt:hover,.donate-amt.active{background:rgba(201,168,76,.2);border-color:var(--accent);color:var(--accent);}
+
+/* SETTINGS */
+.settings-section{margin-bottom:28px;}
+.settings-section h3{font-family:'Cinzel',serif;font-size:.95rem;color:var(--accent);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.setting-row label{font-size:.9rem;color:var(--text);}
+.toggle{position:relative;width:44px;height:24px;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{
+  position:absolute;inset:0;background:var(--border);
+  border-radius:12px;cursor:pointer;transition:.3s;
+}
+.toggle input:checked + .toggle-slider{background:var(--accent);}
+.toggle-slider::before{
+  content:'';position:absolute;width:18px;height:18px;
+  left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s;
+}
+.toggle input:checked + .toggle-slider::before{transform:translateX(20px);}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  #sidebar{width:85%;max-width:320px;}
+  #main{margin-left:0 !important;}
+  .menu-btn{display:flex !important;}
+  .hero h1{font-size:1.4rem;}
+  .topbar-title{display:none;}
+  .search-wrap{flex:1;}
+  .page{padding:16px;}
+  .book-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;}
+  .comic-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;}
+  .modal{max-height:95vh;}
+}
+
+/* AUTH MODAL */
+#authModal .modal{max-width:420px;}
+.auth-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:24px;}
+.auth-tab{
+  flex:1;padding:12px;background:none;border:none;
+  color:var(--muted);font-family:'Lato',sans-serif;font-size:.9rem;
+  cursor:pointer;border-bottom:2px solid transparent;
+  transition:all .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.auth-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:6px;}
+.form-group input{
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  color:var(--text);padding:10px 14px;border-radius:8px;
+  font-size:.9rem;font-family:'Lato',sans-serif;outline:none;
+}
+.form-group input:focus{border-color:var(--accent);}
+.divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--muted);font-size:.8rem;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* READER */
+#readerModal .modal{max-width:90vw;width:900px;}
+#readerFrame{width:100%;height:75vh;border:none;border-radius:8px;background:#fff;}
+
+/* SEARCH RESULTS PAGE */
+.result-count{font-size:.85rem;color:var(--muted);margin-bottom:16px;}
+
+/* DOWNLOADED BOOKS */
+.downloads-list{display:flex;flex-direction:column;gap:12px;}
+.download-item{
+  display:flex;align-items:center;gap:16px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:12px;padding:14px 16px;
+}
+.download-item .di-icon{font-size:2rem;flex-shrink:0;}
+.download-item .di-info{flex:1;min-width:0;}
+.download-item .di-title{font-weight:700;font-size:.9rem;margin-bottom:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.download-item .di-meta{font-size:.78rem;color:var(--muted);}
+.download-item .di-actions{display:flex;gap:8px;flex-shrink:0;}
 </style>
 </head>
 <body>
-<div class="bg-orbs"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
-<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
-<button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
-  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
-</button>
-<div class="shell">
-<aside id="sidebar">
-  <div class="logo"><div class="logo-mark"><div class="logo-icon">&#x1F4DA;</div><h1>Aurelius</h1></div><p>World Library</p></div>
-  <div class="sidebar-divider"></div>
-  <nav>
-    <div class="nav-section">Explore</div>
-    <button class="nav-btn" onclick="navTo('discover')" id="nav-discover">
-      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253"/></svg>
-      Discover <span class="nav-badge">NEW</span>
-    </button>
-    <button class="nav-btn" onclick="navTo('archive')" id="nav-archive">
-      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
-      Internet Archive
-    </button>
-    <div class="nav-section">My Space</div>
-    <button class="nav-btn active" onclick="navTo('library')" id="nav-library">
-      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.966 8.966 0 00-6 2.292m0-14.25v14.25"/></svg>
-      My Library
-    </button>
-    <button class="nav-btn" onclick="openUploadModal()" id="nav-upload">
-      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
-      Upload Book
-    </button>
-    <button class="nav-btn" onclick="navTo('comics')" id="nav-comics">
-      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0118 18a8.966 8.966 0 00-6 2.292m0-14.25v14.25"/></svg>
-      Comics
-    </button>
-    <button class="nav-btn" onclick="navTo('requests')" id="nav-requests">
-      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/></svg>
-      Request a Book <span class="nav-badge" id="requests-count" style="display:none"></span>
-    </button>
-    <button class="nav-btn" onclick="navTo('player')" id="nav-player" style="display:none">
-      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg>
-      Now Playing
-    </button>
-  </nav>
-  <div class="sidebar-footer">
-    <div class="engine-pill"><div class="engine-dot"></div><div class="engine-text">Engine: <span id="engine-name">detecting...</span></div></div>
-    <div id="user-profile-wrap"></div>
-  </div>
-</aside>
-<main id="main-content">
 
-<!-- AUTH PAGE -->
-<div class="page active" id="page-auth">
-<div class="auth-page"><div class="auth-card">
-  <div class="auth-logo"><div class="auth-logo-icon">&#x1F4DA;</div><h1>Aurelius</h1></div>
-  <div class="auth-title">Your personal world library</div>
-  <div class="auth-subtitle">Sign in to access millions of books, build your personal library, and listen to AI narrations.</div>
-  <div class="auth-features">
-    <div class="auth-feature"><div class="auth-feature-icon">&#x1F30D;</div><div class="auth-feature-title">World Library</div><div class="auth-feature-desc">70,000+ Gutenberg + Internet Archive</div></div>
-    <div class="auth-feature"><div class="auth-feature-icon">&#x1F399;&#xFE0F;</div><div class="auth-feature-title">AI Narration</div><div class="auth-feature-desc">Any book converted to audio instantly</div></div>
-    <div class="auth-feature"><div class="auth-feature-icon">&#x1F4F1;</div><div class="auth-feature-title">Any Device</div><div class="auth-feature-desc">Phone, tablet and desktop</div></div>
-    <div class="auth-feature"><div class="auth-feature-icon">&#x1F512;</div><div class="auth-feature-title">Your Library</div><div class="auth-feature-desc">Private — only you can see it</div></div>
+<!-- SIDEBAR -->
+<nav id="sidebar" class="hidden">
+  <div class="sidebar-logo">
+    <span style="font-size:1.6rem">📚</span>
+    <div>
+      <div><span>Aurelius</span></div>
+      <div class="sub">World Library</div>
+    </div>
   </div>
-  <div id="g-signin-btn" style="display:flex;justify-content:center;margin-bottom:8px;"></div>
-  <button class="google-btn" onclick="signInWithGoogleRedirect()">
-    <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google">
-    Continue with Google
-  </button>
-  <div class="auth-disclaimer">Free forever. No credit card required.</div>
-</div></div>
-</div>
 
-<!-- DISCOVER PAGE -->
-<div class="page" id="page-discover">
-  <div class="discover-hero">
-    <div class="hero-eyebrow">World Library</div>
-    <h1 class="hero-title">Every great story,<br>waiting to be heard.</h1>
-    <p class="hero-subtitle">Search 70,000+ free books from Project Gutenberg. Add any book and listen with AI narration.</p>
-    <div class="hero-search">
-      <div class="hero-search-wrap">
-        <svg class="hero-search-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
-        <input class="hero-search-input" type="text" id="gutenberg-search" placeholder="Search by title, author, or topic..." onkeydown="if(event.key==='Enter')searchGutenberg()">
+  <div class="nav-section">
+    <div class="nav-section-title">Explore</div>
+    <button class="nav-btn active" id="nav-discover" onclick="navTo('discover')">
+      <span class="icon">🔍</span> Discover
+    </button>
+    <button class="nav-btn" id="nav-archive" onclick="navTo('archive')">
+      <span class="icon">🏛️</span> Internet Archive
+    </button>
+    <button class="nav-btn" id="nav-comics" onclick="navTo('comics')">
+      <span class="icon">💥</span> Comics
+    </button>
+    <button class="nav-btn" id="nav-search" onclick="navTo('search')">
+      <span class="icon">🔎</span> Search
+    </button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">My Space</div>
+    <button class="nav-btn" id="nav-library" onclick="navTo('library')">
+      <span class="icon">📖</span> My Library
+    </button>
+    <button class="nav-btn" id="nav-downloads" onclick="navTo('downloads')">
+      <span class="icon">⬇️</span> Downloads
+    </button>
+    <button class="nav-btn" id="nav-donate" onclick="navTo('donate')">
+      <span class="icon">💛</span> Support Us
+    </button>
+    <button class="nav-btn" id="nav-settings" onclick="navTo('settings')">
+      <span class="icon">⚙️</span> Settings
+    </button>
+  </div>
+
+  <div class="sidebar-bottom">
+    <div id="sidebarUserArea">
+      <button class="btn btn-primary" style="width:100%" onclick="closeSidebar();openAuth()">Sign In</button>
+    </div>
+  </div>
+</nav>
+<div id="overlay" onclick="closeSidebar()"></div>
+
+<!-- MAIN -->
+<div id="main" class="full">
+  <div class="topbar">
+    <button class="menu-btn" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+    <span class="topbar-title">Aurelius</span>
+    <div class="search-wrap">
+      <span class="si">🔍</span>
+      <input type="search" placeholder="Search books, authors…" id="topSearch" 
+        onkeydown="if(event.key==='Enter')doSearch(this.value)">
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-sm btn-ghost" onclick="openAuth()" id="topAuthBtn">Sign In</button>
+    </div>
+  </div>
+
+  <div id="pages">
+
+    <!-- DISCOVER PAGE -->
+    <div class="page active" id="page-discover">
+      <div class="hero">
+        <h1>📚 World Library</h1>
+        <p>Millions of books, comics & manuscripts from across history — free to explore and read.</p>
       </div>
-      <button class="btn-search" onclick="searchGutenberg()">Search</button>
-    </div>
-  </div>
-  <div class="stats-bar">
-    <div class="stat-item"><div class="stat-num">70,000+</div><div class="stat-label">Free Books</div></div>
-    <div class="stat-item"><div class="stat-num">50+</div><div class="stat-label">Languages</div></div>
-    <div class="stat-item"><div class="stat-num">100%</div><div class="stat-label">Free &amp; Legal</div></div>
-  </div>
-  <div class="section-wrap" style="padding-bottom:14px;">
-    <div class="cat-pills">
-      <div class="cat-pill active" onclick="selectGutenbergCat(this,'')">All</div>
-      <div class="cat-pill" onclick="selectGutenbergCat(this,'fiction')">Fiction</div>
-      <div class="cat-pill" onclick="selectGutenbergCat(this,'philosophy')">Philosophy</div>
-      <div class="cat-pill" onclick="selectGutenbergCat(this,'science')">Science</div>
-      <div class="cat-pill" onclick="selectGutenbergCat(this,'history')">History</div>
-      <div class="cat-pill" onclick="selectGutenbergCat(this,'biography')">Biography</div>
-      <div class="cat-pill" onclick="selectGutenbergCat(this,'mystery')">Mystery</div>
-      <div class="cat-pill" onclick="selectGutenbergCat(this,'adventure')">Adventure</div>
-      <div class="cat-pill" onclick="selectGutenbergCat(this,'romance')">Romance</div>
-      <div class="cat-pill" onclick="selectGutenbergCat(this,'poetry')">Poetry</div>
-      <div class="cat-pill" onclick="selectGutenbergCat(this,'psychology')">Psychology</div>
-    </div>
-  </div>
-  <div class="section-wrap" style="padding-top:14px;">
-    <div class="section-header"><div class="section-title" id="discover-section-title">Featured Books</div></div>
-    <div id="gutenberg-results"><div class="result-loading"><span class="spin pulsing">&#x27F3;</span> Loading...</div></div>
-  </div>
-</div>
-
-<!-- ARCHIVE PAGE -->
-<div class="page" id="page-archive">
-  <div class="discover-hero">
-    <div class="hero-eyebrow">Internet Archive</div>
-    <h1 class="hero-title">Millions of books,<br>magazines &amp; newspapers.</h1>
-    <p class="hero-subtitle">The world&#x27;s largest digital library. Public domain books, historical newspapers, vintage magazines.</p>
-    <div class="hero-search">
-      <div class="hero-search-wrap">
-        <svg class="hero-search-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
-        <input class="hero-search-input" type="text" id="archive-search" placeholder="Search books, magazines, newspapers..." onkeydown="if(event.key==='Enter')searchArchive()">
+      <div class="cat-pills" id="discoverPills">
+        <button class="cat-pill active" data-cat="fiction" onclick="selectDiscoverCat(this,'fiction')">📖 Fiction</button>
+        <button class="cat-pill" data-cat="science" onclick="selectDiscoverCat(this,'science')">🔬 Science</button>
+        <button class="cat-pill" data-cat="history" onclick="selectDiscoverCat(this,'history')">🏛️ History</button>
+        <button class="cat-pill" data-cat="philosophy" onclick="selectDiscoverCat(this,'philosophy')">🧠 Philosophy</button>
+        <button class="cat-pill" data-cat="biography" onclick="selectDiscoverCat(this,'biography')">👤 Biography</button>
+        <button class="cat-pill" data-cat="mystery" onclick="selectDiscoverCat(this,'mystery')">🕵️ Mystery</button>
+        <button class="cat-pill" data-cat="romance" onclick="selectDiscoverCat(this,'romance')">💕 Romance</button>
+        <button class="cat-pill" data-cat="self-help" onclick="selectDiscoverCat(this,'self-help')">⭐ Self-Help</button>
+        <button class="cat-pill" data-cat="technology" onclick="selectDiscoverCat(this,'technology')">💻 Technology</button>
+        <button class="cat-pill" data-cat="children" onclick="selectDiscoverCat(this,'children')">🧒 Children</button>
       </div>
-      <button class="btn-search" onclick="searchArchive()">Search</button>
+      <div class="section-hdr">
+        <h2 id="discoverHeading">Fiction Books</h2>
+        <button class="btn btn-sm btn-ghost" onclick="loadDiscover(currentDiscoverCat,true)">Refresh</button>
+      </div>
+      <div id="discoverGrid" class="book-grid"><div class="loading"><div class="spinner"></div><span>Loading books…</span></div></div>
     </div>
-  </div>
-  <div class="stats-bar">
-    <div class="stat-item"><div class="stat-num">35M+</div><div class="stat-label">Items</div></div>
-    <div class="stat-item"><div class="stat-num">4M+</div><div class="stat-label">Books</div></div>
-    <div class="stat-item"><div class="stat-num">1M+</div><div class="stat-label">Newspapers</div></div>
-  </div>
-  <div class="section-wrap" style="padding-bottom:12px;">
-    <div class="cat-pills" id="archive-type-pills">
-      <div class="cat-pill active" onclick="selectArchiveType(this,'texts')">&#x1F4DA; Books</div>
-      <div class="cat-pill" onclick="selectArchiveType(this,'magazines')">&#x1F4F0; Magazines</div>
-      <div class="cat-pill" onclick="selectArchiveType(this,'newspapers')">&#x1F5DE;&#xFE0F; Newspapers</div>
-    </div>
-    <div class="cat-pills" style="margin-top:10px;" id="archive-subject-pills">
-      <div class="cat-pill active" onclick="selectArchiveSubject(this,'')">All</div>
-      <div class="cat-pill" onclick="selectArchiveSubject(this,'fiction')">Fiction</div>
-      <div class="cat-pill" onclick="selectArchiveSubject(this,'philosophy')">Philosophy</div>
-      <div class="cat-pill" onclick="selectArchiveSubject(this,'science')">Science</div>
-      <div class="cat-pill" onclick="selectArchiveSubject(this,'history')">History</div>
-      <div class="cat-pill" onclick="selectArchiveSubject(this,'technology')">Technology</div>
-    </div>
-  </div>
-  <div class="section-wrap" style="padding-top:14px;">
-    <div class="section-header"><div class="section-title" id="archive-section-title">Featured from Archive</div></div>
-    <div id="archive-results"><div class="result-loading"><span class="spin pulsing">&#x27F3;</span> Loading...</div></div>
-    <div id="archive-pagination" style="display:flex;gap:10px;justify-content:center;margin-top:22px;"></div>
-  </div>
-</div>
 
-<!-- LIBRARY PAGE -->
-<div class="page" id="page-library">
-  <div class="page-header">
-    <div class="page-header-left"><h2>My Library</h2><p id="library-count">Loading your collection...</p></div>
-    <button class="btn btn-gold" onclick="openUploadModal()">
-      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>Add Book
-    </button>
-  </div>
-  <div class="toolbar">
-    <input class="search-input" type="text" placeholder="Search..." id="search-input" oninput="filterBooks()">
-    <select class="filter-select" id="filter-cat" onchange="filterBooks()"><option value="">All Categories</option></select>
-    <select class="filter-select" id="filter-status" onchange="filterBooks()"><option value="">All Status</option><option value="stored">Stored</option><option value="ready">Ready</option><option value="processing">Processing</option></select>
-    <div class="spacer"></div>
-    <div class="toggle-view">
-      <button id="btn-grid" class="active" onclick="setView('grid')"><svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z"/></svg></button>
-      <button id="btn-list" onclick="setView('list')"><svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg></button>
+    <!-- INTERNET ARCHIVE PAGE -->
+    <div class="page" id="page-archive">
+      <div class="hero" style="padding:28px 32px;margin-bottom:24px;">
+        <h1 style="font-size:1.4rem">🏛️ Internet Archive</h1>
+        <p>Millions of digitized books, historical texts and rare manuscripts.</p>
+      </div>
+      <div class="cat-pills" id="archivePills">
+        <button class="cat-pill active" data-cat="books" onclick="selectArchiveCat(this,'books')">📚 Books</button>
+        <button class="cat-pill" data-cat="texts" onclick="selectArchiveCat(this,'texts')">📜 Texts</button>
+        <button class="cat-pill" data-cat="periodicals" onclick="selectArchiveCat(this,'periodicals')">📰 Periodicals</button>
+        <button class="cat-pill" data-cat="audio" onclick="selectArchiveCat(this,'audio')">🎙️ Audio</button>
+        <button class="cat-pill" data-cat="manuscripts" onclick="selectArchiveCat(this,'manuscripts')">📋 Manuscripts</button>
+      </div>
+      <div class="section-hdr">
+        <h2 id="archiveHeading">Books</h2>
+      </div>
+      <div id="archiveGrid" class="book-grid"><div class="loading"><div class="spinner"></div><span>Loading…</span></div></div>
     </div>
-  </div>
-  <div class="books-wrap"><div id="books-container"></div></div>
-</div>
 
-<!-- PLAYER PAGE -->
-<div class="page" id="page-player">
-  <div class="player-page-wrap">
-    <button class="back-btn" onclick="showPage('library')">
-      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>Back to Library
-    </button>
-    <div id="player-header"></div>
-    <div id="job-progress-wrap" style="display:none">
-      <div class="narr-card">
-        <div class="narr-card-top">
-          <div class="narr-waveform" id="narr-wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-          <div class="narr-info"><div class="narr-status" id="narr-status-label">Generating audio...</div><div class="narr-step" id="job-step-label">Starting up...</div></div>
-          <div class="narr-pct-big" id="job-pct-label">0%</div>
+    <!-- COMICS PAGE -->
+    <div class="page" id="page-comics">
+      <div class="hero" style="padding:28px 32px;margin-bottom:24px;">
+        <h1 style="font-size:1.4rem">💥 Comics</h1>
+        <p>Superhero epics, manga, graphic novels and more from the Internet Archive.</p>
+      </div>
+      <div class="cat-pills" id="comicPills">
+        <button class="cat-pill active" data-cat="superhero" onclick="selectComicCat(this,'superhero')">🦸 Superhero</button>
+        <button class="cat-pill" data-cat="manga" onclick="selectComicCat(this,'manga')">⛩️ Manga</button>
+        <button class="cat-pill" data-cat="horror" onclick="selectComicCat(this,'horror')">👻 Horror</button>
+        <button class="cat-pill" data-cat="sci-fi" onclick="selectComicCat(this,'sci-fi')">🚀 Sci-Fi</button>
+        <button class="cat-pill" data-cat="fantasy" onclick="selectComicCat(this,'fantasy')">🐉 Fantasy</button>
+        <button class="cat-pill" data-cat="romance" onclick="selectComicCat(this,'romance')">💕 Romance</button>
+        <button class="cat-pill" data-cat="war" onclick="selectComicCat(this,'war')">🪖 War</button>
+        <button class="cat-pill" data-cat="western" onclick="selectComicCat(this,'western')">🤠 Western</button>
+        <button class="cat-pill" data-cat="crime" onclick="selectComicCat(this,'crime')">🔫 Crime</button>
+        <button class="cat-pill" data-cat="adult" onclick="selectComicCat(this,'adult')">🔞 Adult</button>
+      </div>
+      <div class="section-hdr">
+        <h2 id="comicsHeading">Superhero Comics</h2>
+      </div>
+      <div id="comicsGrid" class="comic-grid"><div class="loading"><div class="spinner"></div><span>Loading comics…</span></div></div>
+    </div>
+
+    <!-- SEARCH PAGE -->
+    <div class="page" id="page-search">
+      <div class="hero" style="padding:24px 28px;margin-bottom:20px;">
+        <h1 style="font-size:1.3rem">🔎 Search</h1>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:20px;">
+        <div class="search-wrap" style="flex:1">
+          <span class="si">🔍</span>
+          <input type="search" id="mainSearch" placeholder="Title, author, subject…" 
+            onkeydown="if(event.key==='Enter')doSearch(this.value)" style="width:100%">
         </div>
-        <div class="narr-bar"><div class="narr-bar-fill" id="job-fill" style="width:0%"></div></div>
-        <div class="narr-stats">
-          <div class="narr-stat"><div class="narr-stat-label">Chunks done</div><div class="narr-stat-value" id="narr-chunks">0 / 0</div></div>
-          <div class="narr-stat"><div class="narr-stat-label">Time elapsed</div><div class="narr-stat-value gold" id="narr-elapsed">0:00</div></div>
-          <div class="narr-stat"><div class="narr-stat-label">Est. remaining</div><div class="narr-stat-value" id="narr-eta">Calculating...</div></div>
+        <button class="btn btn-primary" onclick="doSearch(document.getElementById('mainSearch').value)">Search</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button class="cat-pill active" id="src-gutenberg" onclick="setSearchSrc('gutenberg',this)">Project Gutenberg</button>
+        <button class="cat-pill" id="src-archive" onclick="setSearchSrc('archive',this)">Internet Archive</button>
+        <button class="cat-pill" id="src-both" onclick="setSearchSrc('both',this)">Both</button>
+      </div>
+      <div id="searchResults"></div>
+    </div>
+
+    <!-- LIBRARY PAGE -->
+    <div class="page" id="page-library">
+      <div class="hero" style="padding:24px 28px;margin-bottom:20px;">
+        <h1 style="font-size:1.3rem">📖 My Library</h1>
+        <p>Books you've uploaded — your personal collection.</p>
+      </div>
+      <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+        <div class="ui">📤</div>
+        <p><strong>Upload a Book</strong></p>
+        <p style="font-size:.8rem;margin-top:6px;">PDF, EPUB, MOBI, TXT · Click or tap to browse</p>
+        <input type="file" id="fileInput" accept=".pdf,.epub,.mobi,.txt,.doc,.docx" style="display:none" onchange="handleUpload(event)">
+      </div>
+      <div class="section-hdr">
+        <h2>Uploaded Books</h2>
+        <span id="uploadedCount" style="font-size:.82rem;color:var(--muted)">0 books</span>
+      </div>
+      <div id="libraryGrid" class="book-grid">
+        <div class="empty"><div class="ei">📚</div><p>No uploads yet.<br>Upload your first book above.</p></div>
+      </div>
+    </div>
+
+    <!-- DOWNLOADS PAGE -->
+    <div class="page" id="page-downloads">
+      <div class="hero" style="padding:24px 28px;margin-bottom:20px;">
+        <h1 style="font-size:1.3rem">⬇️ Downloads</h1>
+        <p>Books you've saved from Discover, Archive and Comics.</p>
+      </div>
+      <div class="section-hdr">
+        <h2>Saved Books</h2>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span id="downloadsCount" style="font-size:.82rem;color:var(--muted)">0 books</span>
+          <button class="btn btn-sm btn-ghost" onclick="clearAllDownloads()" id="clearDownloadsBtn" style="display:none">Clear All</button>
         </div>
-        <div class="narr-chapter-list" id="narr-chapter-list"></div>
+      </div>
+      <div id="downloadsList">
+        <div class="empty"><div class="ei">⬇️</div><p>No saved books yet.<br>Browse Discover or Archive and tap Save.</p></div>
       </div>
     </div>
-    <div class="chapter-list" id="chapter-list"></div>
-  </div>
-</div>
 
-<!-- COMICS PAGE -->
-<div class="page" id="page-comics">
-  <div class="discover-hero">
-    <div class="hero-eyebrow">Comics Library</div>
-    <h1 class="hero-title">Comics, manga &amp;<br>graphic novels.</h1>
-    <p class="hero-subtitle">Search thousands of free comics and graphic novels from the Internet Archive and Digital Comic Museum.</p>
-    <div class="hero-search">
-      <div class="hero-search-wrap">
-        <svg class="hero-search-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
-        <input class="hero-search-input" type="text" id="comics-search" placeholder="Search comics, manga, graphic novels..." onkeydown="if(event.key==='Enter')searchComics()">
+    <!-- DONATE PAGE -->
+    <div class="page" id="page-donate">
+      <div class="donate-card">
+        <div style="font-size:3rem;margin-bottom:12px">💛</div>
+        <h2>Support Aurelius</h2>
+        <p>Help us keep knowledge free for everyone. Every donation goes toward maintaining the library and expanding our collection.</p>
+        <div class="donate-amounts">
+          <button class="donate-amt" onclick="setDonateAmt(5,this)">$5</button>
+          <button class="donate-amt active" onclick="setDonateAmt(10,this)">$10</button>
+          <button class="donate-amt" onclick="setDonateAmt(25,this)">$25</button>
+          <button class="donate-amt" onclick="setDonateAmt(50,this)">$50</button>
+          <button class="donate-amt" onclick="setDonateAmt(100,this)">$100</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:16px;">
+          <span style="color:var(--muted);font-size:.9rem">Custom:</span>
+          <input type="number" id="customAmt" placeholder="Enter amount" min="1"
+            style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;width:140px;font-family:'Lato',sans-serif;">
+        </div>
+        <button class="btn btn-primary" style="padding:12px 40px;font-size:1rem" onclick="goPayPal()">
+          💳 Donate via PayPal
+        </button>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:12px;">Powered by PayPal · Secure & encrypted</p>
       </div>
-      <button class="btn-search" onclick="searchComics()">Search</button>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;">
+          <div style="font-size:2rem;margin-bottom:8px">📚</div>
+          <div style="font-weight:700;color:var(--accent)">3M+ Books</div>
+          <div style="font-size:.82rem;color:var(--muted)">Free to access</div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;">
+          <div style="font-size:2rem;margin-bottom:8px">🌍</div>
+          <div style="font-weight:700;color:var(--accent)">190+ Countries</div>
+          <div style="font-size:.82rem;color:var(--muted)">Readers worldwide</div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;">
+          <div style="font-size:2rem;margin-bottom:8px">🆓</div>
+          <div style="font-weight:700;color:var(--accent)">Always Free</div>
+          <div style="font-size:.82rem;color:var(--muted)">Knowledge for all</div>
+        </div>
+      </div>
     </div>
-  </div>
-  <div class="stats-bar">
-    <div class="stat-item"><div class="stat-num">1M+</div><div class="stat-label">Comics</div></div>
-    <div class="stat-item"><div class="stat-num">Free</div><div class="stat-label">Public Domain</div></div>
-    <div class="stat-item"><div class="stat-num">All</div><div class="stat-label">Genres</div></div>
-  </div>
-  <div class="section-wrap" style="padding-bottom:14px;">
-    <div class="section-header"><div class="section-title">Browse by Genre</div></div>
-    <div class="cat-pills" id="comics-genre-pills">
-      <div class="cat-pill active" onclick="selectComicsGenre(this,'')">All</div>
-      <div class="cat-pill" onclick="selectComicsGenre(this,'superhero')">&#x1F9B8; Superhero</div>
-      <div class="cat-pill" onclick="selectComicsGenre(this,'fantasy')">&#x1F409; Fantasy</div>
-      <div class="cat-pill" onclick="selectComicsGenre(this,'adventure')">&#x2694;&#xFE0F; Adventure</div>
-      <div class="cat-pill" onclick="selectComicsGenre(this,'horror')">&#x1F47B; Horror</div>
-      <div class="cat-pill" onclick="selectComicsGenre(this,'science fiction')">&#x1F680; Sci-Fi</div>
-      <div class="cat-pill" onclick="selectComicsGenre(this,'romance')">&#x1F49B; Romance</div>
-      <div class="cat-pill" onclick="selectComicsGenre(this,'humor')">&#x1F602; Humor</div>
-      <div class="cat-pill" onclick="selectComicsGenre(this,'manga')">&#x1F1EF;&#x1F1F5; Manga</div>
-      <div class="cat-pill" onclick="selectComicsGenre(this,'mystery')">&#x1F50D; Mystery</div>
-      <div class="cat-pill" onclick="selectComicsGenre(this,'western')">&#x1F920; Western</div>
-      <div class="cat-pill" onclick="selectComicsGenre(this,'war')">&#x1FA96; War</div>
-      <div class="cat-pill" onclick="selectComicsGenre(this,'adult')">&#x1F51E; Adult</div>
+
+    <!-- SETTINGS PAGE -->
+    <div class="page" id="page-settings">
+      <div class="hero" style="padding:24px 28px;margin-bottom:20px;">
+        <h1 style="font-size:1.3rem">⚙️ Settings</h1>
+      </div>
+      <div class="settings-section">
+        <h3>Reading Preferences</h3>
+        <div class="setting-row">
+          <label>Dark Mode</label>
+          <label class="toggle"><input type="checkbox" checked onchange="toggleDarkMode(this)"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <label>Auto-download for offline</label>
+          <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="setting-row">
+          <label>Font Size</label>
+          <select style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-family:'Lato',sans-serif;">
+            <option>Small</option><option selected>Medium</option><option>Large</option>
+          </select>
+        </div>
+      </div>
+      <div class="settings-section">
+        <h3>Library</h3>
+        <div class="setting-row">
+          <label>Clear Downloads</label>
+          <button class="btn btn-sm btn-danger" onclick="clearAllDownloads();toast('Downloads cleared','success')">Clear</button>
+        </div>
+        <div class="setting-row">
+          <label>Clear Uploaded Books</label>
+          <button class="btn btn-sm btn-danger" onclick="clearLibrary()">Clear</button>
+        </div>
+      </div>
+      <div class="settings-section">
+        <h3>About</h3>
+        <div class="setting-row"><label>Version</label><span style="color:var(--muted)">1.0.0</span></div>
+        <div class="setting-row"><label>Built on</label><span style="color:var(--muted)">Project Gutenberg + Internet Archive</span></div>
+      </div>
     </div>
-  </div>
-  <div class="section-wrap" style="padding-top:14px;">
-    <div class="section-header"><div class="section-title" id="comics-section-title">Featured Comics</div></div>
-    <div id="comics-results"><div class="result-loading"><span class="spin pulsing">&#x27F3;</span> Loading comics...</div></div>
-    <div id="comics-pagination" style="display:flex;gap:10px;justify-content:center;margin-top:22px;"></div>
-  </div>
-</div>
 
-<!-- REQUESTS PAGE -->
-<div class="page" id="page-requests">
-  <div class="page-header">
-    <div class="page-header-left"><h2>Request a Book</h2><p>Can&#x27;t find what you want? Request it and the community votes it up.</p></div>
-    <button class="btn btn-gold" onclick="openRequestModal()">
-      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>Request a Book
-    </button>
-  </div>
-  <div style="margin:0 48px 18px;padding:11px 15px;background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.15);border-radius:12px;font-size:12px;color:var(--muted);line-height:1.7;">
-    <strong style="color:var(--gold2);">&#x2696;&#xFE0F; DMCA Safe Harbor</strong> &#x2014; All content is user-submitted. Copyright holders may <span style="color:var(--gold);cursor:pointer;text-decoration:underline;" onclick="openDmcaModal()">file a takedown report</span>.
-  </div>
-  <div style="padding:0 48px 18px;display:flex;gap:8px;flex-wrap:wrap;">
-    <div class="cat-pill active" id="req-tab-all" onclick="setRequestTab(this,'')">All</div>
-    <div class="cat-pill" id="req-tab-requested" onclick="setRequestTab(this,'requested')">&#x1F50D; Searching</div>
-    <div class="cat-pill" id="req-tab-sourced" onclick="setRequestTab(this,'sourced')">&#x2705; Found</div>
-    <div class="cat-pill" id="req-tab-available" onclick="setRequestTab(this,'available')">&#x1F3A7; Available</div>
-    <div class="spacer"></div>
-    <select class="filter-select" onchange="setRequestSort(this.value)"><option value="votes">Most Voted</option><option value="date">Newest</option></select>
-  </div>
-  <div class="books-wrap"><div id="requests-container"><div class="result-loading"><span class="spin">&#x27F3;</span> Loading...</div></div></div>
-</div>
+  </div><!-- /pages -->
+</div><!-- /main -->
 
-</main></div>
-
-<!-- Audio bar -->
-<div id="audio-bar">
-  <div class="audio-info"><div class="audio-title" id="now-title">&#x2014;</div><div class="audio-book" id="now-book">&#x2014;</div></div>
-  <div class="seek-wrap"><span class="time-lbl" id="time-cur">0:00</span><input type="range" id="seeker" value="0" min="0" max="100" step="0.1" oninput="seekTo(this.value)"><span class="time-lbl" id="time-dur">0:00</span></div>
-  <div class="audio-controls">
-    <button class="ctrl-btn" onclick="skipBack()"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg></button>
-    <button class="ctrl-btn main" id="play-btn" onclick="togglePlay()"><svg id="play-icon" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
-    <button class="ctrl-btn" onclick="skipFwd()"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 15l6-6m0 0l-6-6m6 6H9a6 6 0 000 12h3"/></svg></button>
-    <select class="speed-sel" onchange="setSpeed(this.value)"><option value="0.75">0.75x</option><option value="1" selected>1x</option><option value="1.25">1.25x</option><option value="1.5">1.5x</option><option value="2">2x</option></select>
-  </div>
-</div>
-
-<!-- Donate banner -->
-<div class="donate-banner hidden" id="donate-banner">
-  <button class="donate-banner-close" id="donate-close">&#x2715;</button>
-  <div class="donate-banner-icon">&#x2764;&#xFE0F;</div>
-  <div class="donate-banner-text"><strong>Aurelius is free forever.</strong> If you love it, consider supporting us to keep the servers running.</div>
-  <button class="donate-btn" onclick="window.open('https://www.paypal.com/donate/?business=hotinferno12@gmail.com&currency_code=USD','_blank')">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7.076 21.337H2.47a.641.641 0 01-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 00-.607-.541c-.59 3.025-2.566 6.082-8.558 6.082H9.823l-1.38 8.73h3.886l.893-5.658h2.174c4.942 0 7.718-2.394 8.57-7.162a5.89 5.89 0 00-.744-1.705z"/></svg>
-    Donate via PayPal
-  </button>
-</div>
-
-<!-- MODALS -->
-<!-- Upload -->
-<div class="modal-overlay hidden" id="upload-modal" onclick="closeModal('upload-modal',event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header"><h3>Add to Library</h3><button class="modal-close" onclick="closeModal('upload-modal')">&#x2715;</button></div>
+<!-- BOOK DETAIL MODAL -->
+<div class="modal-overlay" id="bookModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3 id="bookModalTitle">Book Details</h3>
+      <button class="modal-close" onclick="closeModal('bookModal')">✕</button>
+    </div>
     <div class="modal-body">
-      <div class="form-group">
-        <div class="upload-zone" id="drop-zone"><input type="file" accept=".pdf" id="file-input" onchange="onFileSelected(this)"><div class="upload-zone-icon">&#x1F4C4;</div><h4>Drop PDF here or click to browse</h4><p>Books, articles, documents</p></div>
-        <div id="file-pill" style="display:none" class="file-pill">&#x1F4C4; <span id="file-name-label"></span></div>
-      </div>
-      <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="book-title" type="text" placeholder="Auto-detected from filename"></div>
-      <div class="form-row">
-        <div class="form-group" style="margin-bottom:0"><label class="form-label">Author</label><input class="form-input" id="book-author" type="text" placeholder="Author name"></div>
-        <div class="form-group" style="margin-bottom:0"><label class="form-label">Category</label><select class="form-select" id="book-category"></select></div>
-      </div>
-    </div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('upload-modal')">Cancel</button><button class="btn btn-gold" id="upload-btn" onclick="submitUpload()" disabled>Save to Library</button></div>
-  </div>
-</div>
-<!-- Narrate -->
-<div class="modal-overlay hidden" id="narrate-modal" onclick="closeModal('narrate-modal',event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header"><h3>Start Narration</h3><button class="modal-close" onclick="closeModal('narrate-modal')">&#x2715;</button></div>
-    <div class="modal-body">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;" id="narrate-book-name"></p>
-      <div class="form-group"><label class="form-label">Choose Voice</label><div class="voice-grid" id="narrate-voice-grid"></div></div>
-      <div style="font-size:12px;color:var(--muted);padding:10px 12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);">Engine: <span id="narrate-engine">edge_tts</span></div>
-    </div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('narrate-modal')">Cancel</button><button class="btn btn-gold" onclick="submitNarrate()" id="narrate-btn"><svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Start Narrating</button></div>
-  </div>
-</div>
-<!-- Gutenberg options -->
-<div class="modal-overlay hidden" id="gutenberg-modal" onclick="closeModal('gutenberg-modal',event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header"><h3>Add to My Library</h3><button class="modal-close" onclick="closeModal('gutenberg-modal')">&#x2715;</button></div>
-    <div class="modal-body">
-      <div id="gutenberg-modal-info" style="display:flex;gap:13px;margin-bottom:16px;padding:12px;background:var(--surface2);border-radius:10px;">
-        <div id="gm-cover" style="width:52px;height:70px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;"></div>
-        <div><div id="gm-title" style="font-family:'Cormorant Garamond',serif;font-size:15px;margin-bottom:3px;"></div><div id="gm-author" style="font-size:12px;color:var(--muted);"></div></div>
-      </div>
-      <div class="form-group"><label class="form-label">Category</label><select class="form-select" id="gm-category"></select></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div class="option-card" onclick="gutenbergOptionChosen('read')"><div style="font-size:22px;margin-bottom:5px;">&#x1F4D6;</div><div style="font-size:12px;font-weight:500;color:var(--text);">Read Only</div><div style="font-size:10px;color:var(--muted);margin-top:2px;">No audio narration</div></div>
-        <div class="option-card" onclick="gutenbergOptionChosen('narrate')"><div style="font-size:22px;margin-bottom:5px;">&#x1F399;&#xFE0F;</div><div style="font-size:12px;font-weight:500;color:var(--text);">Add &amp; Narrate</div><div style="font-size:10px;color:var(--muted);margin-top:2px;">Generate AI audio</div></div>
+      <div class="book-detail">
+        <div id="bookModalCover"></div>
+        <div class="book-detail-info">
+          <h2 id="bookModalName"></h2>
+          <div class="author" id="bookModalAuthor"></div>
+          <div id="bookModalBadges"></div>
+          <div class="desc" id="bookModalDesc"></div>
+          <div class="modal-actions" id="bookModalActions"></div>
+        </div>
       </div>
     </div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('gutenberg-modal')">Cancel</button></div>
-  </div>
-</div>
-<!-- Archive options -->
-<div class="modal-overlay hidden" id="archive-modal" onclick="closeModal('archive-modal',event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header"><h3>Add from Archive</h3><button class="modal-close" onclick="closeModal('archive-modal')">&#x2715;</button></div>
-    <div class="modal-body">
-      <div style="display:flex;gap:13px;margin-bottom:16px;padding:12px;background:var(--surface2);border-radius:10px;">
-        <div id="am-cover" style="width:52px;height:70px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--surface3);"></div>
-        <div style="flex:1;min-width:0;"><div id="am-title" style="font-family:'Cormorant Garamond',serif;font-size:15px;margin-bottom:3px;"></div><div id="am-creator" style="font-size:12px;color:var(--muted);"></div><div id="am-year" style="font-size:11px;color:var(--muted2);margin-top:2px;"></div></div>
-      </div>
-      <div class="form-group"><label class="form-label">Category</label><select class="form-select" id="am-category"></select></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div class="option-card" onclick="archiveOptionChosen('read')"><div style="font-size:22px;margin-bottom:5px;">&#x1F4D6;</div><div style="font-size:12px;font-weight:500;color:var(--text);">Read Only</div></div>
-        <div class="option-card" onclick="archiveOptionChosen('narrate')"><div style="font-size:22px;margin-bottom:5px;">&#x1F399;&#xFE0F;</div><div style="font-size:12px;font-weight:500;color:var(--text);">Add &amp; Narrate</div></div>
-      </div>
-    </div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('archive-modal')">Cancel</button></div>
-  </div>
-</div>
-<!-- Request -->
-<div class="modal-overlay hidden" id="request-modal" onclick="closeModal('request-modal',event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header"><h3>Request a Book</h3><button class="modal-close" onclick="closeModal('request-modal')">&#x2715;</button></div>
-    <div class="modal-body">
-      <div class="form-group"><label class="form-label">Book Title *</label><input class="form-input" id="req-title" type="text" placeholder="e.g. Thinking, Fast and Slow"></div>
-      <div class="form-row">
-        <div class="form-group" style="margin-bottom:0"><label class="form-label">Author *</label><input class="form-input" id="req-author" type="text" placeholder="Author name"></div>
-        <div class="form-group" style="margin-bottom:0"><label class="form-label">Category</label><select class="form-select" id="req-category"></select></div>
-      </div>
-      <div class="form-group" style="margin-top:12px;"><label class="form-label">Why this book? (optional)</label><textarea class="form-input" id="req-desc" rows="2" style="resize:vertical;"></textarea></div>
-    </div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('request-modal')">Cancel</button><button class="btn btn-gold" onclick="submitRequest()" id="req-submit-btn">Submit Request</button></div>
-  </div>
-</div>
-<!-- DMCA -->
-<div class="modal-overlay hidden" id="dmca-modal" onclick="closeModal('dmca-modal',event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header"><h3>&#x2696;&#xFE0F; DMCA Takedown</h3><button class="modal-close" onclick="closeModal('dmca-modal')">&#x2715;</button></div>
-    <div class="modal-body">
-      <div class="form-group"><label class="form-label">Select Book *</label><select class="form-select" id="dmca-book-select"></select></div>
-      <div class="form-group"><label class="form-label">Reason *</label><textarea class="form-input" id="dmca-reason" rows="3" placeholder="Describe your copyright claim..." style="resize:vertical;"></textarea></div>
-      <div style="font-size:11px;color:var(--muted);padding:10px;background:rgba(229,115,115,.06);border-radius:10px;border:1px solid rgba(229,115,115,.15);">&#x26A0;&#xFE0F; Filing a false DMCA claim is a criminal offense under 17 U.S.C. &#xA7; 512(f).</div>
-    </div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('dmca-modal')">Cancel</button><button class="btn btn-danger" onclick="submitDmca()" id="dmca-submit-btn">File Report</button></div>
   </div>
 </div>
 
-<style>
-.option-card{padding:14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;text-align:center;transition:all .2s;}
-.option-card:hover{border-color:rgba(212,168,67,.4);background:rgba(212,168,67,.04);}
-</style>
+<!-- COMIC DETAIL MODAL -->
+<div class="modal-overlay" id="comicModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3 id="comicModalTitle">Comic Details</h3>
+      <button class="modal-close" onclick="closeModal('comicModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="book-detail">
+        <div id="comicModalCover"></div>
+        <div class="book-detail-info">
+          <h2 id="comicModalName"></h2>
+          <div class="author" id="comicModalMeta"></div>
+          <div id="comicModalBadges"></div>
+          <div class="desc" id="comicModalDesc"></div>
+          <div class="modal-actions" id="comicModalActions"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3>Welcome to Aurelius</h3>
+      <button class="modal-close" onclick="closeModal('authModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchAuth('login',this)">Sign In</button>
+        <button class="auth-tab" onclick="switchAuth('register',this)">Create Account</button>
+      </div>
+      <div id="authLoginForm">
+        <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="you@example.com"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••"></div>
+        <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="doLogin()">Sign In</button>
+        <div class="divider">or</div>
+        <div id="googleSignInBtn" style="display:flex;justify-content:center;"></div>
+      </div>
+      <div id="authRegisterForm" style="display:none">
+        <div class="form-group"><label>Name</label><input type="text" id="regName" placeholder="Your name"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="you@example.com"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="regPass" placeholder="min 8 characters"></div>
+        <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="doRegister()">Create Account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- READER MODAL -->
+<div class="modal-overlay" id="readerModal">
+  <div class="modal" style="max-width:95vw;width:960px;">
+    <div class="modal-hdr">
+      <h3 id="readerTitle">Reading</h3>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <a id="readerOpenLink" href="#" target="_blank" class="btn btn-sm btn-ghost">Open in new tab ↗</a>
+        <button class="modal-close" onclick="closeModal('readerModal')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" style="padding:0">
+      <iframe id="readerFrame" src="" allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
 <div id="toast"></div>
-<audio id="player"></audio>
+
 <script>
-const API='/api';
-const AUTH='/auth';
-const GOOGLE_CLIENT_ID='1017805317287-me5v533ju9kd0vcjq7d8u5add8mpniha.apps.googleusercontent.com';
-const audio=document.getElementById('player');
+// ========== STATE ==========
+let currentPage = 'discover';
+let currentDiscoverCat = 'fiction';
+let currentArchiveCat = 'books';
+let currentComicCat = 'superhero';
+let searchSrc = 'gutenberg';
+let donateAmt = 10;
+let user = null;
+let uploadedBooks = JSON.parse(localStorage.getItem('aurelius_library') || '[]');
+let savedBooks = JSON.parse(localStorage.getItem('aurelius_downloads') || '[]');
 
-let S={books:[],voices:[],categories:[],view:'grid',selVoice:'af_bella',selFile:null,narrateBookId:null,pollTimer:null,_elapsedTimer:null,jobId:null,currentBook:null,gutenbergCat:'',gutenbergBook:null,token:null,user:null};
-let archiveState={type:'texts',subject:'',page:1,query:'',totalPages:1};
-let archiveLoaded=false;
-let requestsState={status:'',sort:'votes'};
-
-// ── Auth ──────────────────────────────────────────────────────────────────────
-function authFetch(url,opts={}){
-  if(!opts.headers)opts.headers={};
-  if(S.token)opts.headers['Authorization']='Bearer '+S.token;
-  return fetch(url,opts);
+// ========== SIDEBAR ==========
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('overlay');
+  const isHidden = sb.classList.contains('hidden');
+  if (isHidden) {
+    sb.classList.remove('hidden');
+    ov.classList.add('show');
+  } else {
+    closeSidebar();
+  }
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.add('hidden');
+  document.getElementById('overlay').classList.remove('show');
+}
+function navTo(page) {
+  closeSidebar();
+  setTimeout(() => showPage(page), 50);
 }
 
-function signInWithGoogleRedirect(){
-  const params=new URLSearchParams({
-    client_id:GOOGLE_CLIENT_ID,
-    redirect_uri:'https://aurelius-qafo.onrender.com/auth/google/callback',
-    response_type:'code',
-    scope:'openid email profile',
-    prompt:'select_account',
-  });
-  window.location.href='https://accounts.google.com/o/oauth2/v2/auth?'+params.toString();
+// ========== PAGES ==========
+function showPage(page) {
+  currentPage = page;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const pg = document.getElementById('page-' + page);
+  if (pg) pg.classList.add('active');
+  const nb = document.getElementById('nav-' + page);
+  if (nb) nb.classList.add('active');
+
+  if (page === 'discover' && document.getElementById('discoverGrid').children.length <= 1) {
+    loadDiscover(currentDiscoverCat);
+  }
+  if (page === 'archive' && document.getElementById('archiveGrid').children.length <= 1) {
+    loadArchive(currentArchiveCat);
+  }
+  if (page === 'comics' && document.getElementById('comicsGrid').children.length <= 1) {
+    loadComics(currentComicCat);
+  }
+  if (page === 'library') renderLibrary();
+  if (page === 'downloads') renderDownloads();
 }
 
-// Also support One Tap as fallback
-function signInWithGoogle(){
-  try{
-    google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:handleGoogleCallback,auto_select:false});
-    google.accounts.id.renderButton(document.getElementById('g-signin-btn'),{theme:'outline',size:'large',width:360,text:'continue_with'});
-  }catch(e){signInWithGoogleRedirect();}
+// ========== DISCOVER ==========
+function selectDiscoverCat(el, cat) {
+  document.querySelectorAll('#discoverPills .cat-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  currentDiscoverCat = cat;
+  loadDiscover(cat);
 }
 
-async function handleGoogleCallback(response){
-  try{
-    const r=await fetch(AUTH+'/google',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id_token:response.credential})});
-    const data=await r.json();
-    if(!r.ok)throw new Error(data.detail||'Auth failed');
-    S.token=data.token;S.user=data.user;
-    localStorage.setItem('au_token',data.token);
-    localStorage.setItem('au_user',JSON.stringify(data.user));
-    onSignedIn();
-  }catch(e){toast('Sign in failed: '+e.message);}
-}
+async function loadDiscover(cat, refresh) {
+  const grid = document.getElementById('discoverGrid');
+  const heading = document.getElementById('discoverHeading');
+  grid.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading…</span></div>';
+  const labels = {fiction:'Fiction',science:'Science',history:'History',philosophy:'Philosophy',
+    biography:'Biography',mystery:'Mystery',romance:'Romance','self-help':'Self-Help',
+    technology:'Technology',children:"Children's"};
+  heading.textContent = (labels[cat] || cat) + ' Books';
 
-// Handle OAuth callback code
-async function handleOAuthCallback(){
-  const params=new URLSearchParams(window.location.search);
-  const code=params.get('code');
-  const error=params.get('error');
-  if(error){toast('Sign in cancelled');window.history.replaceState({},'','/');return;}
-  if(!code)return;
-  // Exchange code for token via backend
-  try{
-    const r=await fetch(AUTH+'/google/callback?code='+encodeURIComponent(code)+'&redirect_uri='+encodeURIComponent(window.location.origin+'/auth/google/callback'));
-    const data=await r.json();
-    if(!r.ok)throw new Error(data.detail||'Auth failed');
-    S.token=data.token;S.user=data.user;
-    localStorage.setItem('au_token',data.token);
-    localStorage.setItem('au_user',JSON.stringify(data.user));
-    window.history.replaceState({},'','/');
-    onSignedIn();
-  }catch(e){toast('Sign in failed: '+e.message);window.history.replaceState({},'','/');}
-}
-
-function onSignedIn(){
-  renderUserProfile();
-  loadMeta();loadLibrary();loadEngineStatus();
-  showPage('library');
-  setTimeout(()=>{if(!localStorage.getItem('donate_done'))document.getElementById('donate-banner').classList.remove('hidden');},30000);
-}
-
-function signOut(){
-  S.token=null;S.user=null;
-  localStorage.removeItem('au_token');localStorage.removeItem('au_user');
-  renderUserProfile();showAuthPage();
-}
-
-function showAuthPage(){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-auth').classList.add('active');
-  // Try to render Google button
-  setTimeout(()=>{
-    try{signInWithGoogle();}catch(e){}
-  },500);
-}
-
-function renderUserProfile(){
-  const wrap=document.getElementById('user-profile-wrap');if(!wrap)return;
-  if(S.user){
-    wrap.innerHTML=`<div class="user-profile" onclick="if(confirm('Sign out of Aurelius?'))signOut()">${S.user.avatar?`<img class="user-avatar" src="${S.user.avatar}" alt="">`:`<div class="user-avatar-placeholder">${(S.user.name||'?')[0]}</div>`}<div style="min-width:0;"><div class="user-name">${esc(S.user.name)}</div><div class="user-email">${esc(S.user.email)}</div></div></div>`;
-  }else{
-    wrap.innerHTML=`<button class="btn btn-ghost" style="width:100%;" onclick="showAuthPage()">Sign In</button>`;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    // Map category to Gutenberg search term
+    const catMap = {fiction:'fiction',science:'science',history:'history',
+      philosophy:'philosophy',biography:'biography',mystery:'mystery',
+      romance:'romance','self-help':'self help',technology:'technology',children:'children'};
+    const q = catMap[cat] || cat;
+    const url = `https://gutendex.com/books/?search=${encodeURIComponent(q)}&page=1`;
+    const r = await fetch(url, {signal: controller.signal});
+    clearTimeout(timeout);
+    if (!r.ok) throw new Error('Failed');
+    const data = await r.json();
+    const books = (data.results || []).slice(0, 12);
+    if (!books.length) { grid.innerHTML = '<div class="empty"><div class="ei">📚</div><p>No books found.</p></div>'; return; }
+    grid.innerHTML = books.map(b => buildBookCard(b, 'gutenberg')).join('');
+  } catch(e) {
+    // Fallback: use popular Gutenberg IDs
+    try {
+      const fallbackBooks = await loadGutenbergFallback(cat);
+      grid.innerHTML = fallbackBooks.map(b => buildBookCard(b, 'gutenberg')).join('');
+    } catch {
+      grid.innerHTML = '<div class="empty"><div class="ei">⚠️</div><p>Could not load books.<br>Check your connection.</p></div>';
+    }
   }
 }
 
-// ── Sidebar ───────────────────────────────────────────────────────────────────
-let sidebarOpen=true;
-function toggleSidebar(){
-  const mobile=window.innerWidth<=768;
-  const btn=document.querySelector('.sidebar-toggle');
-  if(mobile){
-    document.getElementById('sidebar').classList.toggle('open');
-    document.getElementById('sidebar-overlay').classList.toggle('visible');
-  }else{
-    sidebarOpen=!sidebarOpen;
-    document.getElementById('sidebar').classList.toggle('collapsed',!sidebarOpen);
-    document.getElementById('main-content').classList.toggle('expanded',!sidebarOpen);
-    document.getElementById('audio-bar').classList.toggle('expanded',!sidebarOpen);
-    if(btn) btn.style.left=sidebarOpen?'256px':'16px';
+async function loadGutenbergFallback(cat) {
+  // Direct fetch a few known good books by topic
+  const searches = {
+    fiction:['frankenstein','dracula','pride and prejudice','sherlock holmes'],
+    science:['darwin origin species','einstein','newton'],
+    history:['caesar','herodotus history','gibbon roman empire'],
+    philosophy:['plato republic','aristotle','nietzsche'],
+    biography:['autobiography benjamin franklin','lincoln'],
+    mystery:['sherlock holmes','edgar poe'],
+    romance:['jane austen','bronte'],
+    'self-help':['marcus aurelius meditations','stoic'],
+    technology:['computing','engineering'],
+    children:['alice wonderland','grimm fairy tales','wizard oz']
+  };
+  const terms = searches[cat] || ['classic literature'];
+  const q = terms[Math.floor(Math.random() * terms.length)];
+  const r = await fetch(`https://gutendex.com/books/?search=${encodeURIComponent(q)}`);
+  const d = await r.json();
+  return (d.results || []).slice(0, 12);
+}
+
+function buildBookCard(b, src) {
+  const title = b.title || 'Unknown Title';
+  const author = (b.authors && b.authors[0]) ? b.authors[0].name : 'Unknown Author';
+  const cover = b.formats && (b.formats['image/jpeg'] || b.formats['image/png'] || '');
+  const id = b.id;
+  const coverHtml = cover
+    ? `<img class="book-cover" src="${cover}" alt="${escHtml(title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+    : '';
+  return `<div class="book-card" onclick="openBookModal(${JSON.stringify(JSON.stringify({id,title,author,cover,src,formats:b.formats||{}})).replace(/"/g,'&quot;')})" data-id="${id}">
+    ${cover ? coverHtml : ''}
+    <div class="book-cover-placeholder" ${cover?'style="display:none"':''}>📖</div>
+    <div class="book-info">
+      <div class="book-title">${escHtml(title)}</div>
+      <div class="book-author">${escHtml(author)}</div>
+    </div>
+  </div>`;
+}
+
+// ========== ARCHIVE PAGE ==========
+function selectArchiveCat(el, cat) {
+  document.querySelectorAll('#archivePills .cat-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  currentArchiveCat = cat;
+  loadArchive(cat);
+}
+
+async function loadArchive(cat) {
+  const grid = document.getElementById('archiveGrid');
+  const heading = document.getElementById('archiveHeading');
+  const labels = {books:'Books',texts:'Texts',periodicals:'Periodicals',audio:'Audio Books',manuscripts:'Manuscripts'};
+  heading.textContent = labels[cat] || cat;
+  grid.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading…</span></div>';
+
+  const catQuery = {
+    books:'subject:books AND mediatype:texts',
+    texts:'mediatype:texts AND subject:literature',
+    periodicals:'mediatype:texts AND subject:periodicals',
+    audio:'mediatype:audio AND subject:librivox',
+    manuscripts:'subject:manuscripts AND mediatype:texts'
+  };
+  const q = catQuery[cat] || 'mediatype:texts';
+
+  try {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 8000);
+    const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier,title,creator,description,subject&rows=12&output=json&sort=downloads+desc`;
+    const r = await fetch(url, {signal: controller.signal});
+    if (!r.ok) throw new Error();
+    const data = await r.json();
+    const docs = (data.response && data.response.docs) || [];
+    if (!docs.length) { grid.innerHTML = '<div class="empty"><div class="ei">🏛️</div><p>No items found.</p></div>'; return; }
+    grid.innerHTML = docs.map(d => buildArchiveCard(d)).join('');
+  } catch {
+    grid.innerHTML = '<div class="empty"><div class="ei">⚠️</div><p>Could not load Archive items.<br>Check your connection.</p></div>';
   }
 }
-function closeSidebar(){
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebar-overlay').classList.remove('visible');
+
+function buildArchiveCard(d) {
+  const title = d.title || 'Unknown';
+  const creator = Array.isArray(d.creator) ? d.creator[0] : (d.creator || 'Internet Archive');
+  const id = d.identifier;
+  const cover = `https://archive.org/services/img/${id}`;
+  return `<div class="book-card" onclick="openArchiveModal('${id}','${escJs(title)}','${escJs(creator)}')">
+    <img class="book-cover" src="${cover}" alt="${escHtml(title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    <div class="book-cover-placeholder" style="display:none">📜</div>
+    <div class="book-info">
+      <div class="book-title">${escHtml(title)}</div>
+      <div class="book-author">${escHtml(creator)}</div>
+    </div>
+  </div>`;
 }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
-(async()=>{
-  // Check if backend redirected back with token
-  const urlParams=new URLSearchParams(window.location.search);
-  const urlToken=urlParams.get('token');
-  const urlUser=urlParams.get('user');
-  const urlError=urlParams.get('auth_error');
+// ========== COMICS ==========
+function selectComicCat(el, cat) {
+  document.querySelectorAll('#comicPills .cat-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  currentComicCat = cat;
+  loadComics(cat);
+}
 
-  if(urlError){
-    toast('Sign in failed: '+urlError);
-    window.history.replaceState({},'','/');
-  }
+async function loadComics(cat) {
+  const grid = document.getElementById('comicsGrid');
+  const heading = document.getElementById('comicsHeading');
+  const labels = {superhero:'Superhero',manga:'Manga',horror:'Horror','sci-fi':'Sci-Fi',
+    fantasy:'Fantasy',romance:'Romance',war:'War',western:'Western',crime:'Crime',adult:'Adult'};
+  heading.textContent = (labels[cat] || cat) + ' Comics';
+  grid.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading comics…</span></div>';
 
-  if(urlToken&&urlUser){
-    try{
-      S.token=urlToken;
-      S.user=JSON.parse(decodeURIComponent(urlUser));
-      localStorage.setItem('au_token',urlToken);
-      localStorage.setItem('au_user',JSON.stringify(S.user));
-      window.history.replaceState({},'','/');
-      onSignedIn();
+  const queries = {
+    superhero:'subject:(comics OR "comic book") AND (subject:superhero OR subject:batman OR subject:superman OR subject:marvel)',
+    manga:'subject:manga OR subject:"japanese comics"',
+    horror:'subject:(comics OR "comic book") AND subject:horror',
+    'sci-fi':'subject:(comics OR "comic book") AND subject:(science fiction OR "sci-fi")',
+    fantasy:'subject:(comics OR "comic book") AND subject:fantasy',
+    romance:'subject:(comics OR "comic book") AND subject:romance',
+    war:'subject:(comics OR "comic book") AND subject:war',
+    western:'subject:(comics OR "comic book") AND subject:western',
+    crime:'subject:(comics OR "comic book") AND subject:(crime OR detective)',
+    adult:'subject:(comics OR "adult comics" OR "underground comix") AND subject:(adult OR mature)'
+  };
+  const q = queries[cat] || `subject:comics mediatype:texts`;
+
+  try {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 10000);
+    const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(q + ' AND mediatype:texts')}&fl[]=identifier,title,creator,description,date,subject&rows=16&output=json&sort=downloads+desc`;
+    const r = await fetch(url, {signal: controller.signal});
+    if (!r.ok) throw new Error();
+    const data = await r.json();
+    const docs = (data.response && data.response.docs) || [];
+    if (!docs.length) {
+      // fallback broader search
+      const r2 = await fetch(`https://archive.org/advancedsearch.php?q=subject:comics+mediatype:texts&fl[]=identifier,title,creator,date&rows=16&output=json&sort=downloads+desc`);
+      const d2 = await r2.json();
+      const docs2 = (d2.response && d2.response.docs) || [];
+      grid.innerHTML = docs2.length ? docs2.map(buildComicCard).join('') : '<div class="empty"><div class="ei">💥</div><p>No comics found.</p></div>';
       return;
-    }catch(e){
-      console.error('Failed to parse auth redirect:',e);
     }
+    grid.innerHTML = docs.map(buildComicCard).join('');
+  } catch {
+    grid.innerHTML = '<div class="empty"><div class="ei">⚠️</div><p>Could not load comics.<br>Check your connection.</p></div>';
+  }
+}
+
+function buildComicCard(d) {
+  const title = d.title || 'Unknown Comic';
+  const creator = Array.isArray(d.creator) ? d.creator[0] : (d.creator || '');
+  const year = d.date ? d.date.substring(0,4) : '';
+  const id = d.identifier;
+  const cover = `https://archive.org/services/img/${id}`;
+  return `<div class="comic-card" onclick="openComicModal('${id}','${escJs(title)}','${escJs(creator)}','${year}')">
+    <img class="comic-cover" src="${cover}" alt="${escHtml(title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    <div class="comic-cover-ph" style="display:none">💥</div>
+    <div class="comic-info">
+      <div class="comic-title">${escHtml(title)}</div>
+      <div class="comic-year">${year || creator || 'Internet Archive'}</div>
+    </div>
+  </div>`;
+}
+
+// ========== BOOK MODAL (Gutenberg) ==========
+function openBookModal(jsonStr) {
+  let b;
+  try { b = JSON.parse(jsonStr); } catch { return; }
+  document.getElementById('bookModalTitle').textContent = 'Book Details';
+  document.getElementById('bookModalName').textContent = b.title;
+  document.getElementById('bookModalAuthor').textContent = b.author || '';
+  document.getElementById('bookModalBadges').innerHTML = '<span class="badge">Project Gutenberg</span>';
+  document.getElementById('bookModalDesc').textContent = 'Classic literature from Project Gutenberg — free to read, download and share.';
+
+  // Cover
+  const coverEl = document.getElementById('bookModalCover');
+  if (b.cover) {
+    coverEl.innerHTML = `<img class="book-detail-cover" src="${b.cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>📖</div>'">`;
+  } else {
+    coverEl.innerHTML = '<div class="book-detail-cover-ph">📖</div>';
   }
 
-  // Always hide all pages first, show auth by default
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-auth').classList.add('active');
-  renderUserProfile();
+  // Find read URL — prefer HTML, then plain text, then PDF
+  const f = b.formats || {};
+  const readUrl = f['text/html'] || f['application/xhtml+xml'] || f['text/plain'] || f['application/pdf'] || '';
+  const dlUrl = f['application/epub+zip'] || f['application/x-mobipocket-ebook'] || f['application/pdf'] || readUrl;
 
-  const t=localStorage.getItem('au_token'),u=localStorage.getItem('au_user');
-  if(t&&u){
-    S.token=t;S.user=JSON.parse(u);
-    try{
-      const r=await authFetch(AUTH+'/me');
-      if(r.ok){onSignedIn();}else{signOut();}
-    }catch{
-      // Offline — trust cached session
-      onSignedIn();
+  const isSaved = savedBooks.some(s => s.id == b.id);
+
+  document.getElementById('bookModalActions').innerHTML = `
+    ${readUrl ? `<button class="btn btn-primary" onclick="openReader('${escJs(readUrl)}','${escJs(b.title)}')">📖 Read Now</button>` : ''}
+    ${dlUrl ? `<a class="btn btn-ghost" href="${dlUrl}" target="_blank" rel="noopener">⬇️ Download</a>` : ''}
+    <button class="btn btn-ghost" id="saveBookBtn_${b.id}" onclick="saveBook(${JSON.stringify(JSON.stringify(b)).replace(/"/g,'&quot;')})">
+      ${isSaved ? '✅ Saved' : '🔖 Save'}
+    </button>
+  `;
+  openModal('bookModal');
+}
+
+// ========== ARCHIVE MODAL ==========
+async function openArchiveModal(id, title, creator) {
+  // Show modal immediately with loading state
+  document.getElementById('bookModalTitle').textContent = 'Loading…';
+  document.getElementById('bookModalName').textContent = title;
+  document.getElementById('bookModalAuthor').textContent = creator;
+  document.getElementById('bookModalBadges').innerHTML = '<span class="badge">Internet Archive</span>';
+  document.getElementById('bookModalDesc').textContent = 'Loading details…';
+  const cover = `https://archive.org/services/img/${id}`;
+  document.getElementById('bookModalCover').innerHTML = `<img class="book-detail-cover" src="${cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>📜</div>'">`;
+  document.getElementById('bookModalActions').innerHTML = '<div class="loading" style="padding:10px"><div class="spinner"></div></div>';
+  openModal('bookModal');
+
+  // Fetch metadata in background
+  try {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 6000);
+    const r = await fetch(`https://archive.org/metadata/${id}`, {signal: controller.signal});
+    const meta = await r.json();
+    const desc = (meta.metadata && (meta.metadata.description || meta.metadata.subject)) || 'From the Internet Archive collection.';
+    const descText = Array.isArray(desc) ? desc.join(', ') : String(desc).replace(/<[^>]+>/g,'').substring(0,300);
+    document.getElementById('bookModalTitle').textContent = 'Book Details';
+    document.getElementById('bookModalDesc').textContent = descText;
+  } catch { document.getElementById('bookModalDesc').textContent = 'From the Internet Archive collection.'; }
+
+  // Build action buttons
+  const readUrl = `https://archive.org/embed/${id}`;
+  const pageUrl = `https://archive.org/details/${id}`;
+  const isSaved = savedBooks.some(s => s.id === id);
+  document.getElementById('bookModalActions').innerHTML = `
+    <button class="btn btn-primary" onclick="openReader('${escJs(readUrl)}','${escJs(title)}')">📖 Read Now</button>
+    <a class="btn btn-ghost" href="${pageUrl}" target="_blank" rel="noopener">🏛️ View on Archive</a>
+    <button class="btn btn-ghost" onclick="saveBook(JSON.stringify({id:'${escJs(id)}',title:'${escJs(title)}',author:'${escJs(creator)}',cover:'${cover}',src:'archive',readUrl:'${readUrl}',pageUrl:'${pageUrl}'}))">
+      ${isSaved ? '✅ Saved' : '🔖 Save'}
+    </button>
+  `;
+}
+
+// ========== COMIC MODAL ==========
+async function openComicModal(id, title, creator, year) {
+  document.getElementById('comicModalTitle').textContent = 'Loading…';
+  document.getElementById('comicModalName').textContent = title;
+  document.getElementById('comicModalMeta').textContent = [creator, year].filter(Boolean).join(' · ');
+  document.getElementById('comicModalBadges').innerHTML = '<span class="badge">Internet Archive</span>';
+  document.getElementById('comicModalDesc').textContent = 'Loading details…';
+  const cover = `https://archive.org/services/img/${id}`;
+  document.getElementById('comicModalCover').innerHTML = `<img class="book-detail-cover" src="${cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>💥</div>'">`;
+  document.getElementById('comicModalActions').innerHTML = '<div class="loading" style="padding:10px"><div class="spinner"></div></div>';
+  openModal('comicModal');
+
+  try {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 6000);
+    const r = await fetch(`https://archive.org/metadata/${id}`, {signal: controller.signal});
+    const meta = await r.json();
+    const raw = meta.metadata;
+    if (raw) {
+      document.getElementById('comicModalName').textContent = raw.title || title;
+      if (raw.description) {
+        const d = Array.isArray(raw.description) ? raw.description[0] : raw.description;
+        document.getElementById('comicModalDesc').textContent = d.replace(/<[^>]+>/g,'').substring(0,300);
+      }
     }
+  } catch {}
+
+  document.getElementById('comicModalTitle').textContent = 'Comic Details';
+  const readUrl = `https://archive.org/embed/${id}`;
+  const pageUrl = `https://archive.org/details/${id}`;
+  const isSaved = savedBooks.some(s => s.id === id);
+
+  document.getElementById('comicModalActions').innerHTML = `
+    <button class="btn btn-primary" onclick="openReader('${escJs(readUrl)}','${escJs(title)}')">📖 Read Now</button>
+    <a class="btn btn-ghost" href="${pageUrl}" target="_blank" rel="noopener">🏛️ View on Archive</a>
+    <button class="btn btn-ghost" onclick="saveBook(JSON.stringify({id:'${escJs(id)}',title:'${escJs(title)}',author:'${escJs(creator)}',year:'${year}',cover:'${cover}',src:'comic',readUrl:'${readUrl}',pageUrl:'${pageUrl}'}))">
+      ${isSaved ? '✅ Saved' : '🔖 Save'}
+    </button>
+  `;
+}
+
+// ========== READER ==========
+function openReader(url, title) {
+  // Close any open book/comic modal first
+  closeModal('bookModal');
+  closeModal('comicModal');
+  
+  // For Gutenberg HTML books — open in new tab for best experience
+  if (url.includes('gutenberg.org') && !url.includes('embed')) {
+    window.open(url, '_blank');
+    return;
   }
-  document.getElementById('donate-close').onclick=()=>{document.getElementById('donate-banner').classList.add('hidden');localStorage.setItem('donate_done','1');};
-})();
-
-async function loadMeta(){
-  try{
-    const[vr,cr]=await Promise.all([fetch(API+'/voices').then(r=>r.json()),fetch(API+'/categories').then(r=>r.json())]);
-    S.voices=vr.voices||[];S.categories=cr.categories||[];
-    populateCategoryFilter();populateUploadCategory();populateAllSelects();
-  }catch(e){}
+  // For Archive.org — use their embed player
+  document.getElementById('readerTitle').textContent = title || 'Reading';
+  document.getElementById('readerFrame').src = url;
+  document.getElementById('readerOpenLink').href = url.replace('/embed/', '/details/');
+  openModal('readerModal');
 }
 
-async function loadEngineStatus(){
-  try{const s=await fetch(API+'/tts-status').then(r=>r.json());const e=s.engine||'edge_tts';document.getElementById('engine-name').textContent=e;document.getElementById('narrate-engine').textContent=e;}
-  catch{document.getElementById('engine-name').textContent='edge_tts';}
+// ========== SEARCH ==========
+let searchSrcMode = 'gutenberg';
+function setSearchSrc(src, el) {
+  searchSrcMode = src;
+  document.querySelectorAll('#page-search .cat-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
 }
 
-function populateAllSelects(){
-  ['gm-category','am-category','req-category'].forEach(id=>{
-    const sel=document.getElementById(id);if(!sel)return;
-    sel.innerHTML='<option value="Other">Other</option>';
-    S.categories.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
-  });
-}
+async function doSearch(q) {
+  if (!q || !q.trim()) return;
+  showPage('search');
+  document.getElementById('mainSearch').value = q;
+  document.getElementById('topSearch').value = q;
+  const res = document.getElementById('searchResults');
+  res.innerHTML = '<div class="loading"><div class="spinner"></div><span>Searching…</span></div>';
 
-// ── Nav ───────────────────────────────────────────────────────────────────────
-function navTo(name){
-  showPage(name);
-  // Close sidebar on mobile after navigation
-  if(window.innerWidth<=768){
-    setTimeout(()=>{
-      document.getElementById('sidebar').classList.remove('open');
-      document.getElementById('sidebar-overlay').classList.remove('visible');
-    },100);
+  const results = [];
+  const promises = [];
+
+  if (searchSrcMode === 'gutenberg' || searchSrcMode === 'both') {
+    promises.push(
+      fetch(`https://gutendex.com/books/?search=${encodeURIComponent(q)}&page=1`)
+        .then(r => r.json()).then(d => {
+          (d.results || []).slice(0,10).forEach(b => {
+            results.push({
+              type:'book', id:b.id, title:b.title,
+              author:(b.authors&&b.authors[0])?b.authors[0].name:'Unknown',
+              cover:b.formats&&(b.formats['image/jpeg']||''),
+              src:'gutenberg', formats:b.formats||{}
+            });
+          });
+        }).catch(()=>{})
+    );
   }
-}
 
-function showPage(name){
-  if(!S.user&&name!=='auth'){showAuthPage();return;}
-  const page=document.getElementById('page-'+name);
-  if(!page)return;
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  page.classList.add('active');
-  const nb=document.getElementById('nav-'+name);if(nb)nb.classList.add('active');
-  if(name==='library')loadLibrary();
-  if(name==='archive')onShowArchive();
-  if(name==='comics')onShowComics();
-  if(name==='requests'){populateDmcaBookSelect();loadRequests();}
-}
-
-function closeModal(id,e){
-  if(e&&e.target!==document.getElementById(id))return;
-  document.getElementById(id).classList.add('hidden');
-}
-
-// ── Library ───────────────────────────────────────────────────────────────────
-async function loadLibrary(){
-  if(!S.token)return;
-  try{
-    const data=await authFetch(API+'/my/books').then(r=>r.json());
-    S.books=data.books||[];renderBooks();
-    document.getElementById('library-count').textContent=S.books.length===0?'No books yet — discover or upload':''+S.books.length+' book'+(S.books.length!==1?'s':'')+' in your collection';
-  }catch(e){document.getElementById('books-container').innerHTML='<div class="empty"><div class="empty-icon">&#x26A0;&#xFE0F;</div><h3>Could not load library</h3></div>';}
-}
-
-function filterBooks(){
-  const q=document.getElementById('search-input').value.toLowerCase();
-  const cat=document.getElementById('filter-cat').value;
-  const stat=document.getElementById('filter-status').value;
-  renderBooks(S.books.filter(b=>(!q||b.title.toLowerCase().includes(q)||(b.author||'').toLowerCase().includes(q))&&(!cat||b.category===cat)&&(!stat||b.status===stat)));
-}
-
-function getCoverClass(cat){
-  return{Fiction:'cover-fiction',Philosophy:'cover-philosophy',Science:'cover-science',History:'cover-history',Biography:'cover-biography','Self-Help':'cover-selfhelp',Spirituality:'cover-spirituality',Technology:'cover-technology',Comics:'cover-comics'}[cat]||'cover-default';
-}
-
-function renderBooks(books){
-  books=books??S.books;
-  const c=document.getElementById('books-container');
-  if(!books.length){c.innerHTML='<div class="empty"><div class="empty-icon">&#x1F4DA;</div><h3>No books found</h3><p>Try adjusting filters or <span style="color:var(--gold);cursor:pointer" onclick="showPage(&quot;discover&quot;)">discover books</span>.</p></div>';return;}
-  if(S.view==='grid'){
-    c.innerHTML='<div class="book-grid">'+books.map(b=>`<div class="book-card fadein" onclick="openBook('${b.id}')"><div class="book-cover ${getCoverClass(b.category)}"><div class="book-cover-text">${esc(b.title)}</div></div><div class="book-card-body"><div class="book-card-title">${esc(b.title)}</div><div class="book-card-author">${esc(b.author||'Unknown')}</div><div class="book-card-footer"><span style="font-size:10px;color:var(--muted);text-transform:uppercase">${esc(b.category||'')}</span><span class="badge badge-${b.status}">${b.status}</span></div></div></div>`).join('')+'</div>';
-  }else{
-    c.innerHTML='<div class="book-list">'+books.map(b=>`<div class="book-row fadein"><div class="book-row-icon ${getCoverClass(b.category)}" style="border-radius:6px">&#x1F4D6;</div><div class="book-row-info" onclick="openBook('${b.id}')"><div class="book-row-title">${esc(b.title)}</div><div class="book-row-meta">${esc(b.author||'Unknown')} &middot; ${esc(b.category||'')}</div></div><div class="book-row-actions"><span class="badge badge-${b.status}">${b.status}</span>${b.status==='stored'||b.status==='failed'?`<button class="btn btn-gold btn-sm" onclick="event.stopPropagation();openNarrateModal('${b.id}','${esc(b.title)}')">Narrate</button>`:b.status==='ready'?`<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openBook('${b.id}')">&#x25B6; Listen</button>`:`<button class="btn btn-ghost btn-sm" disabled><span class="spin">&#x27F3;</span></button>`}<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openDmcaModal('${b.id}')" title="DMCA">&#x2696;&#xFE0F;</button><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteBook('${b.id}','${esc(b.title)}')">&#x2715;</button></div></div>`).join('')+'</div>';
+  if (searchSrcMode === 'archive' || searchSrcMode === 'both') {
+    promises.push(
+      fetch(`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}+AND+mediatype:texts&fl[]=identifier,title,creator&rows=10&output=json&sort=downloads+desc`)
+        .then(r => r.json()).then(d => {
+          ((d.response&&d.response.docs)||[]).forEach(doc => {
+            results.push({
+              type:'archive', id:doc.identifier, title:doc.title,
+              author:Array.isArray(doc.creator)?doc.creator[0]:(doc.creator||'Internet Archive'),
+              cover:`https://archive.org/services/img/${doc.identifier}`,
+              src:'archive'
+            });
+          });
+        }).catch(()=>{})
+    );
   }
+
+  await Promise.all(promises);
+
+  if (!results.length) {
+    res.innerHTML = '<div class="empty"><div class="ei">🔎</div><p>No results found for "' + escHtml(q) + '"</p></div>';
+    return;
+  }
+
+  res.innerHTML = `<div class="result-count">${results.length} result${results.length!==1?'s':''} for "${escHtml(q)}"</div>
+    <div class="book-grid">${results.map(b => {
+      if (b.src === 'gutenberg') return buildBookCard(b, 'gutenberg');
+      return buildArchiveCard({identifier:b.id, title:b.title, creator:b.author});
+    }).join('')}</div>`;
 }
 
-function setView(v){S.view=v;document.getElementById('btn-grid').classList.toggle('active',v==='grid');document.getElementById('btn-list').classList.toggle('active',v==='list');renderBooks();}
-function populateCategoryFilter(){const sel=document.getElementById('filter-cat');S.categories.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});}
-function populateUploadCategory(){const sel=document.getElementById('book-category');sel.innerHTML='';S.categories.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});}
-function populateDmcaBookSelect(){const sel=document.getElementById('dmca-book-select');if(!sel)return;sel.innerHTML='<option value="">Select a book...</option>';S.books.forEach(b=>{const o=document.createElement('option');o.value=b.id;o.textContent=b.title+(b.author?' — '+b.author:'');sel.appendChild(o);});}
-
-// ── Player ────────────────────────────────────────────────────────────────────
-async function openBook(bookId){
-  try{
-    const data=await authFetch(API+'/books/'+bookId).then(r=>r.json());
-    S.currentBook=data;renderPlayer(data);
-    document.getElementById('nav-player').style.display='flex';
-    showPage('player');
-    if(data.job&&['queued','running'].includes(data.job.status))startPolling(data.job.id);
-  }catch(e){toast('Could not load book');}
+// ========== LIBRARY (UPLOADS) ==========
+function handleUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const entry = {
+    id: Date.now(),
+    title: file.name.replace(/\.[^.]+$/, ''),
+    author: 'Uploaded',
+    size: (file.size / 1024 / 1024).toFixed(1) + ' MB',
+    type: file.name.split('.').pop().toUpperCase(),
+    date: new Date().toLocaleDateString(),
+    dataUrl: null
+  };
+  // Store as data URL for PDFs and text files
+  const reader = new FileReader();
+  reader.onload = e => {
+    entry.dataUrl = e.target.result;
+    uploadedBooks.unshift(entry);
+    localStorage.setItem('aurelius_library', JSON.stringify(uploadedBooks.slice(0,50)));
+    renderLibrary();
+    toast('Book uploaded: ' + entry.title, 'success');
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
 }
 
-function renderPlayer(data){
-  const book=data.book,chs=data.chapters;
-  document.getElementById('player-header').innerHTML=`<div class="player-book-title">${esc(book.title)}</div><div class="player-book-meta"><span>${esc(book.author||'Unknown')}</span><span>&middot;</span><span>${esc(book.category||'')}</span><span>&middot;</span><span class="badge badge-${book.status}">${book.status}</span>${book.status==='stored'||book.status==='failed'?`<button class="btn btn-gold btn-sm" style="margin-left:4px" onclick="openNarrateModal('${book.id}','${esc(book.title)}')">&#x1F399;&#xFE0F; Narrate</button>`:''}</div>`;
-  const list=document.getElementById('chapter-list');
-  if(!chs.length&&book.status==='stored'){list.innerHTML='<div class="empty" style="padding:36px 0"><p>Click <strong>Narrate</strong> above to generate audio.</p></div>';return;}
-  if(!chs.length){list.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:28px">Generating chapters...</div>';return;}
-  list.innerHTML=chs.map(ch=>{const has=!!ch.audio_path;return`<div class="chapter-row ${has?'':'no-audio'}" id="chrow-${ch.id}" onclick="${has?`playChapter('${ch.id}','${esc(ch.title)}','${esc(book.title)}')`:''}"><div class="ch-num">${ch.number}</div><div class="ch-info"><div class="ch-title">${esc(ch.title)}</div><div class="ch-meta">${Math.round(ch.char_count/5)} words &middot; ${has?'Ready to play':'Pending audio'}</div></div><div class="ch-play">${has?'<svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>':'<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>'}</div></div>`;}).join('');
-}
-
-// ── Narrate ───────────────────────────────────────────────────────────────────
-function openNarrateModal(bookId,bookTitle){S.narrateBookId=bookId;document.getElementById('narrate-book-name').textContent='"'+bookTitle+'"';renderNarrateVoices();document.getElementById('narrate-modal').classList.remove('hidden');}
-function renderNarrateVoices(){document.getElementById('narrate-voice-grid').innerHTML=S.voices.map(v=>`<div class="voice-card ${v.id===S.selVoice?'sel':''}" onclick="selectVoice('${v.id}')"><div class="voice-name">${v.name} &middot; ${v.gender}</div><div class="voice-meta">${v.accent} &middot; ${v.style}</div></div>`).join('');}
-function selectVoice(id){S.selVoice=id;renderNarrateVoices();}
-async function submitNarrate(){
-  if(!S.narrateBookId)return;
-  const btn=document.getElementById('narrate-btn');btn.disabled=true;btn.innerHTML='<span class="spin">&#x27F3;</span> Starting...';
-  const form=new FormData();form.append('voice',S.selVoice);
-  try{
-    const r=await fetch(API+'/books/'+S.narrateBookId+'/narrate',{method:'POST',headers:{Authorization:'Bearer '+S.token},body:form});
-    const data=await r.json();if(!r.ok)throw new Error(data.detail||'Failed');
-    closeModal('narrate-modal');toast('Narration started!');
-    await openBook(S.narrateBookId);startPolling(data.job_id);
-  }catch(e){toast('Error: '+e.message);}
-  finally{btn.disabled=false;btn.innerHTML='<svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>Start Narrating';}
-}
-
-// ── Polling ───────────────────────────────────────────────────────────────────
-let _pollStart=null;
-function startPolling(jobId){
-  S.jobId=jobId;_pollStart=Date.now();
-  document.getElementById('job-progress-wrap').style.display='block';
-  if(S.pollTimer)clearInterval(S.pollTimer);
-  if(S._elapsedTimer)clearInterval(S._elapsedTimer);
-  S._elapsedTimer=setInterval(()=>{if(!_pollStart)return;document.getElementById('narr-elapsed').textContent=fmtTime(Math.floor((Date.now()-_pollStart)/1000));},1000);
-  S.pollTimer=setInterval(()=>pollJob(jobId),2500);pollJob(jobId);
-}
-async function pollJob(jobId){
-  try{
-    const job=await authFetch(API+'/jobs/'+jobId).then(r=>r.json());
-    const pct=Math.min(job.percent||0,100);
-    document.getElementById('job-fill').style.width=pct+'%';
-    document.getElementById('job-pct-label').textContent=Math.round(pct)+'%';
-    document.getElementById('job-step-label').textContent=job.current_step||'';
-    document.getElementById('narr-chunks').textContent=(job.progress||0)+' / '+(job.total||0);
-    document.getElementById('narr-eta').textContent=fmtETA(pct,Date.now()-_pollStart);
-    const wave=document.getElementById('narr-wave');
-    wave.className='narr-waveform'+(job.status==='complete'?' done':job.status==='failed'?' paused':'');
-    renderChapterProgress(job,S.currentBook?.chapters||[]);
-    if(job.status==='complete'){
-      clearInterval(S.pollTimer);clearInterval(S._elapsedTimer);
-      document.getElementById('narr-status-label').textContent='Audiobook ready!';
-      document.getElementById('narr-eta').textContent='Done ✓';
-      toast('Audiobook ready! &#x1F389;');
-      setTimeout(async()=>{document.getElementById('job-progress-wrap').style.display='none';const data=await authFetch(API+'/books/'+S.currentBook.book.id).then(r=>r.json());S.currentBook=data;renderPlayer(data);loadLibrary();},2000);
-    }else if(job.status==='failed'){
-      clearInterval(S.pollTimer);clearInterval(S._elapsedTimer);
-      document.getElementById('narr-status-label').textContent='Narration failed';
-      document.getElementById('job-step-label').textContent=job.error||'Unknown error';
-      toast('Narration failed');
-    }else{
-      document.getElementById('narr-status-label').textContent=pct<5?'Starting up...':pct<30?'Generating audio...':pct<70?'Narrating chapters...':pct<95?'Almost there...':'Finishing up...';
-    }
-  }catch(e){}
-}
-function renderChapterProgress(job,chapters){
-  const list=document.getElementById('narr-chapter-list');if(!chapters.length){list.innerHTML='';return;}
-  const pct=job.percent||0;const perCh=100/chapters.length;const ai=Math.min(Math.floor(pct/perCh),chapters.length-1);
-  list.innerHTML=chapters.map((ch,i)=>{const done=i<ai||pct>=100;const active=i===ai&&pct<100;return`<div class="narr-ch-row ${done?'done':active?'active':''}"><div class="narr-ch-dot"></div><span style="min-width:14px;font-size:10px;text-align:center">${done?'&#x2713;':active?'&#x25BA;':(i+1)}</span><span>${esc(ch.title)}</span></div>`;}).join('');
-  const a=list.querySelector('.narr-ch-row.active');if(a)a.scrollIntoView({block:'nearest',behavior:'smooth'});
-}
-function fmtETA(pct,ms){if(pct<=1)return'Calculating...';const r=Math.max(0,Math.floor((ms/(pct/100)-ms)/1000));if(r<60)return r+'s';if(r<3600)return Math.floor(r/60)+'m '+r%60+'s';return Math.floor(r/3600)+'h '+Math.floor(r%3600/60)+'m';}
-
-// ── Upload ────────────────────────────────────────────────────────────────────
-function openUploadModal(){if(!S.token){showAuthPage();return;}document.getElementById('upload-modal').classList.remove('hidden');}
-function onFileSelected(input){
-  const file=input.files[0];if(!file)return;S.selFile=file;
-  document.getElementById('file-name-label').textContent=file.name;
-  document.getElementById('file-pill').style.display='inline-flex';
-  document.getElementById('upload-btn').disabled=false;
-  if(!document.getElementById('book-title').value)document.getElementById('book-title').value=file.name.replace('.pdf','').replace(/[_-]/g,' ').replace(/\w/g,c=>c.toUpperCase());
-}
-const dz=document.getElementById('drop-zone');
-dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
-dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
-dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');const f=e.dataTransfer.files[0];if(f?.name.endsWith('.pdf')){S.selFile=f;document.getElementById('file-name-label').textContent=f.name;document.getElementById('file-pill').style.display='inline-flex';document.getElementById('upload-btn').disabled=false;}else toast('Please drop a PDF file');});
-async function submitUpload(){
-  if(!S.selFile)return;const btn=document.getElementById('upload-btn');btn.disabled=true;btn.textContent='Saving...';
-  const form=new FormData();form.append('file',S.selFile);form.append('title',document.getElementById('book-title').value);form.append('author',document.getElementById('book-author').value||'Unknown Author');form.append('category',document.getElementById('book-category').value);
-  try{const r=await fetch(API+'/my/books/upload',{method:'POST',headers:{Authorization:'Bearer '+S.token},body:form});const data=await r.json();if(!r.ok)throw new Error(data.detail||'Upload failed');closeModal('upload-modal');toast('"'+data.title+'" added!');S.selFile=null;document.getElementById('file-input').value='';document.getElementById('file-pill').style.display='none';document.getElementById('book-title').value='';document.getElementById('book-author').value='';document.getElementById('upload-btn').disabled=true;loadLibrary();}
-  catch(e){toast('Error: '+e.message);}finally{btn.disabled=false;btn.textContent='Save to Library';}
-}
-async function deleteBook(id,title){if(!confirm('Delete "'+title+'" and all its audio?'))return;await authFetch(API+'/books/'+id,{method:'DELETE',headers:{Authorization:'Bearer '+S.token}});toast('Book deleted');loadLibrary();}
-
-// ── Gutenberg ─────────────────────────────────────────────────────────────────
-const GCE={fiction:'cover-fiction',philosophy:'cover-philosophy',science:'cover-science',history:'cover-history',biography:'cover-biography',spirit:'cover-spirituality',tech:'cover-technology'};
-function getCoverClassFromSubjects(s){for(const[k,v]of Object.entries(GCE)){if(s.includes(k))return v;}return'cover-default';}
-function getCoverEmoji(s){if(/fiction|novel/.test(s))return'&#x1F4D6;';if(/philosophy/.test(s))return'&#x1F3DB;&#xFE0F;';if(/science/.test(s))return'&#x1F52C;';if(/history/.test(s))return'&#x1F4DC;';if(/biography/.test(s))return'&#x1F464;';if(/mystery/.test(s))return'&#x1F50D;';if(/adventure/.test(s))return'&#x2694;&#xFE0F;';if(/romance|love/.test(s))return'&#x1F48C;';if(/poetry|poem/.test(s))return'&#x1FAB6;';return'&#x1F4DA;';}
-
-async function loadFeaturedBooks(){await searchGutenberg('philosophy',true);}
-async function searchGutenberg(query,isFeatured=false){
-  const q=query!==undefined?query:document.getElementById('gutenberg-search').value.trim();
-  const cat=S.gutenbergCat;
-  const container=document.getElementById('gutenberg-results');
-  container.innerHTML='<div class="result-loading"><span class="spin">&#x27F3;</span> Searching...</div>';
-  let url='https://gutendex.com/books?';
-  if(q)url+='search='+encodeURIComponent(q)+'&';
-  if(cat)url+='topic='+encodeURIComponent(cat)+'&';
-  url+='languages=en&mime_type=text/plain&page_size=12';
-  if(!isFeatured)document.getElementById('discover-section-title').textContent=q?'Results for "'+q+'"':cat?cat+' Books':'All Books';
-  try{
-    const data=await fetch(url).then(r=>r.json());
-    const books=(data.results||[]).filter(b=>b.formats&&(b.formats['text/plain; charset=utf-8']||b.formats['text/plain']));
-    if(!books.length){container.innerHTML='<div class="result-empty"><p style="color:var(--muted)">No results found.</p></div>';return;}
-    const grid=document.createElement('div');grid.className='results-grid';
-    grid.innerHTML=books.map(b=>{
-      const title=b.title||'Untitled';
-      const author=(b.authors&&b.authors[0])?b.authors[0].name.replace(/,\s*/,' ').replace(/(\d{4}-\d{4}|\d{4}-)/,'').trim():'Unknown';
-      const subjects=(b.subjects||[]).join(' ').toLowerCase();
-      const cc=getCoverClassFromSubjects(subjects);const emoji=getCoverEmoji(subjects);
-      const img=b.formats['image/jpeg'];
-      return`<div class="shelf-card fadein" onclick="openGutenbergModal(${JSON.stringify(b).replace(/"/g,'&quot;')})"><div class="shelf-cover ${cc}"><div class="shelf-cover-spine"></div>${img?`<img class="shelf-cover-img" src="${img}" alt="" onerror="this.style.display='none';this.parentNode.querySelector('.shelf-cover-placeholder').style.display='flex'">`:''}<div class="shelf-cover-placeholder" style="${img?'display:none':'display:flex'}"><div class="shelf-cover-emoji">${emoji}</div><div class="shelf-cover-title">${esc(title)}</div></div></div><div class="shelf-title">${esc(title)}</div><div class="shelf-author">${esc(author)}</div></div>`;
-    }).join('');
-    container.innerHTML='';container.appendChild(grid);
-  }catch(e){container.innerHTML='<div class="result-empty"><p style="color:var(--muted)">Could not reach Gutenberg.</p></div>';}
-}
-function selectGutenbergCat(el,cat){document.querySelectorAll('#page-discover .cat-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');S.gutenbergCat=cat;searchGutenberg('');}
-function openGutenbergModal(book){
-  if(typeof book==='string')book=JSON.parse(book);S.gutenbergBook=book;
-  const title=book.title||'Untitled';
-  const author=(book.authors&&book.authors[0])?book.authors[0].name.replace(/,\s*/,' ').replace(/(\d{4}-\d{4}|\d{4}-)/,'').trim():'Unknown';
-  const subjects=(book.subjects||[]).join(' ').toLowerCase();
-  const img=book.formats['image/jpeg'];const cc=getCoverClassFromSubjects(subjects);const emoji=getCoverEmoji(subjects);
-  const el=document.getElementById('gm-cover');el.className=cc;el.style.cssText='width:52px;height:70px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;';
-  el.innerHTML=img?`<img src="${img}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.parentNode.textContent='${emoji}'">`:`${emoji}`;
-  document.getElementById('gm-title').textContent=title;document.getElementById('gm-author').textContent='by '+author;
-  populateAllSelects();document.getElementById('gutenberg-modal').classList.remove('hidden');
-}
-function gutenbergOptionChosen(action){
-  closeModal('gutenberg-modal');const book=S.gutenbergBook;if(!book)return;
-  const cat=document.getElementById('gm-category').value||'Other';
-  const title=book.title||'Untitled';
-  const author=(book.authors&&book.authors[0])?book.authors[0].name.replace(/,\s*/,' ').replace(/(\d{4}-\d{4}|\d{4}-)/,'').trim():'Unknown';
-  const textUrl=book.formats['text/plain; charset=utf-8']||book.formats['text/plain'];
-  if(!textUrl){toast('No plain text available');return;}
-  doAddGutenberg(title,author,cat,textUrl,book.id,action);
-}
-async function doAddGutenberg(title,author,category,textUrl,gutenbergId,action){
-  if(!S.token){showAuthPage();return;}
-  toast('Adding "'+title+'" to your library...');
-  try{
-    const r=await fetch(API+'/my/gutenberg/import',{method:'POST',headers:{Authorization:'Bearer '+S.token,'Content-Type':'application/json'},body:JSON.stringify({title,author,category,text_url:textUrl,gutenberg_id:gutenbergId||0})});
-    const data=await r.json();if(!r.ok)throw new Error(data.detail||'Failed');
-    showPage('library');await openBook(data.book_id);
-    if(action==='narrate'&&data.job_id)startPolling(data.job_id);
-    else if(action==='narrate')openNarrateModal(data.book_id,title);
-  }catch(e){toast('Error: '+e.message);}
-}
-
-// ── Archive ───────────────────────────────────────────────────────────────────
-function onShowArchive(){if(!archiveLoaded){archiveLoaded=true;fetchArchive();}}
-async function searchArchive(){archiveState.query=document.getElementById('archive-search').value.trim();archiveState.page=1;document.getElementById('archive-section-title').textContent=archiveState.query?'Results for "'+archiveState.query+'"':'Featured from Archive';await fetchArchive();}
-function selectArchiveType(el,type){document.querySelectorAll('#archive-type-pills .cat-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');archiveState.type=type;archiveState.page=1;fetchArchive();}
-function selectArchiveSubject(el,subject){document.querySelectorAll('#archive-subject-pills .cat-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');archiveState.subject=subject;archiveState.page=1;fetchArchive();}
-async function fetchArchive(){
-  const container=document.getElementById('archive-results');container.innerHTML='<div class="result-loading"><span class="spin">&#x27F3;</span> Searching...</div>';
-  const{type,subject,page,query}=archiveState;const rows=12,start=(page-1)*rows;
-  let q='mediatype:'+type;if(query)q+=' AND (title:('+query+') OR creator:('+query+'))';if(subject)q+=' AND subject:('+subject+')';q+=' AND language:English AND -access-restricted-item:true';
-  const url='https://archive.org/advancedsearch.php?q='+encodeURIComponent(q)+'&fl[]=identifier,title,creator,year,subject,mediatype&sort[]=downloads+desc&rows='+rows+'&start='+start+'&output=json';
-  try{
-    const data=await fetch(url).then(r=>r.json());const docs=data.response?.docs||[];
-    archiveState.totalPages=Math.ceil((data.response?.numFound||0)/rows);
-    if(!docs.length){container.innerHTML='<div class="result-empty"><p style="color:var(--muted)">No results found.</p></div>';document.getElementById('archive-pagination').innerHTML='';return;}
-    const grid=document.createElement('div');grid.className='results-grid';
-    grid.innerHTML=docs.map(doc=>{
-      const title=doc.title||'Untitled';const creator=Array.isArray(doc.creator)?doc.creator[0]:(doc.creator||'Unknown');
-      const subjects=(Array.isArray(doc.subject)?doc.subject.join(' '):(doc.subject||'')).toLowerCase();
-      const cc=getCoverClassFromSubjects(subjects);const emoji=doc.mediatype==='magazines'?'&#x1F4F0;':doc.mediatype==='newspapers'?'&#x1F5DE;&#xFE0F;':getCoverEmoji(subjects);
-      const thumb='https://archive.org/services/img/'+doc.identifier;
-      return`<div class="shelf-card fadein" onclick="openArchiveModal(${JSON.stringify(doc).replace(/"/g,'&quot;')})"><div class="shelf-cover ${cc}"><div class="shelf-cover-spine"></div><img class="shelf-cover-img" src="${thumb}" alt="" onerror="this.style.display='none';this.parentNode.querySelector('.shelf-cover-placeholder').style.display='flex'"><div class="shelf-cover-placeholder" style="display:none"><div class="shelf-cover-emoji">${emoji}</div><div class="shelf-cover-title">${esc(title)}</div></div>${doc.year?'<div class="shelf-badge">'+doc.year+'</div>':''}</div><div class="shelf-title">${esc(title)}</div><div class="shelf-author">${esc(creator)}</div></div>`;
-    }).join('');
-    container.innerHTML='';container.appendChild(grid);
-    const pg=document.getElementById('archive-pagination');const{page:p,totalPages:tp}=archiveState;
-    pg.innerHTML=(p>1?`<button class="btn btn-ghost btn-sm" onclick="archivePage(${p-1})">&#x2190; Prev</button>`:'')+'<span style="font-size:12px;color:var(--muted);padding:6px 12px;">Page '+p+' of '+tp+'</span>'+(p<tp?`<button class="btn btn-ghost btn-sm" onclick="archivePage(${p+1})">Next &#x2192;</button>`:'');
-  }catch(e){container.innerHTML='<div class="result-empty"><p style="color:var(--muted)">Could not reach Internet Archive.</p></div>';}
-}
-function archivePage(p){archiveState.page=p;fetchArchive();window.scrollTo(0,0);}
-let currentArchiveItem=null;
-function openArchiveModal(item){
-  if(typeof item==='string')item=JSON.parse(item);currentArchiveItem=item;
-  const creator=Array.isArray(item.creator)?item.creator[0]:(item.creator||'Unknown');
-  const subjects=(Array.isArray(item.subject)?item.subject.join(' '):(item.subject||'')).toLowerCase();
-  const emoji=item.mediatype==='magazines'?'&#x1F4F0;':item.mediatype==='newspapers'?'&#x1F5DE;&#xFE0F;':getCoverEmoji(subjects);
-  const el=document.getElementById('am-cover');el.innerHTML=`<img src="https://archive.org/services/img/${item.identifier}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.parentNode.textContent='${emoji}'">`;
-  document.getElementById('am-title').textContent=item.title||'Untitled';
-  document.getElementById('am-creator').textContent='by '+creator;
-  document.getElementById('am-year').textContent=item.year?'Published: '+item.year:'';
-  populateAllSelects();document.getElementById('archive-modal').classList.remove('hidden');
-}
-function archiveOptionChosen(action){
-  closeModal('archive-modal');const item=currentArchiveItem;if(!item)return;
-  const cat=document.getElementById('am-category').value||'Other';
-  const title=item.title||'Untitled';const creator=Array.isArray(item.creator)?item.creator[0]:(item.creator||'Unknown Author');
-  doAddArchive(title,creator,cat,item.identifier,action);
-}
-async function doAddArchive(title,author,category,archiveId,action){
-  if(!S.token){showAuthPage();return;}
-  toast('Fetching "'+title+'" from Archive...');
-  try{
-    const r=await fetch(API+'/my/archive/import',{method:'POST',headers:{Authorization:'Bearer '+S.token,'Content-Type':'application/json'},body:JSON.stringify({title,author,category,archive_id:archiveId})});
-    const data=await r.json();if(!r.ok)throw new Error(data.detail||'Failed');
-    showPage('library');await openBook(data.book_id);
-    if(action==='narrate'&&data.job_id)startPolling(data.job_id);
-    else if(action==='narrate')openNarrateModal(data.book_id,title);
-  }catch(e){toast('Error: '+e.message);}
-}
-
-// ── Requests ──────────────────────────────────────────────────────────────────
-async function loadRequests(){
-  const c=document.getElementById('requests-container');if(!c)return;c.innerHTML='<div class="result-loading"><span class="spin">&#x27F3;</span> Loading...</div>';
-  const{status,sort}=requestsState;
-  try{
-    const data=await authFetch(API+'/requests?sort='+sort+(status?'&status='+status:'')).then(r=>r.json());
-    const reqs=data.requests||[];
-    const badge=document.getElementById('requests-count');if(badge){badge.textContent=reqs.length;badge.style.display=reqs.length>0?'inline':'none';}
-    if(!reqs.length){c.innerHTML='<div class="empty"><div class="empty-icon">&#x1F4CB;</div><h3>No requests yet</h3><p>Be the first to request a book!</p></div>';return;}
-    const sc={requested:{bg:'rgba(122,120,144,.1)',color:'var(--muted)',label:'&#x1F50D; Searching'},sourced:{bg:'rgba(76,175,138,.1)',color:'var(--green)',label:'&#x2705; Found'},available:{bg:'rgba(212,168,67,.1)',color:'var(--gold)',label:'&#x1F3A7; Available'}};
-    c.innerHTML='<div class="book-list">'+reqs.map(req=>{const s=sc[req.status]||sc.requested;return`<div class="book-row fadein" style="align-items:flex-start;gap:13px;"><div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;padding-top:2px;"><button onclick="voteRequest('${req.id}',this)" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;padding:5px 9px;font-size:14px;line-height:1;transition:all .2s;">&#x25B2;</button><div id="votes-${req.id}" style="font-size:14px;font-weight:600;color:var(--text);">${req.votes}</div><div style="font-size:9px;color:var(--muted2);">VOTES</div></div><div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px;">${esc(req.title)}</div><div style="font-size:11px;color:var(--muted);">by ${esc(req.author)} &middot; ${esc(req.category)}</div>${req.description?`<div style="font-size:11px;color:var(--muted2);margin-top:3px;">${esc(req.description)}</div>`:''}<div style="margin-top:6px;"><span style="font-size:10px;padding:3px 8px;border-radius:20px;background:${s.bg};color:${s.color};font-weight:500;">${s.label}</span></div></div><div style="display:flex;gap:5px;flex-shrink:0;">${req.status==='available'&&req.book_id?`<button class="btn btn-gold btn-sm" onclick="openBook('${req.book_id}')">&#x25B6;</button>`:''}${req.status==='sourced'?`<button class="btn btn-violet btn-sm" onclick="addFromRequest('${req.id}','${esc(req.title)}','${esc(req.author)}','${esc(req.source_url||'')}')">+ Add</button>`:''}<button class="btn btn-danger btn-sm" onclick="deleteRequest('${req.id}','${esc(req.title)}')">&#x2715;</button></div></div>`;}).join('')+'</div>';
-  }catch(e){c.innerHTML='<div class="empty"><div class="empty-icon">&#x26A0;&#xFE0F;</div><h3>Could not load requests</h3></div>';}
-}
-function setRequestTab(el,status){document.querySelectorAll('[id^="req-tab-"]').forEach(t=>t.classList.remove('active'));el.classList.add('active');requestsState.status=status;loadRequests();}
-function setRequestSort(s){requestsState.sort=s;loadRequests();}
-async function voteRequest(reqId,btn){
-  try{const r=await authFetch(API+'/requests/'+reqId+'/vote',{method:'POST',headers:{Authorization:'Bearer '+S.token}});const data=await r.json();document.getElementById('votes-'+reqId).textContent=data.votes;btn.style.color='var(--gold)';btn.style.borderColor='var(--gold)';toast('Vote counted!');}
-  catch{toast('Could not cast vote');}
-}
-async function deleteRequest(id,title){if(!confirm('Remove request for "'+title+'"?'))return;await authFetch(API+'/requests/'+id,{method:'DELETE',headers:{Authorization:'Bearer '+S.token}});toast('Removed');loadRequests();}
-async function addFromRequest(reqId,title,author,sourceUrl){
-  if(!sourceUrl){toast('No source URL available');return;}toast('Adding book...');
-  try{const r=await fetch(API+'/my/gutenberg/import',{method:'POST',headers:{Authorization:'Bearer '+S.token,'Content-Type':'application/json'},body:JSON.stringify({title,author,category:'Other',text_url:sourceUrl,gutenberg_id:0})});const data=await r.json();if(!r.ok)throw new Error(data.detail||'Failed');await fetch(API+'/requests/'+reqId,{method:'DELETE',headers:{Authorization:'Bearer '+S.token}});toast('"'+title+'" added!');showPage('library');await openBook(data.book_id);if(data.job_id)startPolling(data.job_id);}
-  catch(e){toast('Error: '+e.message);}
-}
-function openRequestModal(){document.getElementById('request-modal').classList.remove('hidden');}
-async function submitRequest(){
-  const title=document.getElementById('req-title').value.trim();const author=document.getElementById('req-author').value.trim();
-  if(!title||!author){toast('Please fill in title and author');return;}
-  const btn=document.getElementById('req-submit-btn');btn.disabled=true;btn.textContent='Submitting...';
-  try{const r=await authFetch(API+'/requests',{method:'POST',headers:{Authorization:'Bearer '+S.token,'Content-Type':'application/json'},body:JSON.stringify({title,author,category:document.getElementById('req-category').value||'Other',description:document.getElementById('req-desc').value.trim()||null})});const data=await r.json();if(!r.ok)throw new Error(data.detail||'Failed');closeModal('request-modal');document.getElementById('req-title').value='';document.getElementById('req-author').value='';document.getElementById('req-desc').value='';toast(data.already_existed?'Already requested — vote counted!':'Request submitted!');loadRequests();}
-  catch(e){toast('Error: '+e.message);}finally{btn.disabled=false;btn.textContent='Submit Request';}
-}
-function openDmcaModal(bookId){populateDmcaBookSelect();if(bookId)document.getElementById('dmca-book-select').value=bookId;document.getElementById('dmca-modal').classList.remove('hidden');}
-async function submitDmca(){
-  const bookId=document.getElementById('dmca-book-select').value;const reason=document.getElementById('dmca-reason').value.trim();
-  if(!bookId){toast('Please select a book');return;}if(reason.length<30){toast('Please provide a detailed reason (30+ chars)');return;}
-  const btn=document.getElementById('dmca-submit-btn');btn.disabled=true;btn.textContent='Filing...';
-  try{const r=await fetch(API+'/dmca/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({book_id:bookId,reason})});const data=await r.json();if(!r.ok)throw new Error(data.detail||'Failed');closeModal('dmca-modal');document.getElementById('dmca-reason').value='';toast('Takedown report filed.');loadLibrary();}
-  catch(e){toast('Error: '+e.message);}finally{btn.disabled=false;btn.textContent='File Report';}
-}
-
-// ── Audio ─────────────────────────────────────────────────────────────────────
-function playChapter(id,title,bookTitle){
-  audio.src=API+'/audio/'+id;audio.load();audio.play().catch(()=>toast('Could not play audio'));
-  document.getElementById('now-title').textContent=title;document.getElementById('now-book').textContent=bookTitle;
-  document.getElementById('audio-bar').classList.add('visible');
-  document.querySelectorAll('.chapter-row').forEach(r=>r.classList.remove('playing'));
-  const row=document.getElementById('chrow-'+id);if(row)row.classList.add('playing');playIcon(true);
-}
-function togglePlay(){audio.paused?audio.play():audio.pause();}
-function skipBack(){audio.currentTime=Math.max(0,audio.currentTime-15);}
-function skipFwd(){audio.currentTime=Math.min(audio.duration||0,audio.currentTime+30);}
-function setSpeed(v){audio.playbackRate=parseFloat(v);}
-function seekTo(v){if(audio.duration)audio.currentTime=(v/100)*audio.duration;}
-function fmtTime(s){if(!s||isNaN(s))return'0:00';return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');}
-function playIcon(p){document.getElementById('play-icon').innerHTML=p?'<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>':'<path d="M8 5v14l11-7z"/>';}
-audio.addEventListener('timeupdate',()=>{const p=audio.duration?(audio.currentTime/audio.duration*100):0;document.getElementById('seeker').value=p;document.getElementById('time-cur').textContent=fmtTime(audio.currentTime);document.getElementById('time-dur').textContent=fmtTime(audio.duration);});
-audio.addEventListener('play',()=>playIcon(true));audio.addEventListener('pause',()=>playIcon(false));audio.addEventListener('ended',()=>playIcon(false));
-
-
-// ══════════════════════════════════════════════════════════════════════════════
-// COMICS
-// ══════════════════════════════════════════════════════════════════════════════
-let comicsState={genre:'',page:1,query:'',totalPages:1};
-let comicsLoaded=false;
-
-function onShowComics(){if(!comicsLoaded){comicsLoaded=true;fetchComics();}}
-
-async function searchComics(){
-  comicsState.query=document.getElementById('comics-search').value.trim();
-  comicsState.page=1;
-  const q=comicsState.query;
-  document.getElementById('comics-section-title').textContent=q?'Results for "'+q+'"':'Featured Comics';
-  await fetchComics();
-}
-
-function selectComicsGenre(el,genre){
-  document.querySelectorAll('#comics-genre-pills .cat-pill').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');comicsState.genre=genre;comicsState.page=1;fetchComics();
-}
-
-async function fetchComics(){
-  const container=document.getElementById('comics-results');
-  container.innerHTML='<div class="result-loading"><span class="spin">&#x27F3;</span> Searching comics...</div>';
-  const{genre,page,query}=comicsState;
-  const rows=12,start=(page-1)*rows;
-  let q='mediatype:texts AND subject:(comic OR comics OR "graphic novel" OR manga)';
-  if(query)q+=' AND (title:('+query+') OR creator:('+query+'))';
-  if(genre)q+=' AND subject:('+genre+')';
-  q+=' AND -access-restricted-item:true';
-  const url='https://archive.org/advancedsearch.php?q='+encodeURIComponent(q)+'&fl[]=identifier,title,creator,year,subject,mediatype&sort[]=downloads+desc&rows='+rows+'&start='+start+'&output=json';
-  try{
-    const data=await fetch(url).then(r=>r.json());
-    const docs=data.response?.docs||[];
-    comicsState.totalPages=Math.ceil((data.response?.numFound||0)/rows);
-    if(!docs.length){container.innerHTML='<div class="result-empty"><p style="color:var(--muted)">No comics found. Try a different search.</p></div>';document.getElementById('comics-pagination').innerHTML='';return;}
-    renderComicsResults(docs,container);renderComicsPagination();
-  }catch(e){container.innerHTML='<div class="result-empty"><p style="color:var(--muted)">Could not reach comics library.</p></div>';}
-}
-
-function getComicsEmoji(subjects){
-  const s=(subjects||'').toLowerCase();
-  if(/superhero|super hero/.test(s))return'&#x1F9B8;';
-  if(/fantasy/.test(s))return'&#x1F409;';
-  if(/horror/.test(s))return'&#x1F47B;';
-  if(/sci.fi|science fiction/.test(s))return'&#x1F680;';
-  if(/romance/.test(s))return'&#x1F49B;';
-  if(/humor|comedy/.test(s))return'&#x1F602;';
-  if(/manga/.test(s))return'&#x1F1EF;&#x1F1F5;';
-  if(/western/.test(s))return'&#x1F920;';
-  if(/mystery/.test(s))return'&#x1F50D;';
-  if(/adventure/.test(s))return'&#x2694;&#xFE0F;';
-  return'&#x1F4D8;';
-}
-
-function renderComicsResults(docs,container){
-  const grid=document.createElement('div');grid.className='results-grid';
-  grid.innerHTML=docs.map(doc=>{
-    const title=doc.title||'Untitled';
-    const creator=Array.isArray(doc.creator)?doc.creator[0]:(doc.creator||'Unknown');
-    const subjects=Array.isArray(doc.subject)?doc.subject.join(' '):(doc.subject||'');
-    const emoji=getComicsEmoji(subjects);
-    const thumb='https://archive.org/services/img/'+doc.identifier;
-    return`<div class="shelf-card fadein" onclick="openComicModal(${JSON.stringify(doc).replace(/"/g,'&quot;')})">
-      <div class="shelf-cover cover-comics">
-        <div class="shelf-cover-spine"></div>
-        <img class="shelf-cover-img" src="${thumb}" alt="" onerror="this.style.display='none';this.parentNode.querySelector('.shelf-cover-placeholder').style.display='flex'">
-        <div class="shelf-cover-placeholder" style="display:none"><div class="shelf-cover-emoji">${emoji}</div><div class="shelf-cover-title">${esc(title)}</div></div>
-        ${doc.year?'<div class="shelf-badge">'+doc.year+'</div>':''}
+function renderLibrary() {
+  const grid = document.getElementById('libraryGrid');
+  const count = document.getElementById('uploadedCount');
+  count.textContent = uploadedBooks.length + ' book' + (uploadedBooks.length !== 1 ? 's' : '');
+  if (!uploadedBooks.length) {
+    grid.innerHTML = '<div class="empty"><div class="ei">📚</div><p>No uploads yet.<br>Upload your first book above.</p></div>';
+    return;
+  }
+  grid.innerHTML = uploadedBooks.map(b => `
+    <div class="book-card">
+      <div class="book-cover-placeholder">📄</div>
+      <div class="book-info">
+        <div class="book-title">${escHtml(b.title)}</div>
+        <div class="book-author" style="margin-bottom:8px">${b.type} · ${b.size}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${b.dataUrl ? `<button class="btn btn-sm btn-primary" onclick="readUploaded(${b.id})">📖 Read</button>` : ''}
+          <button class="btn btn-sm btn-ghost" onclick="removeUploaded(${b.id})">🗑️</button>
+        </div>
       </div>
-      <div class="shelf-title">${esc(title)}</div>
-      <div class="shelf-author">${esc(creator)}</div>
+    </div>
+  `).join('');
+}
+
+function readUploaded(id) {
+  const b = uploadedBooks.find(x => x.id === id);
+  if (!b || !b.dataUrl) return;
+  if (b.type === 'PDF') {
+    document.getElementById('readerTitle').textContent = b.title;
+    document.getElementById('readerFrame').src = b.dataUrl;
+    document.getElementById('readerOpenLink').href = b.dataUrl;
+    openModal('readerModal');
+  } else {
+    // Open in new tab
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(`<html><head><title>${escHtml(b.title)}</title><meta charset="UTF-8"><style>body{font-family:Georgia,serif;max-width:720px;margin:40px auto;padding:20px;line-height:1.8;font-size:1.1rem;}</style></head><body><h1>${escHtml(b.title)}</h1><pre style="white-space:pre-wrap;font-family:Georgia,serif">${escHtml(atob(b.dataUrl.split(',')[1]))}</pre></body></html>`);
+    }
+  }
+}
+
+function removeUploaded(id) {
+  uploadedBooks = uploadedBooks.filter(b => b.id !== id);
+  localStorage.setItem('aurelius_library', JSON.stringify(uploadedBooks));
+  renderLibrary();
+}
+
+function clearLibrary() {
+  if (confirm('Remove all uploaded books?')) {
+    uploadedBooks = [];
+    localStorage.setItem('aurelius_library', JSON.stringify([]));
+    renderLibrary();
+    toast('Library cleared', 'info');
+  }
+}
+
+// ========== DOWNLOADS ==========
+function saveBook(jsonStr) {
+  let b;
+  try { b = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr; } catch { return; }
+  if (!savedBooks.some(s => s.id == b.id)) {
+    savedBooks.unshift({...b, savedAt: new Date().toLocaleDateString()});
+    localStorage.setItem('aurelius_downloads', JSON.stringify(savedBooks.slice(0, 100)));
+    toast('Saved to Downloads', 'success');
+  } else {
+    toast('Already saved', 'info');
+  }
+}
+
+function renderDownloads() {
+  const list = document.getElementById('downloadsList');
+  const count = document.getElementById('downloadsCount');
+  const clearBtn = document.getElementById('clearDownloadsBtn');
+  count.textContent = savedBooks.length + ' book' + (savedBooks.length !== 1 ? 's' : '');
+  clearBtn.style.display = savedBooks.length ? 'block' : 'none';
+  if (!savedBooks.length) {
+    list.innerHTML = '<div class="empty"><div class="ei">⬇️</div><p>No saved books yet.<br>Browse Discover or Archive and tap Save.</p></div>';
+    return;
+  }
+  list.innerHTML = '<div class="downloads-list">' + savedBooks.map(b => `
+    <div class="download-item">
+      <div class="di-icon">${b.src === 'comic' ? '💥' : b.src === 'archive' ? '🏛️' : '📖'}</div>
+      <div class="di-info">
+        <div class="di-title">${escHtml(b.title)}</div>
+        <div class="di-meta">${b.author || ''} ${b.src ? '· ' + b.src : ''} ${b.savedAt ? '· Saved ' + b.savedAt : ''}</div>
+      </div>
+      <div class="di-actions">
+        ${b.readUrl ? `<button class="btn btn-sm btn-primary" onclick="openReader('${escJs(b.readUrl)}','${escJs(b.title)}')">📖 Read</button>` : ''}
+        <button class="btn btn-sm btn-ghost" onclick="removeDownload('${b.id}')">🗑️</button>
+      </div>
+    </div>
+  `).join('') + '</div>';
+}
+
+function removeDownload(id) {
+  savedBooks = savedBooks.filter(b => b.id != id);
+  localStorage.setItem('aurelius_downloads', JSON.stringify(savedBooks));
+  renderDownloads();
+}
+
+function clearAllDownloads() {
+  if (confirm('Remove all saved books?')) {
+    savedBooks = [];
+    localStorage.setItem('aurelius_downloads', JSON.stringify([]));
+    renderDownloads();
+    toast('Downloads cleared', 'info');
+  }
+}
+
+// ========== DONATE ==========
+function setDonateAmt(amt, el) {
+  donateAmt = amt;
+  document.querySelectorAll('.donate-amt').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('customAmt').value = '';
+}
+function goPayPal() {
+  const custom = document.getElementById('customAmt').value;
+  const amount = custom ? parseFloat(custom) : donateAmt;
+  if (!amount || amount < 1) { toast('Please enter a valid amount', 'error'); return; }
+  const url = `https://www.paypal.com/donate/?business=hotinferno12%40gmail.com&amount=${amount}&currency_code=USD&item_name=Aurelius+Library+Donation`;
+  window.open(url, '_blank');
+}
+
+// ========== AUTH ==========
+function openAuth() { openModal('authModal'); }
+function switchAuth(mode, el) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('authLoginForm').style.display = mode === 'login' ? '' : 'none';
+  document.getElementById('authRegisterForm').style.display = mode === 'register' ? '' : 'none';
+}
+function doLogin() {
+  const email = document.getElementById('loginEmail').value;
+  const pass = document.getElementById('loginPass').value;
+  if (!email || !pass) { toast('Fill in all fields', 'error'); return; }
+  user = {name: email.split('@')[0], email};
+  updateUserUI();
+  closeModal('authModal');
+  toast('Welcome, ' + user.name + '!', 'success');
+}
+function doRegister() {
+  const name = document.getElementById('regName').value;
+  const email = document.getElementById('regEmail').value;
+  const pass = document.getElementById('regPass').value;
+  if (!name || !email || !pass) { toast('Fill in all fields', 'error'); return; }
+  if (pass.length < 8) { toast('Password must be at least 8 characters', 'error'); return; }
+  user = {name, email};
+  updateUserUI();
+  closeModal('authModal');
+  toast('Account created! Welcome, ' + name + '!', 'success');
+}
+function updateUserUI() {
+  const area = document.getElementById('sidebarUserArea');
+  const topBtn = document.getElementById('topAuthBtn');
+  if (user) {
+    area.innerHTML = `<div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:#0a0a14">${user.name[0].toUpperCase()}</div>
+      <div style="flex:1;min-width:0;"><div style="font-size:.9rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(user.name)}</div>
+      <button style="background:none;border:none;color:var(--muted);font-size:.75rem;cursor:pointer;padding:0" onclick="signOut()">Sign out</button></div>
     </div>`;
-  }).join('');
-  container.innerHTML='';container.appendChild(grid);
+    topBtn.textContent = user.name[0].toUpperCase();
+    topBtn.style.borderRadius = '50%';
+    topBtn.style.width = '36px';
+    topBtn.style.height = '36px';
+    topBtn.style.padding = '0';
+  }
+}
+function signOut() {
+  user = null;
+  document.getElementById('sidebarUserArea').innerHTML = `<button class="btn btn-primary" style="width:100%" onclick="closeSidebar();openAuth()">Sign In</button>`;
+  document.getElementById('topAuthBtn').textContent = 'Sign In';
+  document.getElementById('topAuthBtn').style = '';
+  toast('Signed out', 'info');
 }
 
-function renderComicsPagination(){
-  const{page,totalPages}=comicsState;
-  const el=document.getElementById('comics-pagination');
-  if(totalPages<=1){el.innerHTML='';return;}
-  let html='';
-  if(page>1)html+=`<button class="btn btn-ghost btn-sm" onclick="comicsPage(${page-1})">&#x2190; Prev</button>`;
-  html+=`<span style="font-size:12px;color:var(--muted);padding:6px 12px;">Page ${page} of ${totalPages}</span>`;
-  if(page<totalPages)html+=`<button class="btn btn-ghost btn-sm" onclick="comicsPage(${page+1})">Next &#x2192;</button>`;
-  el.innerHTML=html;
+// ========== MODAL UTILS ==========
+function openModal(id) {
+  const el = document.getElementById(id);
+  if (el) { el.classList.add('show'); document.body.style.overflow = 'hidden'; }
 }
-function comicsPage(p){comicsState.page=p;fetchComics();window.scrollTo(0,0);}
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (el) { el.classList.remove('show'); }
+  // Only restore scroll if no other modals open
+  if (!document.querySelector('.modal-overlay.show')) document.body.style.overflow = '';
+  // Clear reader iframe on close to stop video/audio
+  if (id === 'readerModal') document.getElementById('readerFrame').src = '';
+}
+// Close modals on backdrop click
+document.querySelectorAll('.modal-overlay').forEach(ov => {
+  ov.addEventListener('click', function(e) {
+    if (e.target === this) closeModal(this.id);
+  });
+});
 
-let currentComic=null;
-function openComicModal(item){
-  if(typeof item==='string')item=JSON.parse(item);
-  currentComic=item;
-  // Reuse archive modal for comics
-  const creator=Array.isArray(item.creator)?item.creator[0]:(item.creator||'Unknown');
-  const subjects=Array.isArray(item.subject)?item.subject.join(' '):(item.subject||'');
-  const emoji=getComicsEmoji(subjects);
-  const thumb='https://archive.org/services/img/'+item.identifier;
-  const el=document.getElementById('am-cover');
-  el.innerHTML=`<img src="${thumb}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;" onerror="this.parentNode.textContent='${emoji}'">`;
-  document.getElementById('am-title').textContent=item.title||'Untitled';
-  document.getElementById('am-creator').textContent='by '+creator;
-  document.getElementById('am-year').textContent=item.year?'Published: '+item.year:'';
-  // Set category to Comics
-  populateArchiveCategory();
-  setTimeout(()=>{
-    const sel=document.getElementById('am-category');
-    if(sel){for(let o of sel.options){if(o.value==='Comics'){o.selected=true;break;}}}
-  },50);
-  document.getElementById('archive-modal').classList.remove('hidden');
+// ========== SETTINGS ==========
+function toggleDarkMode(cb) {
+  if (!cb.checked) {
+    document.documentElement.style.setProperty('--bg','#f5f5f0');
+    document.documentElement.style.setProperty('--surface','#ffffff');
+    document.documentElement.style.setProperty('--surface2','#f0f0e8');
+    document.documentElement.style.setProperty('--text','#1a1a14');
+    document.documentElement.style.setProperty('--muted','#666655');
+  } else {
+    document.documentElement.style.setProperty('--bg','#0a0a14');
+    document.documentElement.style.setProperty('--surface','#12121f');
+    document.documentElement.style.setProperty('--surface2','#1a1a2e');
+    document.documentElement.style.setProperty('--text','#e8e8f0');
+    document.documentElement.style.setProperty('--muted','#888899');
+  }
 }
 
-function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
+// ========== TOAST ==========
+function toast(msg, type='info') {
+  const icons = {success:'✅', error:'❌', info:'ℹ️'};
+  const el = document.createElement('div');
+  el.className = `toast-item ${type}`;
+  el.innerHTML = `<span>${icons[type]||''}</span><span>${escHtml(msg)}</span>`;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transition='opacity .4s'; setTimeout(()=>el.remove(),400); }, 3000);
+}
+
+// ========== UTILS ==========
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escJs(s) {
+  return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"').replace(/\n/g,'\\n').replace(/\r/g,'\\r');
+}
+
+// ========== INIT ==========
+(function init() {
+  // On desktop, show sidebar open; on mobile keep closed
+  if (window.innerWidth > 768) {
+    document.getElementById('sidebar').classList.remove('hidden');
+    document.getElementById('main').classList.remove('full');
+  }
+  // Load initial page
+  loadDiscover('fiction');
+})();
 </script>
 </body>
 </html>
