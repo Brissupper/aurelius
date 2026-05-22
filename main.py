@@ -85,7 +85,14 @@ def serve_frontend():
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "version": "2.0.0"}
+    return {
+        "status": "ok",
+        "version": "2.0.0",
+        "google_client_id_set": bool(os.environ.get("GOOGLE_CLIENT_ID")),
+        "google_secret_set": bool(os.environ.get("GOOGLE_CLIENT_SECRET")),
+        "jwt_secret_set": bool(os.environ.get("JWT_SECRET")),
+        "database_url_set": bool(os.environ.get("DATABASE_URL")),
+    }
 
 
 # =============================================================================
@@ -747,6 +754,78 @@ async def google_auth(data: GoogleAuthRequest):
             "avatar": user_info["avatar"],
         }
     }
+
+
+@app.get("/auth/google/callback")
+async def google_oauth_callback(code: str = None, error: str = None):
+    """Exchange OAuth code for user token, redirect back to frontend."""
+    import httpx
+    from fastapi.responses import RedirectResponse
+
+    if error:
+        return RedirectResponse(url="/?auth_error=" + error)
+
+    if not code:
+        return RedirectResponse(url="/?auth_error=no_code")
+
+    # The redirect_uri must match exactly what was sent to Google
+    redirect_uri = os.environ.get("APP_URL", "https://aurelius-qafo.onrender.com") + "/auth/google/callback"
+
+    try:
+        async with httpx.AsyncClient() as client:
+            r = await client.post(
+                "https://oauth2.googleapis.com/token",
+                data={
+                    "code": code,
+                    "client_id": os.environ.get("GOOGLE_CLIENT_ID", ""),
+                    "client_secret": os.environ.get("GOOGLE_CLIENT_SECRET", ""),
+                    "redirect_uri": redirect_uri,
+                    "grant_type": "authorization_code",
+                }
+            )
+            tokens = r.json()
+    except Exception as e:
+        return RedirectResponse(url="/?auth_error=token_exchange_failed")
+
+    if "error" in tokens:
+        log.error(f"Token exchange error: {tokens}")
+        return RedirectResponse(url="/?auth_error=" + tokens.get("error", "unknown"))
+
+    id_token = tokens.get("id_token")
+    if not id_token:
+        return RedirectResponse(url="/?auth_error=no_id_token")
+
+    try:
+        from auth import verify_google_token, create_jwt
+        user_info = await verify_google_token(id_token)
+    except Exception as e:
+        return RedirectResponse(url="/?auth_error=verify_failed")
+
+    conn = get_db()
+    user = fetchone(conn, "SELECT * FROM users WHERE google_id = ?", (user_info["google_id"],))
+    if user:
+        execute(conn, "UPDATE users SET name=?, avatar=?, updated_at=? WHERE google_id=?",
+                (user_info["name"], user_info["avatar"], now(), user_info["google_id"]))
+        user_id = user["id"]
+    else:
+        user_id = str(uuid.uuid4())
+        execute(conn,
+            """INSERT INTO users (id, google_id, email, name, avatar, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (user_id, user_info["google_id"], user_info["email"],
+             user_info["name"], user_info["avatar"], now(), now()))
+        log.info(f"New user: {user_info['email']}")
+    conn.close()
+
+    token = create_jwt(user_id=user_id, email=user_info["email"],
+                       name=user_info["name"], avatar=user_info["avatar"])
+
+    import json, urllib.parse
+    user_data = urllib.parse.quote(json.dumps({
+        "id": user_id, "email": user_info["email"],
+        "name": user_info["name"], "avatar": user_info["avatar"]
+    }))
+    return RedirectResponse(url=f"/?token={token}&user={user_data}")
 
 
 @app.get("/auth/me")

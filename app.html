@@ -699,10 +699,9 @@ function authFetch(url,opts={}){
 function signInWithGoogleRedirect(){
   const params=new URLSearchParams({
     client_id:GOOGLE_CLIENT_ID,
-    redirect_uri:window.location.origin+'/auth/google/callback',
+    redirect_uri:'https://aurelius-qafo.onrender.com/auth/google/callback',
     response_type:'code',
     scope:'openid email profile',
-    access_type:'offline',
     prompt:'select_account',
   });
   window.location.href='https://accounts.google.com/o/oauth2/v2/auth?'+params.toString();
@@ -802,9 +801,29 @@ function closeSidebar(){
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 (async()=>{
-  // Check for OAuth callback first
-  if(window.location.search.includes('code=')&&window.location.pathname.includes('callback')){
-    await handleOAuthCallback();return;
+  // Check if backend redirected back with token
+  const urlParams=new URLSearchParams(window.location.search);
+  const urlToken=urlParams.get('token');
+  const urlUser=urlParams.get('user');
+  const urlError=urlParams.get('auth_error');
+
+  if(urlError){
+    toast('Sign in failed: '+urlError);
+    window.history.replaceState({},'','/');
+  }
+
+  if(urlToken&&urlUser){
+    try{
+      S.token=urlToken;
+      S.user=JSON.parse(decodeURIComponent(urlUser));
+      localStorage.setItem('au_token',urlToken);
+      localStorage.setItem('au_user',JSON.stringify(S.user));
+      window.history.replaceState({},'','/');
+      onSignedIn();
+      return;
+    }catch(e){
+      console.error('Failed to parse auth redirect:',e);
+    }
   }
 
   // Always hide all pages first, show auth by default
