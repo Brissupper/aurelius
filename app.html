@@ -396,18 +396,16 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
 .narrate-voice{display:flex;align-items:center;gap:10px;justify-content:center;font-size:.82rem;color:var(--muted);margin-top:8px;}
 .narrate-voice select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-family:'Lato',sans-serif;max-width:200px;}
 
-/* GOOGLE SIGN IN BUTTON */
-.google-btn{
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  width:100%;padding:11px 16px;
-  background:#fff;color:#3c4043;
-  border:1px solid #dadce0;border-radius:8px;
-  font-family:'Lato',sans-serif;font-size:.9rem;font-weight:700;
-  cursor:pointer;transition:box-shadow .15s;
-  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+/* GOOGLE SIGN-IN CONTAINER — dark theme wrapper */
+.google-signin-wrap{
+  display:flex;justify-content:center;align-items:center;
+  width:100%;min-height:44px;margin-bottom:4px;
 }
-.google-btn:hover{box-shadow:0 2px 8px rgba(0,0,0,.2);}
-.google-btn svg{flex-shrink:0;}
+/* Force Google button to fill width */
+.google-signin-wrap > div,
+.google-signin-wrap iframe {
+  width: 100% !important;
+}
 
 /* SEARCH RESULTS PAGE */
 .result-count{font-size:.85rem;color:var(--muted);margin-bottom:16px;}
@@ -765,21 +763,25 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
         <button class="auth-tab active" onclick="switchAuth('login',this)">Sign In</button>
         <button class="auth-tab" onclick="switchAuth('register',this)">Create Account</button>
       </div>
+
+      <!-- LOGIN FORM -->
       <div id="authLoginForm">
-        <button class="google-btn" onclick="doGoogleSignIn()">
-          <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/><path fill="#34A353" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2.01c-.72.48-1.63.76-2.7.76-2.08 0-3.84-1.4-4.47-3.29H1.84v2.07A8 8 0 0 0 8.98 17z"/><path fill="#FBBC05" d="M4.51 10.52A4.8 4.8 0 0 1 4.26 9c0-.53.09-1.04.25-1.52V5.41H1.84A8 8 0 0 0 .98 9c0 1.29.31 2.51.86 3.59l2.67-2.07z"/><path fill="#EA4335" d="M8.98 3.58c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 8.98 1a8 8 0 0 0-7.14 4.41l2.67 2.07c.63-1.89 2.39-3.3 4.47-3.3-.01 0-.01 0 0 0z"/></svg>
-          Continue with Google
-        </button>
+        <!-- Google renders its own button into this div -->
+        <div class="google-signin-wrap">
+          <div id="googleBtnLogin"></div>
+        </div>
         <div class="divider">or</div>
         <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="you@example.com"></div>
         <div class="form-group"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••"></div>
         <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="doLogin()">Sign In</button>
       </div>
+
+      <!-- REGISTER FORM -->
       <div id="authRegisterForm" style="display:none">
-        <button class="google-btn" onclick="doGoogleSignIn()">
-          <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/><path fill="#34A353" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2.01c-.72.48-1.63.76-2.7.76-2.08 0-3.84-1.4-4.47-3.29H1.84v2.07A8 8 0 0 0 8.98 17z"/><path fill="#FBBC05" d="M4.51 10.52A4.8 4.8 0 0 1 4.26 9c0-.53.09-1.04.25-1.52V5.41H1.84A8 8 0 0 0 .98 9c0 1.29.31 2.51.86 3.59l2.67-2.07z"/><path fill="#EA4335" d="M8.98 3.58c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 8.98 1a8 8 0 0 0-7.14 4.41l2.67 2.07c.63-1.89 2.39-3.3 4.47-3.3-.01 0-.01 0 0 0z"/></svg>
-          Sign up with Google
-        </button>
+        <!-- Google renders its own button into this div -->
+        <div class="google-signin-wrap">
+          <div id="googleBtnRegister"></div>
+        </div>
         <div class="divider">or</div>
         <div class="form-group"><label>Name</label><input type="text" id="regName" placeholder="Your name"></div>
         <div class="form-group"><label>Email</label><input type="email" id="regEmail" placeholder="you@example.com"></div>
@@ -864,6 +866,73 @@ let user = null;
 let uploadedBooks = JSON.parse(localStorage.getItem('aurelius_library') || '[]');
 let savedBooks = JSON.parse(localStorage.getItem('aurelius_downloads') || '[]');
 
+// ========== GOOGLE SIGN-IN ==========
+const GOOGLE_CLIENT_ID = '1017805317287-me5v533ju9kd0vcjq7d8u5add8mpniha.apps.googleusercontent.com';
+
+// Called by Google SDK once it loads
+function initGoogleSignIn() {
+  if (!window.google || !window.google.accounts) return;
+  window.google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleGoogleCredential,
+    auto_select: false,
+    cancel_on_tap_outside: true
+  });
+  renderGoogleButtons();
+}
+
+function renderGoogleButtons() {
+  if (!window.google || !window.google.accounts) return;
+  const btnCfg = {
+    theme: 'outline',
+    size: 'large',
+    width: 360,
+    text: 'signin_with',
+    shape: 'rectangular',
+    logo_alignment: 'left'
+  };
+  const loginEl = document.getElementById('googleBtnLogin');
+  const regEl   = document.getElementById('googleBtnRegister');
+  if (loginEl)  window.google.accounts.id.renderButton(loginEl,  {...btnCfg, text: 'signin_with'});
+  if (regEl)    window.google.accounts.id.renderButton(regEl,    {...btnCfg, text: 'signup_with'});
+}
+
+function handleGoogleCredential(response) {
+  try {
+    // Decode JWT payload (middle part)
+    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    user = {
+      name:    payload.name    || payload.email,
+      email:   payload.email,
+      google:  true,
+      picture: payload.picture || ''
+    };
+    updateUserUI();
+    closeModal('authModal');
+    toast('Signed in as ' + user.name, 'success');
+  } catch(err) {
+    console.error('Google credential error:', err);
+    toast('Google sign-in failed. Try email sign-in.', 'error');
+  }
+}
+
+// Poll until Google SDK is ready, then initialize
+function waitForGoogleSDK() {
+  if (window.google && window.google.accounts) {
+    initGoogleSignIn();
+  } else {
+    setTimeout(waitForGoogleSDK, 200);
+  }
+}
+waitForGoogleSDK();
+
+// Re-render buttons whenever the auth modal opens
+function openAuth() {
+  openModal('authModal');
+  // Short delay so the DOM is visible before renderButton measures width
+  setTimeout(renderGoogleButtons, 150);
+}
+
 // ========== SIDEBAR ==========
 function toggleSidebar() {
   const sb = document.getElementById('sidebar');
@@ -895,17 +964,71 @@ function showPage(page) {
   const nb = document.getElementById('nav-' + page);
   if (nb) nb.classList.add('active');
 
-  if (page === 'discover' && document.getElementById('discoverGrid').children.length <= 1) {
-    loadDiscover(currentDiscoverCat);
-  }
-  if (page === 'archive' && document.getElementById('archiveGrid').children.length <= 1) {
-    loadArchive(currentArchiveCat);
-  }
-  if (page === 'comics' && document.getElementById('comicsGrid').children.length <= 1) {
-    loadComics(currentComicCat);
-  }
-  if (page === 'library') renderLibrary();
+  if (page === 'discover' && document.getElementById('discoverGrid').children.length <= 1) loadDiscover(currentDiscoverCat);
+  if (page === 'archive'  && document.getElementById('archiveGrid').children.length  <= 1) loadArchive(currentArchiveCat);
+  if (page === 'comics'   && document.getElementById('comicsGrid').children.length   <= 1) loadComics(currentComicCat);
+  if (page === 'library')   renderLibrary();
   if (page === 'downloads') renderDownloads();
+}
+
+// ========== AUTH (email) ==========
+function switchAuth(mode, el) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('authLoginForm').style.display    = mode === 'login'    ? '' : 'none';
+  document.getElementById('authRegisterForm').style.display = mode === 'register' ? '' : 'none';
+  // Re-render Google buttons for the now-visible form
+  setTimeout(renderGoogleButtons, 100);
+}
+function doLogin() {
+  const email = document.getElementById('loginEmail').value;
+  const pass  = document.getElementById('loginPass').value;
+  if (!email || !pass) { toast('Fill in all fields', 'error'); return; }
+  user = {name: email.split('@')[0], email};
+  updateUserUI();
+  closeModal('authModal');
+  toast('Welcome, ' + user.name + '!', 'success');
+}
+function doRegister() {
+  const name  = document.getElementById('regName').value;
+  const email = document.getElementById('regEmail').value;
+  const pass  = document.getElementById('regPass').value;
+  if (!name || !email || !pass) { toast('Fill in all fields', 'error'); return; }
+  if (pass.length < 8) { toast('Password must be at least 8 characters', 'error'); return; }
+  user = {name, email};
+  updateUserUI();
+  closeModal('authModal');
+  toast('Account created! Welcome, ' + name + '!', 'success');
+}
+function updateUserUI() {
+  const area   = document.getElementById('sidebarUserArea');
+  const topBtn = document.getElementById('topAuthBtn');
+  if (user) {
+    const avatar = user.picture
+      ? `<img src="${user.picture}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;" onerror="this.outerHTML='<div style=width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:#0a0a14>${escHtml(user.name[0].toUpperCase())}</div>'">`
+      : `<div style="width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:#0a0a14">${escHtml(user.name[0].toUpperCase())}</div>`;
+    area.innerHTML = `<div style="display:flex;align-items:center;gap:10px;">
+      ${avatar}
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:.9rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(user.name)}</div>
+        <button style="background:none;border:none;color:var(--muted);font-size:.75rem;cursor:pointer;padding:0" onclick="signOut()">Sign out</button>
+      </div>
+    </div>`;
+    topBtn.textContent     = user.name[0].toUpperCase();
+    topBtn.style.borderRadius = '50%';
+    topBtn.style.width        = '36px';
+    topBtn.style.height       = '36px';
+    topBtn.style.padding      = '0';
+  }
+}
+function signOut() {
+  user = null;
+  if (window.google && window.google.accounts) window.google.accounts.id.disableAutoSelect();
+  document.getElementById('sidebarUserArea').innerHTML = `<button class="btn btn-primary" style="width:100%" onclick="closeSidebar();openAuth()">Sign In</button>`;
+  const btn = document.getElementById('topAuthBtn');
+  btn.textContent = 'Sign In';
+  btn.style = '';
+  toast('Signed out', 'info');
 }
 
 // ========== DISCOVER ==========
@@ -915,23 +1038,20 @@ function selectDiscoverCat(el, cat) {
   currentDiscoverCat = cat;
   loadDiscover(cat);
 }
-
 async function loadDiscover(cat, refresh) {
-  const grid = document.getElementById('discoverGrid');
+  const grid    = document.getElementById('discoverGrid');
   const heading = document.getElementById('discoverHeading');
   grid.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading…</span></div>';
   const labels = {fiction:'Fiction',science:'Science',history:'History',philosophy:'Philosophy',
     biography:'Biography',mystery:'Mystery',romance:'Romance','self-help':'Self-Help',
     technology:'Technology',children:"Children's"};
   heading.textContent = (labels[cat] || cat) + ' Books';
-
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8000);
-    // Map category to Gutenberg search term
-    const catMap = {fiction:'fiction',science:'science',history:'history',
-      philosophy:'philosophy',biography:'biography',mystery:'mystery',
-      romance:'romance','self-help':'self help',technology:'technology',children:'children'};
+    const catMap = {fiction:'fiction',science:'science',history:'history',philosophy:'philosophy',
+      biography:'biography',mystery:'mystery',romance:'romance','self-help':'self help',
+      technology:'technology',children:'children'};
     const q = catMap[cat] || cat;
     const url = `https://gutendex.com/books/?search=${encodeURIComponent(q)}&page=1`;
     const r = await fetch(url, {signal: controller.signal});
@@ -942,7 +1062,6 @@ async function loadDiscover(cat, refresh) {
     if (!books.length) { grid.innerHTML = '<div class="empty"><div class="ei">📚</div><p>No books found.</p></div>'; return; }
     grid.innerHTML = books.map(b => buildBookCard(b, 'gutenberg')).join('');
   } catch(e) {
-    // Fallback: use popular Gutenberg IDs
     try {
       const fallbackBooks = await loadGutenbergFallback(cat);
       grid.innerHTML = fallbackBooks.map(b => buildBookCard(b, 'gutenberg')).join('');
@@ -951,9 +1070,7 @@ async function loadDiscover(cat, refresh) {
     }
   }
 }
-
 async function loadGutenbergFallback(cat) {
-  // Direct fetch a few known good books by topic
   const searches = {
     fiction:['frankenstein','dracula','pride and prejudice','sherlock holmes'],
     science:['darwin origin species','einstein','newton'],
@@ -972,12 +1089,11 @@ async function loadGutenbergFallback(cat) {
   const d = await r.json();
   return (d.results || []).slice(0, 12);
 }
-
 function buildBookCard(b, src) {
-  const title = b.title || 'Unknown Title';
+  const title  = b.title || 'Unknown Title';
   const author = (b.authors && b.authors[0]) ? b.authors[0].name : 'Unknown Author';
-  const cover = b.formats && (b.formats['image/jpeg'] || b.formats['image/png'] || '');
-  const id = b.id;
+  const cover  = b.formats && (b.formats['image/jpeg'] || b.formats['image/png'] || '');
+  const id     = b.id;
   const coverHtml = cover
     ? `<img class="book-cover" src="${cover}" alt="${escHtml(title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
     : '';
@@ -998,14 +1114,12 @@ function selectArchiveCat(el, cat) {
   currentArchiveCat = cat;
   loadArchive(cat);
 }
-
 async function loadArchive(cat) {
-  const grid = document.getElementById('archiveGrid');
+  const grid    = document.getElementById('archiveGrid');
   const heading = document.getElementById('archiveHeading');
-  const labels = {books:'Books',texts:'Texts',periodicals:'Periodicals',audio:'Audio Books',manuscripts:'Manuscripts'};
+  const labels  = {books:'Books',texts:'Texts',periodicals:'Periodicals',audio:'Audio Books',manuscripts:'Manuscripts'};
   heading.textContent = labels[cat] || cat;
   grid.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading…</span></div>';
-
   const catQuery = {
     books:'subject:books AND mediatype:texts',
     texts:'mediatype:texts AND subject:literature',
@@ -1014,7 +1128,6 @@ async function loadArchive(cat) {
     manuscripts:'subject:manuscripts AND mediatype:texts'
   };
   const q = catQuery[cat] || 'mediatype:texts';
-
   try {
     const controller = new AbortController();
     setTimeout(() => controller.abort(), 8000);
@@ -1022,19 +1135,18 @@ async function loadArchive(cat) {
     const r = await fetch(url, {signal: controller.signal});
     if (!r.ok) throw new Error();
     const data = await r.json();
-    const docs = (data.response && data.response.docs) || [];
+    const docs  = (data.response && data.response.docs) || [];
     if (!docs.length) { grid.innerHTML = '<div class="empty"><div class="ei">🏛️</div><p>No items found.</p></div>'; return; }
     grid.innerHTML = docs.map(d => buildArchiveCard(d)).join('');
   } catch {
     grid.innerHTML = '<div class="empty"><div class="ei">⚠️</div><p>Could not load Archive items.<br>Check your connection.</p></div>';
   }
 }
-
 function buildArchiveCard(d) {
-  const title = d.title || 'Unknown';
+  const title   = d.title || 'Unknown';
   const creator = Array.isArray(d.creator) ? d.creator[0] : (d.creator || 'Internet Archive');
-  const id = d.identifier;
-  const cover = `https://archive.org/services/img/${id}`;
+  const id      = d.identifier;
+  const cover   = `https://archive.org/services/img/${id}`;
   return `<div class="book-card" onclick="openArchiveModal('${id}','${escJs(title)}','${escJs(creator)}')">
     <img class="book-cover" src="${cover}" alt="${escHtml(title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
     <div class="book-cover-placeholder" style="display:none">📜</div>
@@ -1052,15 +1164,13 @@ function selectComicCat(el, cat) {
   currentComicCat = cat;
   loadComics(cat);
 }
-
 async function loadComics(cat) {
-  const grid = document.getElementById('comicsGrid');
+  const grid    = document.getElementById('comicsGrid');
   const heading = document.getElementById('comicsHeading');
-  const labels = {superhero:'Superhero',manga:'Manga',horror:'Horror','sci-fi':'Sci-Fi',
+  const labels  = {superhero:'Superhero',manga:'Manga',horror:'Horror','sci-fi':'Sci-Fi',
     fantasy:'Fantasy',romance:'Romance',war:'War',western:'Western',crime:'Crime',adult:'Adult'};
   heading.textContent = (labels[cat] || cat) + ' Comics';
   grid.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading comics…</span></div>';
-
   const queries = {
     superhero:'subject:(comics OR "comic book") AND (subject:superhero OR subject:batman OR subject:superman OR subject:marvel)',
     manga:'subject:manga OR subject:"japanese comics"',
@@ -1074,7 +1184,6 @@ async function loadComics(cat) {
     adult:'subject:(comics OR "adult comics" OR "underground comix") AND subject:(adult OR mature)'
   };
   const q = queries[cat] || `subject:comics mediatype:texts`;
-
   try {
     const controller = new AbortController();
     setTimeout(() => controller.abort(), 10000);
@@ -1082,11 +1191,10 @@ async function loadComics(cat) {
     const r = await fetch(url, {signal: controller.signal});
     if (!r.ok) throw new Error();
     const data = await r.json();
-    const docs = (data.response && data.response.docs) || [];
+    const docs  = (data.response && data.response.docs) || [];
     if (!docs.length) {
-      // fallback broader search
-      const r2 = await fetch(`https://archive.org/advancedsearch.php?q=subject:comics+mediatype:texts&fl[]=identifier,title,creator,date&rows=16&output=json&sort=downloads+desc`);
-      const d2 = await r2.json();
+      const r2   = await fetch(`https://archive.org/advancedsearch.php?q=subject:comics+mediatype:texts&fl[]=identifier,title,creator,date&rows=16&output=json&sort=downloads+desc`);
+      const d2   = await r2.json();
       const docs2 = (d2.response && d2.response.docs) || [];
       grid.innerHTML = docs2.length ? docs2.map(buildComicCard).join('') : '<div class="empty"><div class="ei">💥</div><p>No comics found.</p></div>';
       return;
@@ -1096,13 +1204,12 @@ async function loadComics(cat) {
     grid.innerHTML = '<div class="empty"><div class="ei">⚠️</div><p>Could not load comics.<br>Check your connection.</p></div>';
   }
 }
-
 function buildComicCard(d) {
-  const title = d.title || 'Unknown Comic';
+  const title   = d.title || 'Unknown Comic';
   const creator = Array.isArray(d.creator) ? d.creator[0] : (d.creator || '');
-  const year = d.date ? d.date.substring(0,4) : '';
-  const id = d.identifier;
-  const cover = `https://archive.org/services/img/${id}`;
+  const year    = d.date ? d.date.substring(0,4) : '';
+  const id      = d.identifier;
+  const cover   = `https://archive.org/services/img/${id}`;
   return `<div class="comic-card" onclick="openComicModal('${id}','${escJs(title)}','${escJs(creator)}','${year}')">
     <img class="comic-cover" src="${cover}" alt="${escHtml(title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
     <div class="comic-cover-ph" style="display:none">💥</div>
@@ -1117,30 +1224,24 @@ function buildComicCard(d) {
 function openBookModal(jsonStr) {
   let b;
   try { b = JSON.parse(jsonStr); } catch { return; }
-  document.getElementById('bookModalTitle').textContent = 'Book Details';
-  document.getElementById('bookModalName').textContent = b.title;
+  document.getElementById('bookModalTitle').textContent  = 'Book Details';
+  document.getElementById('bookModalName').textContent   = b.title;
   document.getElementById('bookModalAuthor').textContent = b.author || '';
-  document.getElementById('bookModalBadges').innerHTML = '<span class="badge">Project Gutenberg</span>';
-  document.getElementById('bookModalDesc').textContent = 'Classic literature from Project Gutenberg — free to read, download and share.';
-
-  // Cover
+  document.getElementById('bookModalBadges').innerHTML   = '<span class="badge">Project Gutenberg</span>';
+  document.getElementById('bookModalDesc').textContent   = 'Classic literature from Project Gutenberg — free to read, download and share.';
   const coverEl = document.getElementById('bookModalCover');
   if (b.cover) {
     coverEl.innerHTML = `<img class="book-detail-cover" src="${b.cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>📖</div>'">`;
   } else {
     coverEl.innerHTML = '<div class="book-detail-cover-ph">📖</div>';
   }
-
-  // Find read URL — prefer HTML, then plain text, then PDF
-  const f = b.formats || {};
+  const f       = b.formats || {};
   const readUrl = f['text/html'] || f['application/xhtml+xml'] || f['text/plain'] || f['application/pdf'] || '';
-  const dlUrl = f['application/epub+zip'] || f['application/x-mobipocket-ebook'] || f['application/pdf'] || readUrl;
-
+  const dlUrl   = f['application/epub+zip'] || f['application/x-mobipocket-ebook'] || f['application/pdf'] || readUrl;
   const isSaved = savedBooks.some(s => s.id == b.id);
-
   document.getElementById('bookModalActions').innerHTML = `
     ${readUrl ? `<button class="btn btn-primary" onclick="openReader('${escJs(readUrl)}','${escJs(b.title)}')">📖 Read Now</button>` : ''}
-    ${dlUrl ? `<a class="btn btn-ghost" href="${dlUrl}" target="_blank" rel="noopener">⬇️ Download</a>` : ''}
+    ${dlUrl   ? `<a class="btn btn-ghost" href="${dlUrl}" target="_blank" rel="noopener">⬇️ Download</a>` : ''}
     <button class="btn btn-ghost" onclick="openNarration('${escJs(b.title)}','${escJs(b.author||'')}','gutenberg','${b.id}','')">🎧 Listen</button>
     <button class="btn btn-ghost" id="saveBookBtn_${b.id}" onclick="saveBook(${JSON.stringify(JSON.stringify(b)).replace(/"/g,'&quot;')})">
       ${isSaved ? '✅ Saved' : '🔖 Save'}
@@ -1151,33 +1252,28 @@ function openBookModal(jsonStr) {
 
 // ========== ARCHIVE MODAL ==========
 async function openArchiveModal(id, title, creator) {
-  // Show modal immediately with loading state
-  document.getElementById('bookModalTitle').textContent = 'Loading…';
-  document.getElementById('bookModalName').textContent = title;
+  document.getElementById('bookModalTitle').textContent  = 'Loading…';
+  document.getElementById('bookModalName').textContent   = title;
   document.getElementById('bookModalAuthor').textContent = creator;
-  document.getElementById('bookModalBadges').innerHTML = '<span class="badge">Internet Archive</span>';
-  document.getElementById('bookModalDesc').textContent = 'Loading details…';
+  document.getElementById('bookModalBadges').innerHTML   = '<span class="badge">Internet Archive</span>';
+  document.getElementById('bookModalDesc').textContent   = 'Loading details…';
   const cover = `https://archive.org/services/img/${id}`;
-  document.getElementById('bookModalCover').innerHTML = `<img class="book-detail-cover" src="${cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>📜</div>'">`;
-  document.getElementById('bookModalActions').innerHTML = '<div class="loading" style="padding:10px"><div class="spinner"></div></div>';
+  document.getElementById('bookModalCover').innerHTML    = `<img class="book-detail-cover" src="${cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>📜</div>'">`;
+  document.getElementById('bookModalActions').innerHTML  = '<div class="loading" style="padding:10px"><div class="spinner"></div></div>';
   openModal('bookModal');
-
-  // Fetch metadata in background
   try {
     const controller = new AbortController();
     setTimeout(() => controller.abort(), 6000);
-    const r = await fetch(`https://archive.org/metadata/${id}`, {signal: controller.signal});
+    const r    = await fetch(`https://archive.org/metadata/${id}`, {signal: controller.signal});
     const meta = await r.json();
     const desc = (meta.metadata && (meta.metadata.description || meta.metadata.subject)) || 'From the Internet Archive collection.';
     const descText = Array.isArray(desc) ? desc.join(', ') : String(desc).replace(/<[^>]+>/g,'').substring(0,300);
     document.getElementById('bookModalTitle').textContent = 'Book Details';
-    document.getElementById('bookModalDesc').textContent = descText;
+    document.getElementById('bookModalDesc').textContent  = descText;
   } catch { document.getElementById('bookModalDesc').textContent = 'From the Internet Archive collection.'; }
-
-  // Build action buttons
-  const readUrl = `https://archive.org/embed/${id}`;
-  const pageUrl = `https://archive.org/details/${id}`;
-  const isSaved = savedBooks.some(s => s.id === id);
+  const readUrl  = `https://archive.org/embed/${id}`;
+  const pageUrl  = `https://archive.org/details/${id}`;
+  const isSaved  = savedBooks.some(s => s.id === id);
   document.getElementById('bookModalActions').innerHTML = `
     <button class="btn btn-primary" onclick="openReader('${escJs(readUrl)}','${escJs(title)}')">📖 Read Now</button>
     <a class="btn btn-ghost" href="${pageUrl}" target="_blank" rel="noopener">🏛️ View on Archive</a>
@@ -1191,21 +1287,20 @@ async function openArchiveModal(id, title, creator) {
 // ========== COMIC MODAL ==========
 async function openComicModal(id, title, creator, year) {
   document.getElementById('comicModalTitle').textContent = 'Loading…';
-  document.getElementById('comicModalName').textContent = title;
-  document.getElementById('comicModalMeta').textContent = [creator, year].filter(Boolean).join(' · ');
-  document.getElementById('comicModalBadges').innerHTML = '<span class="badge">Internet Archive</span>';
-  document.getElementById('comicModalDesc').textContent = 'Loading details…';
+  document.getElementById('comicModalName').textContent  = title;
+  document.getElementById('comicModalMeta').textContent  = [creator, year].filter(Boolean).join(' · ');
+  document.getElementById('comicModalBadges').innerHTML  = '<span class="badge">Internet Archive</span>';
+  document.getElementById('comicModalDesc').textContent  = 'Loading details…';
   const cover = `https://archive.org/services/img/${id}`;
-  document.getElementById('comicModalCover').innerHTML = `<img class="book-detail-cover" src="${cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>💥</div>'">`;
+  document.getElementById('comicModalCover').innerHTML   = `<img class="book-detail-cover" src="${cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>💥</div>'">`;
   document.getElementById('comicModalActions').innerHTML = '<div class="loading" style="padding:10px"><div class="spinner"></div></div>';
   openModal('comicModal');
-
   try {
     const controller = new AbortController();
     setTimeout(() => controller.abort(), 6000);
-    const r = await fetch(`https://archive.org/metadata/${id}`, {signal: controller.signal});
+    const r    = await fetch(`https://archive.org/metadata/${id}`, {signal: controller.signal});
     const meta = await r.json();
-    const raw = meta.metadata;
+    const raw  = meta.metadata;
     if (raw) {
       document.getElementById('comicModalName').textContent = raw.title || title;
       if (raw.description) {
@@ -1214,12 +1309,10 @@ async function openComicModal(id, title, creator, year) {
       }
     }
   } catch {}
-
   document.getElementById('comicModalTitle').textContent = 'Comic Details';
   const readUrl = `https://archive.org/embed/${id}`;
   const pageUrl = `https://archive.org/details/${id}`;
   const isSaved = savedBooks.some(s => s.id === id);
-
   document.getElementById('comicModalActions').innerHTML = `
     <button class="btn btn-primary" onclick="openReader('${escJs(readUrl)}','${escJs(title)}')">📖 Read Now</button>
     <a class="btn btn-ghost" href="${pageUrl}" target="_blank" rel="noopener">🏛️ View on Archive</a>
@@ -1232,19 +1325,15 @@ async function openComicModal(id, title, creator, year) {
 
 // ========== READER ==========
 function openReader(url, title) {
-  // Close any open book/comic modal first
   closeModal('bookModal');
   closeModal('comicModal');
-  
-  // For Gutenberg HTML books — open in new tab for best experience
   if (url.includes('gutenberg.org') && !url.includes('embed')) {
     window.open(url, '_blank');
     return;
   }
-  // For Archive.org — use their embed player
-  document.getElementById('readerTitle').textContent = title || 'Reading';
-  document.getElementById('readerFrame').src = url;
-  document.getElementById('readerOpenLink').href = url.replace('/embed/', '/details/');
+  document.getElementById('readerTitle').textContent    = title || 'Reading';
+  document.getElementById('readerFrame').src            = url;
+  document.getElementById('readerOpenLink').href        = url.replace('/embed/', '/details/');
   openModal('readerModal');
 }
 
@@ -1255,18 +1344,15 @@ function setSearchSrc(src, el) {
   document.querySelectorAll('#page-search .cat-pill').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
 }
-
 async function doSearch(q) {
   if (!q || !q.trim()) return;
   showPage('search');
   document.getElementById('mainSearch').value = q;
-  document.getElementById('topSearch').value = q;
+  document.getElementById('topSearch').value  = q;
   const res = document.getElementById('searchResults');
   res.innerHTML = '<div class="loading"><div class="spinner"></div><span>Searching…</span></div>';
-
-  const results = [];
-  const promises = [];
-
+  const results   = [];
+  const promises  = [];
   if (searchSrcMode === 'gutenberg' || searchSrcMode === 'both') {
     promises.push(
       fetch(`https://gutendex.com/books/?search=${encodeURIComponent(q)}&page=1`)
@@ -1282,7 +1368,6 @@ async function doSearch(q) {
         }).catch(()=>{})
     );
   }
-
   if (searchSrcMode === 'archive' || searchSrcMode === 'both') {
     promises.push(
       fetch(`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}+AND+mediatype:texts&fl[]=identifier,title,creator&rows=10&output=json&sort=downloads+desc`)
@@ -1298,14 +1383,11 @@ async function doSearch(q) {
         }).catch(()=>{})
     );
   }
-
   await Promise.all(promises);
-
   if (!results.length) {
     res.innerHTML = '<div class="empty"><div class="ei">🔎</div><p>No results found for "' + escHtml(q) + '"</p></div>';
     return;
   }
-
   res.innerHTML = `<div class="result-count">${results.length} result${results.length!==1?'s':''} for "${escHtml(q)}"</div>
     <div class="book-grid">${results.map(b => {
       if (b.src === 'gutenberg') return buildBookCard(b, 'gutenberg');
@@ -1318,15 +1400,14 @@ function handleUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
   const entry = {
-    id: Date.now(),
+    id:    Date.now(),
     title: file.name.replace(/\.[^.]+$/, ''),
-    author: 'Uploaded',
-    size: (file.size / 1024 / 1024).toFixed(1) + ' MB',
-    type: file.name.split('.').pop().toUpperCase(),
-    date: new Date().toLocaleDateString(),
+    author:'Uploaded',
+    size:  (file.size / 1024 / 1024).toFixed(1) + ' MB',
+    type:  file.name.split('.').pop().toUpperCase(),
+    date:  new Date().toLocaleDateString(),
     dataUrl: null
   };
-  // Store as data URL for PDFs and text files
   const reader = new FileReader();
   reader.onload = e => {
     entry.dataUrl = e.target.result;
@@ -1338,9 +1419,8 @@ function handleUpload(event) {
   reader.readAsDataURL(file);
   event.target.value = '';
 }
-
 function renderLibrary() {
-  const grid = document.getElementById('libraryGrid');
+  const grid  = document.getElementById('libraryGrid');
   const count = document.getElementById('uploadedCount');
   count.textContent = uploadedBooks.length + ' book' + (uploadedBooks.length !== 1 ? 's' : '');
   if (!uploadedBooks.length) {
@@ -1362,30 +1442,26 @@ function renderLibrary() {
     </div>
   `).join('');
 }
-
 function readUploaded(id) {
   const b = uploadedBooks.find(x => x.id === id);
   if (!b || !b.dataUrl) return;
   if (b.type === 'PDF') {
     document.getElementById('readerTitle').textContent = b.title;
-    document.getElementById('readerFrame').src = b.dataUrl;
-    document.getElementById('readerOpenLink').href = b.dataUrl;
+    document.getElementById('readerFrame').src         = b.dataUrl;
+    document.getElementById('readerOpenLink').href     = b.dataUrl;
     openModal('readerModal');
   } else {
-    // Open in new tab
     const win = window.open('', '_blank');
     if (win) {
       win.document.write(`<html><head><title>${escHtml(b.title)}</title><meta charset="UTF-8"><style>body{font-family:Georgia,serif;max-width:720px;margin:40px auto;padding:20px;line-height:1.8;font-size:1.1rem;}</style></head><body><h1>${escHtml(b.title)}</h1><pre style="white-space:pre-wrap;font-family:Georgia,serif">${escHtml(atob(b.dataUrl.split(',')[1]))}</pre></body></html>`);
     }
   }
 }
-
 function removeUploaded(id) {
   uploadedBooks = uploadedBooks.filter(b => b.id !== id);
   localStorage.setItem('aurelius_library', JSON.stringify(uploadedBooks));
   renderLibrary();
 }
-
 function clearLibrary() {
   if (confirm('Remove all uploaded books?')) {
     uploadedBooks = [];
@@ -1407,13 +1483,12 @@ function saveBook(jsonStr) {
     toast('Already saved', 'info');
   }
 }
-
 function renderDownloads() {
-  const list = document.getElementById('downloadsList');
-  const count = document.getElementById('downloadsCount');
+  const list     = document.getElementById('downloadsList');
+  const count    = document.getElementById('downloadsCount');
   const clearBtn = document.getElementById('clearDownloadsBtn');
-  count.textContent = savedBooks.length + ' book' + (savedBooks.length !== 1 ? 's' : '');
-  clearBtn.style.display = savedBooks.length ? 'block' : 'none';
+  count.textContent       = savedBooks.length + ' book' + (savedBooks.length !== 1 ? 's' : '');
+  clearBtn.style.display  = savedBooks.length ? 'block' : 'none';
   if (!savedBooks.length) {
     list.innerHTML = '<div class="empty"><div class="ei">⬇️</div><p>No saved books yet.<br>Browse Discover or Archive and tap Save.</p></div>';
     return;
@@ -1432,13 +1507,11 @@ function renderDownloads() {
     </div>
   `).join('') + '</div>';
 }
-
 function removeDownload(id) {
   savedBooks = savedBooks.filter(b => b.id != id);
   localStorage.setItem('aurelius_downloads', JSON.stringify(savedBooks));
   renderDownloads();
 }
-
 function clearAllDownloads() {
   if (confirm('Remove all saved books?')) {
     savedBooks = [];
@@ -1463,58 +1536,6 @@ function goPayPal() {
   window.open(url, '_blank');
 }
 
-// ========== AUTH ==========
-function openAuth() { openModal('authModal'); }
-function switchAuth(mode, el) {
-  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('authLoginForm').style.display = mode === 'login' ? '' : 'none';
-  document.getElementById('authRegisterForm').style.display = mode === 'register' ? '' : 'none';
-}
-function doLogin() {
-  const email = document.getElementById('loginEmail').value;
-  const pass = document.getElementById('loginPass').value;
-  if (!email || !pass) { toast('Fill in all fields', 'error'); return; }
-  user = {name: email.split('@')[0], email};
-  updateUserUI();
-  closeModal('authModal');
-  toast('Welcome, ' + user.name + '!', 'success');
-}
-function doRegister() {
-  const name = document.getElementById('regName').value;
-  const email = document.getElementById('regEmail').value;
-  const pass = document.getElementById('regPass').value;
-  if (!name || !email || !pass) { toast('Fill in all fields', 'error'); return; }
-  if (pass.length < 8) { toast('Password must be at least 8 characters', 'error'); return; }
-  user = {name, email};
-  updateUserUI();
-  closeModal('authModal');
-  toast('Account created! Welcome, ' + name + '!', 'success');
-}
-function updateUserUI() {
-  const area = document.getElementById('sidebarUserArea');
-  const topBtn = document.getElementById('topAuthBtn');
-  if (user) {
-    area.innerHTML = `<div style="display:flex;align-items:center;gap:10px;">
-      <div style="width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:#0a0a14">${user.name[0].toUpperCase()}</div>
-      <div style="flex:1;min-width:0;"><div style="font-size:.9rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(user.name)}</div>
-      <button style="background:none;border:none;color:var(--muted);font-size:.75rem;cursor:pointer;padding:0" onclick="signOut()">Sign out</button></div>
-    </div>`;
-    topBtn.textContent = user.name[0].toUpperCase();
-    topBtn.style.borderRadius = '50%';
-    topBtn.style.width = '36px';
-    topBtn.style.height = '36px';
-    topBtn.style.padding = '0';
-  }
-}
-function signOut() {
-  user = null;
-  document.getElementById('sidebarUserArea').innerHTML = `<button class="btn btn-primary" style="width:100%" onclick="closeSidebar();openAuth()">Sign In</button>`;
-  document.getElementById('topAuthBtn').textContent = 'Sign In';
-  document.getElementById('topAuthBtn').style = '';
-  toast('Signed out', 'info');
-}
-
 // ========== MODAL UTILS ==========
 function openModal(id) {
   const el = document.getElementById(id);
@@ -1522,13 +1543,10 @@ function openModal(id) {
 }
 function closeModal(id) {
   const el = document.getElementById(id);
-  if (el) { el.classList.remove('show'); }
-  // Only restore scroll if no other modals open
+  if (el) el.classList.remove('show');
   if (!document.querySelector('.modal-overlay.show')) document.body.style.overflow = '';
-  // Clear reader iframe on close to stop video/audio
   if (id === 'readerModal') document.getElementById('readerFrame').src = '';
 }
-// Close modals on backdrop click
 document.querySelectorAll('.modal-overlay').forEach(ov => {
   ov.addEventListener('click', function(e) {
     if (e.target === this) closeModal(this.id);
@@ -1555,7 +1573,7 @@ function toggleDarkMode(cb) {
 // ========== TOAST ==========
 function toast(msg, type='info') {
   const icons = {success:'✅', error:'❌', info:'ℹ️'};
-  const el = document.createElement('div');
+  const el    = document.createElement('div');
   el.className = `toast-item ${type}`;
   el.innerHTML = `<span>${icons[type]||''}</span><span>${escHtml(msg)}</span>`;
   document.getElementById('toast').appendChild(el);
@@ -1570,61 +1588,18 @@ function escJs(s) {
   return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"').replace(/\n/g,'\\n').replace(/\r/g,'\\r');
 }
 
-// ========== GOOGLE SIGN IN ==========
-function doGoogleSignIn() {
-  // Use Google Identity Services if available, otherwise simulate
-  if (window.google && window.google.accounts) {
-    window.google.accounts.id.initialize({
-      client_id: '1017805317287-me5v533ju9kd0vcjq7d8u5add8mpniha.apps.googleusercontent.com', // Replace with real client ID for production
-      callback: handleGoogleCredential
-    });
-    window.google.accounts.id.prompt();
-  } else {
-    // Friendly fallback — ask for name to simulate Google sign-in
-    const name = prompt('Enter your Google account name (demo mode):');
-    if (name && name.trim()) {
-      user = {name: name.trim(), email: name.toLowerCase().replace(/\s+/g,'') + '@gmail.com', google: true};
-      updateUserUI();
-      closeModal('authModal');
-      toast('Signed in with Google as ' + user.name, 'success');
-    }
-  }
-}
-function handleGoogleCredential(response) {
-  try {
-    const payload = JSON.parse(atob(response.credential.split('.')[1]));
-    user = {name: payload.name || payload.email, email: payload.email, google: true, picture: payload.picture};
-    updateUserUI();
-    closeModal('authModal');
-    toast('Signed in with Google as ' + user.name, 'success');
-  } catch {
-    toast('Google sign-in failed', 'error');
-  }
-}
-
 // ========== NARRATION ENGINE ==========
 let tts = {
-  utterance: null,
-  sentences: [],
-  currentIdx: 0,
-  isPlaying: false,
-  title: '',
-  author: '',
-  fullText: '',
-  voices: [],
-  selectedVoice: null
+  utterance:null,sentences:[],currentIdx:0,isPlaying:false,
+  title:'',author:'',fullText:'',voices:[],selectedVoice:null
 };
-
 function loadVoices() {
   const voices = window.speechSynthesis.getVoices();
   if (voices.length) {
     tts.voices = voices;
     const sel = document.getElementById('narrateVoice');
     if (!sel) return;
-    sel.innerHTML = voices.map((v, i) =>
-      `<option value="${i}" ${v.lang.startsWith('en') ? '' : ''}>${v.name} (${v.lang})</option>`
-    ).join('');
-    // Default: prefer English
+    sel.innerHTML = voices.map((v, i) => `<option value="${i}">${v.name} (${v.lang})</option>`).join('');
     const engIdx = voices.findIndex(v => v.lang.startsWith('en'));
     if (engIdx >= 0) { sel.value = engIdx; tts.selectedVoice = voices[engIdx]; }
   }
@@ -1633,78 +1608,57 @@ window.speechSynthesis.onvoiceschanged = loadVoices;
 
 async function openNarration(title, author, src, id, extra) {
   stopNarration();
-  tts.title = title;
-  tts.author = author;
-  tts.sentences = [];
-  tts.currentIdx = 0;
-  tts.isPlaying = false;
-
-  document.getElementById('narrateTitle').textContent = title;
+  tts.title = title; tts.author = author; tts.sentences = []; tts.currentIdx = 0; tts.isPlaying = false;
+  document.getElementById('narrateTitle').textContent  = title;
   document.getElementById('narrateAuthor').textContent = author || '';
   document.getElementById('narratePlayBtn').textContent = '▶';
   document.getElementById('narrateProgressFill').style.width = '0%';
-  document.getElementById('narratePos').textContent = '0%';
+  document.getElementById('narratePos').textContent    = '0%';
   document.getElementById('narrateStatus').textContent = 'Loading text…';
   document.getElementById('narratePreview').textContent = 'Fetching text, please wait…';
   openModal('narrateModal');
   loadVoices();
-
   let text = '';
-
   if (src === 'uploaded') {
-    // Get text from uploaded book
     const book = uploadedBooks.find(b => b.id == id);
     if (book && book.dataUrl) {
       if (book.type === 'TXT') {
-        try {
-          text = atob(book.dataUrl.split(',')[1]);
-        } catch { text = ''; }
+        try { text = atob(book.dataUrl.split(',')[1]); } catch { text = ''; }
       } else if (book.type === 'PDF') {
-        text = `This is "${title}". Audio narration works best with text files. For PDF files, please use the Read button to view the document, or the Listen button will narrate a summary.`;
+        text = `This is "${title}". Audio narration works best with text files.`;
       } else {
-        text = `Now reading: ${title}. This file type may not fully support text extraction for narration.`;
+        text = `Now reading: ${title}. This file type may not fully support text extraction.`;
       }
     }
-    if (!text) text = `Unable to extract text from "${title}". Try uploading a plain text (.txt) file for best narration results.`;
+    if (!text) text = `Unable to extract text from "${title}". Try uploading a plain text (.txt) file.`;
   } else if (src === 'gutenberg') {
-    // Fetch plain text from Gutenberg
     try {
       const controller = new AbortController();
       setTimeout(() => controller.abort(), 10000);
-      // Get the book's text URL
-      const r = await fetch(`https://gutendex.com/books/${id}`, {signal: controller.signal});
+      const r    = await fetch(`https://gutendex.com/books/${id}`, {signal: controller.signal});
       const data = await r.json();
-      const formats = data.formats || {};
-      const textUrl = formats['text/plain; charset=utf-8'] || formats['text/plain'] || formats['text/plain; charset=us-ascii'] || '';
+      const f    = data.formats || {};
+      const textUrl = f['text/plain; charset=utf-8'] || f['text/plain'] || f['text/plain; charset=us-ascii'] || '';
       if (textUrl) {
-        const tr = await fetch(textUrl, {signal: controller.signal});
-        let raw = await tr.text();
-        // Strip Gutenberg header/footer boilerplate
-        const startMarkers = ['*** START OF', '***START OF', 'START OF THE PROJECT', 'START OF THIS PROJECT'];
-        const endMarkers = ['*** END OF', '***END OF', 'END OF THE PROJECT', 'END OF THIS PROJECT'];
+        const tr  = await fetch(textUrl, {signal: controller.signal});
+        let raw   = await tr.text();
+        const startMarkers = ['*** START OF','***START OF','START OF THE PROJECT','START OF THIS PROJECT'];
+        const endMarkers   = ['*** END OF',  '***END OF',  'END OF THE PROJECT',  'END OF THIS PROJECT'];
         let start = 0, end = raw.length;
-        for (const m of startMarkers) {
-          const i = raw.indexOf(m);
-          if (i !== -1) { const nl = raw.indexOf('\n', i); start = nl !== -1 ? nl + 1 : i + m.length; break; }
-        }
-        for (const m of endMarkers) {
-          const i = raw.indexOf(m);
-          if (i !== -1) { end = i; break; }
-        }
-        text = raw.substring(start, end).replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
-        // Limit to first 50000 chars for performance
-        if (text.length > 50000) text = text.substring(0, 50000) + '\n\n[Text continues — showing first portion for narration]';
+        for (const m of startMarkers) { const i = raw.indexOf(m); if (i !== -1) { const nl = raw.indexOf('\n', i); start = nl !== -1 ? nl + 1 : i + m.length; break; } }
+        for (const m of endMarkers)   { const i = raw.indexOf(m); if (i !== -1) { end = i; break; } }
+        text = raw.substring(start, end).replace(/\r\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+        if (text.length > 50000) text = text.substring(0, 50000) + '\n\n[Text continues — showing first portion]';
       }
     } catch { text = ''; }
-    if (!text) text = `Now narrating "${title}" by ${author}. The full text could not be loaded. Please check your connection and try again.`;
+    if (!text) text = `Now narrating "${title}" by ${author}. The full text could not be loaded.`;
   } else {
-    // Archive / Comic — try to get description or first text file
     try {
       const controller = new AbortController();
       setTimeout(() => controller.abort(), 6000);
-      const r = await fetch(`https://archive.org/metadata/${id}`, {signal: controller.signal});
+      const r    = await fetch(`https://archive.org/metadata/${id}`, {signal: controller.signal});
       const meta = await r.json();
-      const m = meta.metadata || {};
+      const m    = meta.metadata || {};
       const desc = m.description || m.notes || '';
       const descText = Array.isArray(desc) ? desc.join(' ') : String(desc).replace(/<[^>]+>/g,' ');
       text = `${title}. ${author ? 'By ' + author + '. ' : ''}${descText || 'From the Internet Archive collection.'}`;
@@ -1712,155 +1666,115 @@ async function openNarration(title, author, src, id, extra) {
       text = `${title}. ${author ? 'By ' + author + '.' : ''} From the Internet Archive collection.`;
     }
   }
-
-  tts.fullText = text;
-  // Split into sentences for progress tracking
+  tts.fullText  = text;
   tts.sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
   tts.sentences = tts.sentences.filter(s => s.trim().length > 2);
   if (!tts.sentences.length) tts.sentences = [text];
-
   const preview = text.substring(0, 400) + (text.length > 400 ? '…' : '');
-  document.getElementById('narratePreview').textContent = preview;
-  document.getElementById('narrateStatus').textContent = 'Ready · ' + tts.sentences.length + ' sentences';
-  document.getElementById('narratePlayBtn').textContent = '▶';
+  document.getElementById('narratePreview').textContent  = preview;
+  document.getElementById('narrateStatus').textContent   = 'Ready · ' + tts.sentences.length + ' sentences';
+  document.getElementById('narratePlayBtn').textContent  = '▶';
 }
-
-function toggleNarration() {
-  if (tts.isPlaying) {
-    pauseNarration();
-  } else {
-    playNarration();
-  }
-}
-
+function toggleNarration() { tts.isPlaying ? pauseNarration() : playNarration(); }
 function playNarration() {
-  if (!('speechSynthesis' in window)) {
-    toast('Text-to-speech not supported on this browser', 'error');
-    return;
-  }
+  if (!('speechSynthesis' in window)) { toast('Text-to-speech not supported', 'error'); return; }
   if (tts.currentIdx >= tts.sentences.length) tts.currentIdx = 0;
   speakFrom(tts.currentIdx);
 }
-
 function speakFrom(idx) {
   window.speechSynthesis.cancel();
   tts.isPlaying = true;
-  document.getElementById('narratePlayBtn').textContent = '⏸';
-  document.getElementById('narrateStatus').textContent = 'Playing…';
+  document.getElementById('narratePlayBtn').textContent  = '⏸';
+  document.getElementById('narrateStatus').textContent   = 'Playing…';
   speakSentence(idx);
 }
-
 function speakSentence(idx) {
   if (idx >= tts.sentences.length) {
-    tts.isPlaying = false;
-    tts.currentIdx = 0;
-    document.getElementById('narratePlayBtn').textContent = '▶';
-    document.getElementById('narrateStatus').textContent = 'Finished';
-    document.getElementById('narrateProgressFill').style.width = '100%';
-    document.getElementById('narratePos').textContent = '100%';
+    tts.isPlaying = false; tts.currentIdx = 0;
+    document.getElementById('narratePlayBtn').textContent         = '▶';
+    document.getElementById('narrateStatus').textContent          = 'Finished';
+    document.getElementById('narrateProgressFill').style.width    = '100%';
+    document.getElementById('narratePos').textContent             = '100%';
     return;
   }
   tts.currentIdx = idx;
   const sentence = tts.sentences[idx];
   const pct = Math.round((idx / tts.sentences.length) * 100);
   document.getElementById('narrateProgressFill').style.width = pct + '%';
-  document.getElementById('narratePos').textContent = pct + '%';
-
-  // Highlight current sentence in preview
+  document.getElementById('narratePos').textContent          = pct + '%';
   const preview = document.getElementById('narratePreview');
   const textPos = tts.fullText.indexOf(sentence.substring(0, 40));
   if (textPos !== -1 && textPos < 400) {
-    const before = escHtml(tts.fullText.substring(0, textPos));
+    const before      = escHtml(tts.fullText.substring(0, textPos));
     const highlighted = `<span class="highlight">${escHtml(sentence)}</span>`;
-    const after = escHtml(tts.fullText.substring(textPos + sentence.length, 400));
+    const after       = escHtml(tts.fullText.substring(textPos + sentence.length, 400));
     preview.innerHTML = before + highlighted + after;
     preview.querySelector('.highlight')?.scrollIntoView({block:'nearest'});
   }
-
   const u = new SpeechSynthesisUtterance(sentence);
   u.rate = parseFloat(document.getElementById('narrateSpeed')?.value || '1');
   const voiceSel = document.getElementById('narrateVoice');
   if (voiceSel && tts.voices[voiceSel.value]) u.voice = tts.voices[voiceSel.value];
-  u.onend = () => { if (tts.isPlaying) speakSentence(idx + 1); };
+  u.onend  = () => { if (tts.isPlaying) speakSentence(idx + 1); };
   u.onerror = () => { if (tts.isPlaying) speakSentence(idx + 1); };
   tts.utterance = u;
   window.speechSynthesis.speak(u);
 }
-
 function pauseNarration() {
-  window.speechSynthesis.cancel();
-  tts.isPlaying = false;
+  window.speechSynthesis.cancel(); tts.isPlaying = false;
   document.getElementById('narratePlayBtn').textContent = '▶';
-  document.getElementById('narrateStatus').textContent = 'Paused';
+  document.getElementById('narrateStatus').textContent  = 'Paused';
 }
-
 function stopNarration() {
-  window.speechSynthesis.cancel();
-  tts.isPlaying = false;
-  tts.currentIdx = 0;
+  window.speechSynthesis.cancel(); tts.isPlaying = false; tts.currentIdx = 0;
   const btn = document.getElementById('narratePlayBtn');
   if (btn) btn.textContent = '▶';
 }
-
 function rewindNarration() {
-  const was = tts.isPlaying;
-  window.speechSynthesis.cancel();
-  tts.isPlaying = false;
+  const was = tts.isPlaying; window.speechSynthesis.cancel(); tts.isPlaying = false;
   tts.currentIdx = Math.max(0, tts.currentIdx - 5);
   if (was) speakFrom(tts.currentIdx);
   else {
     const pct = Math.round((tts.currentIdx / Math.max(1, tts.sentences.length)) * 100);
     document.getElementById('narrateProgressFill').style.width = pct + '%';
-    document.getElementById('narratePos').textContent = pct + '%';
+    document.getElementById('narratePos').textContent          = pct + '%';
   }
 }
-
 function skipNarration() {
-  const was = tts.isPlaying;
-  window.speechSynthesis.cancel();
-  tts.isPlaying = false;
+  const was = tts.isPlaying; window.speechSynthesis.cancel(); tts.isPlaying = false;
   tts.currentIdx = Math.min(tts.sentences.length - 1, tts.currentIdx + 5);
   if (was) speakFrom(tts.currentIdx);
 }
-
 function seekNarration(e) {
   const bar = e.currentTarget;
   const pct = e.offsetX / bar.offsetWidth;
-  const was = tts.isPlaying;
-  window.speechSynthesis.cancel();
-  tts.isPlaying = false;
+  const was = tts.isPlaying; window.speechSynthesis.cancel(); tts.isPlaying = false;
   tts.currentIdx = Math.floor(pct * tts.sentences.length);
   if (was) speakFrom(tts.currentIdx);
   else {
     document.getElementById('narrateProgressFill').style.width = Math.round(pct * 100) + '%';
-    document.getElementById('narratePos').textContent = Math.round(pct * 100) + '%';
+    document.getElementById('narratePos').textContent          = Math.round(pct * 100) + '%';
   }
 }
-
 function updateNarrateSpeed() {
   if (tts.utterance) tts.utterance.rate = parseFloat(document.getElementById('narrateSpeed').value);
   if (tts.isPlaying) { const idx = tts.currentIdx; window.speechSynthesis.cancel(); tts.isPlaying = false; speakFrom(idx); }
 }
-
 function updateNarrateVoice() {
   const sel = document.getElementById('narrateVoice');
   tts.selectedVoice = tts.voices[sel.value] || null;
   if (tts.isPlaying) { const idx = tts.currentIdx; window.speechSynthesis.cancel(); tts.isPlaying = false; speakFrom(idx); }
 }
-
-// Stop narration when modal is closed
 document.getElementById('narrateModal').addEventListener('click', function(e) {
   if (e.target === this) { stopNarration(); closeModal('narrateModal'); }
 });
 
 // ========== INIT ==========
 (function init() {
-  // On desktop, show sidebar open; on mobile keep closed
   if (window.innerWidth > 768) {
     document.getElementById('sidebar').classList.remove('hidden');
     document.getElementById('main').classList.remove('full');
   }
-  // Load initial page
   loadDiscover('fiction');
 })();
 </script>
