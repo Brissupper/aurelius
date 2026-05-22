@@ -28,7 +28,7 @@ body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font
 body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1;opacity:.4;}
 /* Layout */
 .shell{display:flex;min-height:100vh;position:relative;z-index:2;}
-aside{width:var(--sidebar);min-height:100vh;background:rgba(10,10,20,.9);backdrop-filter:blur(20px);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .3s ease;}
+aside{width:var(--sidebar);min-height:100vh;background:#12121f;backdrop-filter:blur(20px);border-right:1px solid var(--border2);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform .3s ease;}
 aside.collapsed{transform:translateX(-100%);}
 main{margin-left:var(--sidebar);flex:1;transition:margin-left .3s ease;}
 main.expanded{margin-left:0;}
@@ -47,7 +47,7 @@ aside.collapsed ~ * .sidebar-toggle, main.expanded .sidebar-toggle{left:16px;}
 .sidebar-divider{height:1px;background:var(--border);margin:0 16px 12px;}
 nav{padding:8px 12px;flex:1;overflow-y:auto;}
 .nav-section{font-size:9px;color:var(--muted2);letter-spacing:.14em;text-transform:uppercase;padding:10px 8px 5px;}
-.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;background:none;border:none;border-radius:10px;color:var(--muted);font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;text-align:left;white-space:nowrap;}
+.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;background:none;border:none;border-radius:10px;color:var(--muted);font-family:'Outfit',sans-serif;font-size:14px;cursor:pointer;transition:all .2s;text-align:left;white-space:nowrap;-webkit-tap-highlight-color:rgba(212,168,67,.2);touch-action:manipulation;}
 .nav-btn:hover{background:var(--surface2);color:var(--text);}
 .nav-btn.active{background:linear-gradient(135deg,rgba(212,168,67,.12),rgba(124,92,191,.08));color:var(--gold2);border:1px solid rgba(212,168,67,.2);}
 .nav-btn svg{width:15px;height:15px;flex-shrink:0;opacity:.7;}
@@ -191,7 +191,7 @@ nav{padding:8px 12px;flex:1;overflow-y:auto;}
 .cat-pill.active{background:linear-gradient(135deg,rgba(212,168,67,.15),rgba(212,168,67,.08));border-color:rgba(212,168,67,.35);color:var(--gold2);}
 /* Shelf grid */
 .results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:16px;}
-.shelf-card{cursor:pointer;transition:transform .2s;}
+.shelf-card{cursor:pointer;transition:transform .2s;-webkit-tap-highlight-color:rgba(212,168,67,.15);touch-action:manipulation;}
 .shelf-card:hover{transform:translateY(-4px);}
 .shelf-cover{height:205px;border-radius:10px;position:relative;overflow:hidden;margin-bottom:9px;box-shadow:0 8px 24px rgba(0,0,0,.4);}
 .shelf-cover-spine{position:absolute;left:0;top:0;bottom:0;width:6px;background:rgba(0,0,0,.3);z-index:2;}
@@ -301,10 +301,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
 /* Mobile */
-.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:98;}
 @media(max-width:768px){
   :root{--sidebar:0px;}
-  aside{width:260px;transform:translateX(-100%);}
+  aside{width:280px;transform:translateX(-100%);background:#1a1a2e!important;box-shadow:4px 0 24px rgba(0,0,0,.6);}
   aside.open{transform:translateX(0)!important;}
   main{margin-left:0!important;}
   #audio-bar{left:0!important;}
@@ -566,6 +566,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;heigh
       <div class="cat-pill" onclick="selectComicsGenre(this,'manga')">&#x1F1EF;&#x1F1F5; Manga</div>
       <div class="cat-pill" onclick="selectComicsGenre(this,'mystery')">&#x1F50D; Mystery</div>
       <div class="cat-pill" onclick="selectComicsGenre(this,'western')">&#x1F920; Western</div>
+      <div class="cat-pill" onclick="selectComicsGenre(this,'war')">&#x1FA96; War</div>
+      <div class="cat-pill" onclick="selectComicsGenre(this,'adult')">&#x1F51E; Adult</div>
     </div>
   </div>
   <div class="section-wrap" style="padding-top:14px;">
@@ -914,12 +916,14 @@ function populateAllSelects(){
 
 // ── Nav ───────────────────────────────────────────────────────────────────────
 function navTo(name){
-  // Close sidebar first on mobile, then navigate
-  if(window.innerWidth<=768){
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('sidebar-overlay').classList.remove('visible');
-  }
   showPage(name);
+  // Close sidebar on mobile after navigation
+  if(window.innerWidth<=768){
+    setTimeout(()=>{
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('sidebar-overlay').classList.remove('visible');
+    },100);
+  }
 }
 
 function showPage(name){
@@ -1096,7 +1100,7 @@ async function searchGutenberg(query,isFeatured=false){
   let url='https://gutendex.com/books?';
   if(q)url+='search='+encodeURIComponent(q)+'&';
   if(cat)url+='topic='+encodeURIComponent(cat)+'&';
-  url+='languages=en&mime_type=text/plain&page_size=20';
+  url+='languages=en&mime_type=text/plain&page_size=12';
   if(!isFeatured)document.getElementById('discover-section-title').textContent=q?'Results for "'+q+'"':cat?cat+' Books':'All Books';
   try{
     const data=await fetch(url).then(r=>r.json());
@@ -1154,7 +1158,7 @@ function selectArchiveType(el,type){document.querySelectorAll('#archive-type-pil
 function selectArchiveSubject(el,subject){document.querySelectorAll('#archive-subject-pills .cat-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');archiveState.subject=subject;archiveState.page=1;fetchArchive();}
 async function fetchArchive(){
   const container=document.getElementById('archive-results');container.innerHTML='<div class="result-loading"><span class="spin">&#x27F3;</span> Searching...</div>';
-  const{type,subject,page,query}=archiveState;const rows=20,start=(page-1)*rows;
+  const{type,subject,page,query}=archiveState;const rows=12,start=(page-1)*rows;
   let q='mediatype:'+type;if(query)q+=' AND (title:('+query+') OR creator:('+query+'))';if(subject)q+=' AND subject:('+subject+')';q+=' AND language:English AND -access-restricted-item:true';
   const url='https://archive.org/advancedsearch.php?q='+encodeURIComponent(q)+'&fl[]=identifier,title,creator,year,subject,mediatype&sort[]=downloads+desc&rows='+rows+'&start='+start+'&output=json';
   try{
@@ -1291,7 +1295,7 @@ async function fetchComics(){
   const container=document.getElementById('comics-results');
   container.innerHTML='<div class="result-loading"><span class="spin">&#x27F3;</span> Searching comics...</div>';
   const{genre,page,query}=comicsState;
-  const rows=20,start=(page-1)*rows;
+  const rows=12,start=(page-1)*rows;
   let q='mediatype:texts AND subject:(comic OR comics OR "graphic novel" OR manga)';
   if(query)q+=' AND (title:('+query+') OR creator:('+query+'))';
   if(genre)q+=' AND subject:('+genre+')';
