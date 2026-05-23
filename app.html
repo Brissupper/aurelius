@@ -76,7 +76,6 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
 .comic-info{padding:10px;}
 .comic-title{font-size:.82rem;font-weight:700;margin-bottom:4px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .comic-year{font-size:.75rem;color:var(--muted);}
-/* PAGINATION */
 .pagination-bar{display:flex;align-items:center;justify-content:center;gap:14px;padding:28px 0 8px;}
 .page-info{font-size:.85rem;color:var(--muted);min-width:90px;text-align:center;}
 .btn-prev,.btn-next{padding:10px 22px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;font-family:'Lato',sans-serif;font-weight:700;font-size:.88rem;transition:all .15s;touch-action:manipulation;min-height:42px;}
@@ -137,7 +136,7 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
 .download-item .di-info{flex:1;min-width:0;}
 .download-item .di-title{font-weight:700;font-size:.9rem;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .download-item .di-meta{font-size:.78rem;color:var(--muted);}
-.download-item .di-actions{display:flex;gap:8px;flex-shrink:0;}
+.download-item .di-actions{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;}
 #authModal .modal{max-width:420px;}
 .auth-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:24px;}
 .auth-tab{flex:1;padding:12px;background:none;border:none;color:var(--muted);font-family:'Lato',sans-serif;font-size:.9rem;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
@@ -178,6 +177,8 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
   .book-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;}
   .comic-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;}
   .modal{max-height:95vh;}
+  .download-item{flex-wrap:wrap;}
+  .download-item .di-actions{width:100%;justify-content:flex-end;}
 }
 </style>
 </head>
@@ -374,7 +375,7 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
       </div>
       <div class="settings-section">
         <h3>About</h3>
-        <div class="setting-row"><label>Version</label><span style="color:var(--muted)">1.1.0</span></div>
+        <div class="setting-row"><label>Version</label><span style="color:var(--muted)">1.2.0</span></div>
         <div class="setting-row"><label>Built on</label><span style="color:var(--muted)">Project Gutenberg + Internet Archive</span></div>
       </div>
     </div>
@@ -489,20 +490,47 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
 
 <script>
 // ============================================================
+// USER DATA PERSISTENCE HELPERS
+// ============================================================
+// Each user gets their own namespaced storage keys.
+// Anonymous (guest) users share the 'guest' namespace.
+// Data persists across logins: when you log in, your saved
+// books and library come back exactly as you left them.
+
+function userKey(suffix) {
+  // Key scoped to current user's email (or 'guest' if not logged in)
+  const email = user ? user.email : 'guest';
+  return 'aurelius_' + suffix + '_' + btoa(email).replace(/=/g,'');
+}
+
+function loadUserData() {
+  // Load saved books and uploaded library for current user
+  savedBooks    = JSON.parse(localStorage.getItem(userKey('downloads')) || '[]');
+  uploadedBooks = JSON.parse(localStorage.getItem(userKey('library'))   || '[]');
+}
+
+function saveDownloadsData() {
+  localStorage.setItem(userKey('downloads'), JSON.stringify(savedBooks.slice(0,200)));
+}
+
+function saveLibraryData() {
+  localStorage.setItem(userKey('library'), JSON.stringify(uploadedBooks.slice(0,50)));
+}
+
+// ============================================================
 // STATE
 // ============================================================
-let currentPage       = 'discover';
-let currentDiscoverCat= 'fiction';
-let currentArchiveCat = 'books';
-let currentComicCat   = 'superhero';
-let currentAdultSub   = 'all';
-let searchSrcMode     = 'gutenberg';
-let donateAmt         = 10;
-let user              = null;
-let uploadedBooks     = JSON.parse(localStorage.getItem('aurelius_library')   || '[]');
-let savedBooks        = JSON.parse(localStorage.getItem('aurelius_downloads') || '[]');
+let currentPage        = 'discover';
+let currentDiscoverCat = 'fiction';
+let currentArchiveCat  = 'books';
+let currentComicCat    = 'superhero';
+let currentAdultSub    = 'all';
+let searchSrcMode      = 'gutenberg';
+let donateAmt          = 10;
+let user               = null;  // set by restoreSession() on load
+let uploadedBooks      = [];
+let savedBooks         = [];
 
-// Per-section pagination  — Gutenberg uses page number, Archive uses offset
 const pg = {
   discover: { page: 1, perPage: 32, total: 0 },
   archive:  { page: 1, perPage: 20, total: 0 },
@@ -510,112 +538,202 @@ const pg = {
 };
 
 // ============================================================
+// SESSION PERSISTENCE — restore & save login across refreshes
+// ============================================================
+function restoreSession() {
+  try {
+    const stored = localStorage.getItem('aurelius_session');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed && parsed.email) {
+        user = parsed;
+        updateUserUI();
+        toast('Welcome back, ' + user.name + '!', 'info');
+      }
+    }
+  } catch(e) {}
+  // Load user-scoped data (after user is set)
+  loadUserData();
+}
+
+function persistSession() {
+  if (user) {
+    localStorage.setItem('aurelius_session', JSON.stringify(user));
+  } else {
+    localStorage.removeItem('aurelius_session');
+  }
+}
+
+// ============================================================
 // GOOGLE AUTH
 // ============================================================
 const GOOGLE_CLIENT_ID = '1017805317287-me5v533ju9kd0vcjq7d8u5add8mpniha.apps.googleusercontent.com';
-function initGoogleSignIn(){
-  if(!window.google||!window.google.accounts) return;
-  window.google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:handleGoogleCredential,auto_select:false,cancel_on_tap_outside:true});
+
+function initGoogleSignIn() {
+  if (!window.google || !window.google.accounts) return;
+  window.google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleGoogleCredential,
+    auto_select: false,
+    cancel_on_tap_outside: true
+  });
   renderGoogleButtons();
 }
-function renderGoogleButtons(){
-  if(!window.google||!window.google.accounts) return;
-  const cfg={theme:'outline',size:'large',width:360,shape:'rectangular',logo_alignment:'left'};
-  const l=document.getElementById('googleBtnLogin'); const r=document.getElementById('googleBtnRegister');
-  if(l) window.google.accounts.id.renderButton(l,{...cfg,text:'signin_with'});
-  if(r) window.google.accounts.id.renderButton(r,{...cfg,text:'signup_with'});
+
+function renderGoogleButtons() {
+  if (!window.google || !window.google.accounts) return;
+  const cfg = {theme:'outline', size:'large', width:360, shape:'rectangular', logo_alignment:'left'};
+  const l = document.getElementById('googleBtnLogin');
+  const r = document.getElementById('googleBtnRegister');
+  if (l) window.google.accounts.id.renderButton(l, {...cfg, text:'signin_with'});
+  if (r) window.google.accounts.id.renderButton(r, {...cfg, text:'signup_with'});
 }
-function handleGoogleCredential(resp){
-  try{
-    const p=JSON.parse(atob(resp.credential.split('.')[1]));
-    user={name:p.name||p.email,email:p.email,google:true,picture:p.picture||''};
-    updateUserUI(); closeModal('authModal'); toast('Signed in as '+user.name,'success');
-  }catch(e){ toast('Google sign-in failed','error'); }
+
+function handleGoogleCredential(resp) {
+  try {
+    const p = JSON.parse(atob(resp.credential.split('.')[1]));
+    user = {name: p.name || p.email, email: p.email, google: true, picture: p.picture || ''};
+    persistSession();
+    loadUserData();
+    updateUserUI();
+    closeModal('authModal');
+    toast('Signed in as ' + user.name, 'success');
+  } catch(e) {
+    toast('Google sign-in failed', 'error');
+  }
 }
-function waitForGoogleSDK(){ window.google&&window.google.accounts ? initGoogleSignIn() : setTimeout(waitForGoogleSDK,200); }
+
+function waitForGoogleSDK() {
+  window.google && window.google.accounts ? initGoogleSignIn() : setTimeout(waitForGoogleSDK, 200);
+}
 waitForGoogleSDK();
-function openAuth(){ openModal('authModal'); setTimeout(renderGoogleButtons,150); }
+function openAuth() { openModal('authModal'); setTimeout(renderGoogleButtons, 150); }
 
 // ============================================================
 // SIDEBAR / NAV
 // ============================================================
-function toggleSidebar(){
-  const sb=document.getElementById('sidebar'),ov=document.getElementById('overlay');
-  sb.classList.contains('hidden') ? (sb.classList.remove('hidden'),ov.classList.add('show')) : closeSidebar();
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar'), ov = document.getElementById('overlay');
+  sb.classList.contains('hidden') ? (sb.classList.remove('hidden'), ov.classList.add('show')) : closeSidebar();
 }
-function closeSidebar(){ document.getElementById('sidebar').classList.add('hidden'); document.getElementById('overlay').classList.remove('show'); }
-function navTo(page){ closeSidebar(); setTimeout(()=>showPage(page),50); }
+function closeSidebar() {
+  document.getElementById('sidebar').classList.add('hidden');
+  document.getElementById('overlay').classList.remove('show');
+}
+function navTo(page) { closeSidebar(); setTimeout(() => showPage(page), 50); }
 
-function showPage(page){
-  currentPage=page;
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  const pg2=document.getElementById('page-'+page); if(pg2) pg2.classList.add('active');
-  const nb=document.getElementById('nav-'+page);   if(nb)  nb.classList.add('active');
-  if(page==='discover' && !document.getElementById('discoverGrid').querySelector('.book-card')) loadDiscover(1);
-  if(page==='archive'  && !document.getElementById('archiveGrid').querySelector('.book-card'))  loadArchive(1);
-  if(page==='comics'   && !document.getElementById('comicsGrid').querySelector('.comic-card'))  loadComics(1);
-  if(page==='library')   renderLibrary();
-  if(page==='downloads') renderDownloads();
+function showPage(page) {
+  currentPage = page;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const pg2 = document.getElementById('page-' + page); if (pg2) pg2.classList.add('active');
+  const nb  = document.getElementById('nav-' + page);  if (nb)  nb.classList.add('active');
+  if (page === 'discover'  && !document.getElementById('discoverGrid').querySelector('.book-card'))  loadDiscover(1);
+  if (page === 'archive'   && !document.getElementById('archiveGrid').querySelector('.book-card'))   loadArchive(1);
+  if (page === 'comics'    && !document.getElementById('comicsGrid').querySelector('.comic-card'))   loadComics(1);
+  if (page === 'library')    renderLibrary();
+  if (page === 'downloads')  renderDownloads();
 }
 
 // ============================================================
-// AUTH (email)
+// AUTH (email / local)
 // ============================================================
-function switchAuth(mode,el){
-  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active')); el.classList.add('active');
-  document.getElementById('authLoginForm').style.display   =mode==='login'?'':'none';
-  document.getElementById('authRegisterForm').style.display=mode==='register'?'':'none';
-  setTimeout(renderGoogleButtons,100);
+function switchAuth(mode, el) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active')); el.classList.add('active');
+  document.getElementById('authLoginForm').style.display    = mode === 'login'    ? '' : 'none';
+  document.getElementById('authRegisterForm').style.display = mode === 'register' ? '' : 'none';
+  setTimeout(renderGoogleButtons, 100);
 }
-function doLogin(){
-  const e=document.getElementById('loginEmail').value,p=document.getElementById('loginPass').value;
-  if(!e||!p){toast('Fill in all fields','error');return;}
-  user={name:e.split('@')[0],email:e}; updateUserUI(); closeModal('authModal'); toast('Welcome, '+user.name+'!','success');
+
+function doLogin() {
+  const e = document.getElementById('loginEmail').value;
+  const p = document.getElementById('loginPass').value;
+  if (!e || !p) { toast('Fill in all fields', 'error'); return; }
+  // Retrieve stored profile for this email (name saved at registration)
+  let name = e.split('@')[0];
+  try {
+    const stored = localStorage.getItem('aurelius_profile_' + btoa(e).replace(/=/g,''));
+    if (stored) { const prof = JSON.parse(stored); name = prof.name || name; }
+  } catch(err) {}
+  user = {name, email: e};
+  persistSession();
+  loadUserData();
+  updateUserUI();
+  closeModal('authModal');
+  toast('Welcome back, ' + user.name + '!', 'success');
 }
-function doRegister(){
-  const n=document.getElementById('regName').value,e=document.getElementById('regEmail').value,p=document.getElementById('regPass').value;
-  if(!n||!e||!p){toast('Fill in all fields','error');return;}
-  if(p.length<8){toast('Password must be at least 8 characters','error');return;}
-  user={name:n,email:e}; updateUserUI(); closeModal('authModal'); toast('Welcome, '+n+'!','success');
+
+function doRegister() {
+  const n = document.getElementById('regName').value;
+  const e = document.getElementById('regEmail').value;
+  const p = document.getElementById('regPass').value;
+  if (!n || !e || !p) { toast('Fill in all fields', 'error'); return; }
+  if (p.length < 8)   { toast('Password must be at least 8 characters', 'error'); return; }
+  // Save profile so name is available on future logins
+  localStorage.setItem('aurelius_profile_' + btoa(e).replace(/=/g,''), JSON.stringify({name: n, email: e}));
+  user = {name: n, email: e};
+  persistSession();
+  loadUserData();
+  updateUserUI();
+  closeModal('authModal');
+  toast('Welcome, ' + n + '!', 'success');
 }
-function updateUserUI(){
-  const area=document.getElementById('sidebarUserArea'),topBtn=document.getElementById('topAuthBtn');
-  if(user){
-    const av=user.picture?`<img src="${user.picture}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">`
-      :`<div style="width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:#0a0a14">${escHtml(user.name[0].toUpperCase())}</div>`;
-    area.innerHTML=`<div style="display:flex;align-items:center;gap:10px;">${av}<div style="flex:1;min-width:0;"><div style="font-size:.9rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(user.name)}</div><button style="background:none;border:none;color:var(--muted);font-size:.75rem;cursor:pointer;padding:0" onclick="signOut()">Sign out</button></div></div>`;
-    topBtn.textContent=user.name[0].toUpperCase(); topBtn.style.borderRadius='50%'; topBtn.style.width='36px'; topBtn.style.height='36px'; topBtn.style.padding='0';
+
+function updateUserUI() {
+  const area   = document.getElementById('sidebarUserArea');
+  const topBtn = document.getElementById('topAuthBtn');
+  if (user) {
+    const av = user.picture
+      ? `<img src="${user.picture}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">`
+      : `<div style="width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:#0a0a14">${escHtml(user.name[0].toUpperCase())}</div>`;
+    area.innerHTML = `<div style="display:flex;align-items:center;gap:10px;">${av}<div style="flex:1;min-width:0;">
+      <div style="font-size:.9rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(user.name)}</div>
+      <button style="background:none;border:none;color:var(--muted);font-size:.75rem;cursor:pointer;padding:0" onclick="signOut()">Sign out</button>
+    </div></div>`;
+    topBtn.textContent = user.name[0].toUpperCase();
+    topBtn.style.borderRadius = '50%'; topBtn.style.width = '36px'; topBtn.style.height = '36px'; topBtn.style.padding = '0';
+  } else {
+    area.innerHTML = `<button class="btn btn-primary" style="width:100%" onclick="closeSidebar();openAuth()">Sign In</button>`;
+    const b = document.getElementById('topAuthBtn'); b.textContent = 'Sign In'; b.style = '';
   }
 }
-function signOut(){
-  user=null; if(window.google&&window.google.accounts) window.google.accounts.id.disableAutoSelect();
-  document.getElementById('sidebarUserArea').innerHTML=`<button class="btn btn-primary" style="width:100%" onclick="closeSidebar();openAuth()">Sign In</button>`;
-  const b=document.getElementById('topAuthBtn'); b.textContent='Sign In'; b.style=''; toast('Signed out','info');
+
+function signOut() {
+  // Save current data before signing out
+  saveDownloadsData();
+  saveLibraryData();
+  user = null;
+  persistSession();
+  if (window.google && window.google.accounts) window.google.accounts.id.disableAutoSelect();
+  // Switch to guest data
+  loadUserData();
+  updateUserUI();
+  toast('Signed out', 'info');
+  // Refresh visible pages
+  if (currentPage === 'downloads') renderDownloads();
+  if (currentPage === 'library')   renderLibrary();
 }
 
 // ============================================================
 // PAGINATION HELPER
 // ============================================================
-function renderPagination(containerId, currentPg, total, perPage, loadFn){
-  const el=document.getElementById(containerId); if(!el) return;
-  const totalPages=Math.ceil(total/perPage);
-  if(total===0){ el.innerHTML=''; return; }
-  const prevDisabled = currentPg<=1 ? 'disabled' : '';
-  const nextDisabled = currentPg>=totalPages ? 'disabled' : '';
-  el.innerHTML=`<div class="pagination-bar">
+function renderPagination(containerId, currentPg, total, perPage, loadFn) {
+  const el = document.getElementById(containerId); if (!el) return;
+  const totalPages = Math.ceil(total / perPage);
+  if (total === 0) { el.innerHTML = ''; return; }
+  const prevDisabled = currentPg <= 1 ? 'disabled' : '';
+  const nextDisabled = currentPg >= totalPages ? 'disabled' : '';
+  el.innerHTML = `<div class="pagination-bar">
     <button class="btn-prev" ${prevDisabled} onclick="${loadFn}(${currentPg-1})">← Previous</button>
     <span class="page-info">Page ${currentPg} of ${totalPages}</span>
     <button class="btn-next" ${nextDisabled} onclick="${loadFn}(${currentPg+1})">Next →</button>
   </div>`;
 }
-function scrollPageTop(pageId){ const p=document.getElementById(pageId); if(p) p.scrollTo({top:0,behavior:'smooth'}); }
+function scrollPageTop(pageId) { const p = document.getElementById(pageId); if (p) p.scrollTo({top:0,behavior:'smooth'}); }
 
 // ============================================================
-// DISCOVER  (Gutenberg — uses real page param, 32 per page)
+// DISCOVER  (Gutenberg)
 // ============================================================
-// Gutenberg subject map — each cat maps to a DIFFERENT subject query per page
-// We randomise within a pool to avoid identical page-1 every time
 const GUTENBERG_SUBJECTS = {
   fiction:     ['subject=fiction','topic=novel','topic=short+stories','subject=adventure','subject=drama'],
   science:     ['topic=science','subject=natural+history','subject=physics','subject=chemistry','subject=biology'],
@@ -629,113 +747,105 @@ const GUTENBERG_SUBJECTS = {
   children:    ['topic=children','subject=fairy+tales','subject=juvenile+fiction','subject=fables','subject=nursery+rhymes']
 };
 
-function selectDiscoverCat(el,cat){
-  document.querySelectorAll('#discoverPills .cat-pill').forEach(p=>p.classList.remove('active')); el.classList.add('active');
-  currentDiscoverCat=cat; loadDiscover(1);
+function selectDiscoverCat(el, cat) {
+  document.querySelectorAll('#discoverPills .cat-pill').forEach(p => p.classList.remove('active')); el.classList.add('active');
+  currentDiscoverCat = cat; loadDiscover(1);
 }
 
-async function loadDiscover(page){
-  if(!page) page=1;
-  pg.discover.page=page;
-  const grid=document.getElementById('discoverGrid');
-  const heading=document.getElementById('discoverHeading');
-  grid.innerHTML='<div class="loading"><div class="spinner"></div><span>Loading…</span></div>';
-  document.getElementById('discoverPagination').innerHTML='';
-  const labels={fiction:'Fiction',science:'Science',history:'History',philosophy:'Philosophy',biography:'Biography',mystery:'Mystery',romance:'Romance','self-help':'Self-Help',technology:'Technology',children:"Children's"};
-  heading.textContent=(labels[currentDiscoverCat]||currentDiscoverCat)+' Books';
-
-  // Build URL: use subject-based search for variety, rotate subjects by page
-  const subjects=GUTENBERG_SUBJECTS[currentDiscoverCat]||['topic=fiction'];
-  const subjectParam=subjects[(page-1) % subjects.length];
-  const url=`https://gutendex.com/books/?${subjectParam}&page=${page}`;
-
-  try{
-    const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),9000);
-    const r=await fetch(url,{signal:ctrl.signal}); if(!r.ok) throw new Error();
-    const data=await r.json();
-    const total=data.count||0;
-    // De-dup by ID within this batch
-    const seen=new Set();
-    const books=(data.results||[]).filter(b=>{ if(seen.has(b.id)) return false; seen.add(b.id); return true; });
-    if(!books.length){ grid.innerHTML='<div class="empty"><div class="ei">📚</div><p>No books found.</p></div>'; return; }
-    grid.innerHTML=books.map(b=>buildBookCard(b)).join('');
-    pg.discover.total=total;
-    renderPagination('discoverPagination',page,total,pg.discover.perPage,'loadDiscover');
-    if(page>1) scrollPageTop('page-discover');
-  }catch(e){
-    grid.innerHTML='<div class="empty"><div class="ei">⚠️</div><p>Could not load books.<br>Check your connection.</p></div>';
+async function loadDiscover(page) {
+  if (!page) page = 1;
+  pg.discover.page = page;
+  const grid    = document.getElementById('discoverGrid');
+  const heading = document.getElementById('discoverHeading');
+  grid.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading…</span></div>';
+  document.getElementById('discoverPagination').innerHTML = '';
+  const labels = {fiction:'Fiction',science:'Science',history:'History',philosophy:'Philosophy',biography:'Biography',mystery:'Mystery',romance:'Romance','self-help':'Self-Help',technology:'Technology',children:"Children's"};
+  heading.textContent = (labels[currentDiscoverCat] || currentDiscoverCat) + ' Books';
+  const subjects = GUTENBERG_SUBJECTS[currentDiscoverCat] || ['topic=fiction'];
+  const subjectParam = subjects[(page-1) % subjects.length];
+  const url = `https://gutendex.com/books/?${subjectParam}&page=${page}`;
+  try {
+    const ctrl = new AbortController(); setTimeout(() => ctrl.abort(), 9000);
+    const r = await fetch(url, {signal: ctrl.signal}); if (!r.ok) throw new Error();
+    const data = await r.json();
+    const total = data.count || 0;
+    const seen = new Set();
+    const books = (data.results || []).filter(b => { if (seen.has(b.id)) return false; seen.add(b.id); return true; });
+    if (!books.length) { grid.innerHTML = '<div class="empty"><div class="ei">📚</div><p>No books found.</p></div>'; return; }
+    grid.innerHTML = books.map(b => buildBookCard(b)).join('');
+    pg.discover.total = total;
+    renderPagination('discoverPagination', page, total, pg.discover.perPage, 'loadDiscover');
+    if (page > 1) scrollPageTop('page-discover');
+  } catch(e) {
+    grid.innerHTML = '<div class="empty"><div class="ei">⚠️</div><p>Could not load books.<br>Check your connection.</p></div>';
   }
 }
 
-function buildBookCard(b){
-  const title=b.title||'Unknown Title';
-  const author=(b.authors&&b.authors[0])?b.authors[0].name:'Unknown Author';
-  const cover=b.formats&&(b.formats['image/jpeg']||b.formats['image/png']||'');
-  const id=b.id;
-  const d=escAttr(JSON.stringify({id,title,author,cover,src:'gutenberg',formats:b.formats||{}}));
+function buildBookCard(b) {
+  const title  = b.title || 'Unknown Title';
+  const author = (b.authors && b.authors[0]) ? b.authors[0].name : 'Unknown Author';
+  const cover  = b.formats && (b.formats['image/jpeg'] || b.formats['image/png'] || '');
+  const id     = b.id;
+  const d = escAttr(JSON.stringify({id, title, author, cover, src:'gutenberg', formats: b.formats || {}}));
   return `<div class="book-card" onclick="openBookModal('${d}')">
-    ${cover?`<img class="book-cover" src="${cover}" alt="${escHtml(title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:``}
-    <div class="book-cover-placeholder" ${cover?'style="display:none"':''}>📖</div>
+    ${cover ? `<img class="book-cover" src="${cover}" alt="${escHtml(title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+    <div class="book-cover-placeholder" ${cover ? 'style="display:none"' : ''}>📖</div>
     <div class="book-info"><div class="book-title">${escHtml(title)}</div><div class="book-author">${escHtml(author)}</div></div>
   </div>`;
 }
 
 // ============================================================
-// INTERNET ARCHIVE  (uses rows + start offset — guaranteed unique per page)
+// INTERNET ARCHIVE
 // ============================================================
-const ARCHIVE_QUERIES={
-  books:       'subject:book AND mediatype:texts AND language:eng',
-  texts:       'mediatype:texts AND subject:literature AND language:eng',
-  periodicals: 'mediatype:texts AND subject:periodicals',
-  audio:       'mediatype:audio AND collection:librivoxaudio',
-  manuscripts: 'subject:manuscripts AND mediatype:texts'
+const ARCHIVE_QUERIES = {
+  books:        'subject:book AND mediatype:texts AND language:eng',
+  texts:        'mediatype:texts AND subject:literature AND language:eng',
+  periodicals:  'mediatype:texts AND subject:periodicals',
+  audio:        'mediatype:audio AND collection:librivoxaudio',
+  manuscripts:  'subject:manuscripts AND mediatype:texts'
 };
 
-function selectArchiveCat(el,cat){
-  document.querySelectorAll('#archivePills .cat-pill').forEach(p=>p.classList.remove('active')); el.classList.add('active');
-  currentArchiveCat=cat; loadArchive(1);
+function selectArchiveCat(el, cat) {
+  document.querySelectorAll('#archivePills .cat-pill').forEach(p => p.classList.remove('active')); el.classList.add('active');
+  currentArchiveCat = cat; loadArchive(1);
 }
 
-async function loadArchive(page){
-  if(!page) page=1;
-  pg.archive.page=page;
-  const grid=document.getElementById('archiveGrid');
-  const heading=document.getElementById('archiveHeading');
-  const labels={books:'Books',texts:'Texts',periodicals:'Periodicals',audio:'Audio Books',manuscripts:'Manuscripts'};
-  heading.textContent=labels[currentArchiveCat]||currentArchiveCat;
-  grid.innerHTML='<div class="loading"><div class="spinner"></div><span>Loading…</span></div>';
-  document.getElementById('archivePagination').innerHTML='';
-
-  const q=ARCHIVE_QUERIES[currentArchiveCat]||'mediatype:texts';
-  const perPg=pg.archive.perPage;
-  const start=(page-1)*perPg;
-
-  try{
-    const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),10000);
-    // IMPORTANT: we request rows+start so each page is a completely different offset
-    const url=`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier,title,creator,description,subject&rows=${perPg}&start=${start}&output=json&sort[]=downloads+desc`;
-    const r=await fetch(url,{signal:ctrl.signal}); if(!r.ok) throw new Error();
-    const data=await r.json();
-    const resp=data.response||{};
-    const total=resp.numFound||0;
-    // De-dup identifiers within the page
-    const seen=new Set();
-    const docs=(resp.docs||[]).filter(d=>{ if(seen.has(d.identifier)) return false; seen.add(d.identifier); return true; });
-    if(!docs.length){ grid.innerHTML='<div class="empty"><div class="ei">🏛️</div><p>No items found.</p></div>'; return; }
-    grid.innerHTML=docs.map(d=>buildArchiveCard(d)).join('');
-    pg.archive.total=total;
-    renderPagination('archivePagination',page,total,perPg,'loadArchive');
-    if(page>1) scrollPageTop('page-archive');
-  }catch(e){
-    grid.innerHTML='<div class="empty"><div class="ei">⚠️</div><p>Could not load Archive items.<br>Check your connection.</p></div>';
+async function loadArchive(page) {
+  if (!page) page = 1;
+  pg.archive.page = page;
+  const grid    = document.getElementById('archiveGrid');
+  const heading = document.getElementById('archiveHeading');
+  const labels  = {books:'Books',texts:'Texts',periodicals:'Periodicals',audio:'Audio Books',manuscripts:'Manuscripts'};
+  heading.textContent = labels[currentArchiveCat] || currentArchiveCat;
+  grid.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading…</span></div>';
+  document.getElementById('archivePagination').innerHTML = '';
+  const q     = ARCHIVE_QUERIES[currentArchiveCat] || 'mediatype:texts';
+  const perPg = pg.archive.perPage;
+  const start = (page - 1) * perPg;
+  try {
+    const ctrl = new AbortController(); setTimeout(() => ctrl.abort(), 10000);
+    const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier,title,creator,description,subject&rows=${perPg}&start=${start}&output=json&sort[]=downloads+desc`;
+    const r = await fetch(url, {signal: ctrl.signal}); if (!r.ok) throw new Error();
+    const data = await r.json();
+    const resp  = data.response || {};
+    const total = resp.numFound || 0;
+    const seen  = new Set();
+    const docs  = (resp.docs || []).filter(d => { if (seen.has(d.identifier)) return false; seen.add(d.identifier); return true; });
+    if (!docs.length) { grid.innerHTML = '<div class="empty"><div class="ei">🏛️</div><p>No items found.</p></div>'; return; }
+    grid.innerHTML = docs.map(d => buildArchiveCard(d)).join('');
+    pg.archive.total = total;
+    renderPagination('archivePagination', page, total, perPg, 'loadArchive');
+    if (page > 1) scrollPageTop('page-archive');
+  } catch(e) {
+    grid.innerHTML = '<div class="empty"><div class="ei">⚠️</div><p>Could not load Archive items.<br>Check your connection.</p></div>';
   }
 }
 
-function buildArchiveCard(d){
-  const title=d.title||'Unknown';
-  const creator=Array.isArray(d.creator)?d.creator[0]:(d.creator||'Internet Archive');
-  const id=d.identifier;
-  const cover=`https://archive.org/services/img/${id}`;
+function buildArchiveCard(d) {
+  const title   = d.title || 'Unknown';
+  const creator = Array.isArray(d.creator) ? d.creator[0] : (d.creator || 'Internet Archive');
+  const id      = d.identifier;
+  const cover   = `https://archive.org/services/img/${id}`;
   return `<div class="book-card" onclick="openArchiveModal('${escJs(id)}','${escJs(title)}','${escJs(creator)}')">
     <img class="book-cover" src="${cover}" alt="${escHtml(title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
     <div class="book-cover-placeholder" style="display:none">📜</div>
@@ -744,24 +854,20 @@ function buildArchiveCard(d){
 }
 
 // ============================================================
-// COMICS  (Archive — precise queries, offset pagination)
+// COMICS
 // ============================================================
-
-// Main non-adult queries
-const COMIC_QUERIES={
-  superhero:  'collection:(ComicBookPlus OR dccomics OR marvel_comics) AND mediatype:texts AND subject:(superhero OR batman OR superman OR avengers OR xmen)',
-  manga:      'mediatype:texts AND (subject:manga OR subject:"manga" OR collection:manga)',
-  horror:     'mediatype:texts AND subject:(comics OR "comic book") AND subject:(horror OR terror OR vampire OR zombie)',
-  'sci-fi':   'mediatype:texts AND subject:(comics OR "comic book") AND subject:("science fiction" OR "sci-fi" OR space OR robot)',
-  fantasy:    'mediatype:texts AND subject:(comics OR "comic book") AND subject:(fantasy OR dragon OR magic OR sword)',
-  romance:    'mediatype:texts AND subject:(comics OR "comic book") AND subject:(romance OR love)',
-  war:        'mediatype:texts AND subject:(comics OR "comic book") AND subject:(war OR military OR soldier OR combat)',
-  western:    'mediatype:texts AND subject:(comics OR "comic book") AND subject:(western OR cowboy OR outlaw)',
-  crime:      'mediatype:texts AND subject:(comics OR "comic book") AND subject:(crime OR detective OR noir OR gangster)'
+const COMIC_QUERIES = {
+  superhero: 'collection:(ComicBookPlus OR dccomics OR marvel_comics) AND mediatype:texts AND subject:(superhero OR batman OR superman OR avengers OR xmen)',
+  manga:     'mediatype:texts AND (subject:manga OR subject:"manga" OR collection:manga)',
+  horror:    'mediatype:texts AND subject:(comics OR "comic book") AND subject:(horror OR terror OR vampire OR zombie)',
+  'sci-fi':  'mediatype:texts AND subject:(comics OR "comic book") AND subject:("science fiction" OR "sci-fi" OR space OR robot)',
+  fantasy:   'mediatype:texts AND subject:(comics OR "comic book") AND subject:(fantasy OR dragon OR magic OR sword)',
+  romance:   'mediatype:texts AND subject:(comics OR "comic book") AND subject:(romance OR love)',
+  war:       'mediatype:texts AND subject:(comics OR "comic book") AND subject:(war OR military OR soldier OR combat)',
+  western:   'mediatype:texts AND subject:(comics OR "comic book") AND subject:(western OR cowboy OR outlaw)',
+  crime:     'mediatype:texts AND subject:(comics OR "comic book") AND subject:(crime OR detective OR noir OR gangster)'
 };
-
-// Adult sub-category queries — specific enough to return genuine content
-const ADULT_QUERIES={
+const ADULT_QUERIES = {
   all:         'mediatype:texts AND (collection:"adult_comics" OR subject:"underground comix" OR subject:"adult comics" OR subject:"erotic comics")',
   straight:    'mediatype:texts AND (subject:"underground comix" OR subject:"adult comics") AND (subject:heterosexual OR subject:straight OR subject:"man and woman")',
   gay:         'mediatype:texts AND (subject:"underground comix" OR subject:"adult comics" OR subject:"gay comics") AND subject:gay',
@@ -776,115 +882,108 @@ const ADULT_QUERIES={
   underground: 'mediatype:texts AND (subject:"underground comix" OR collection:"underground_comix" OR subject:"comix")'
 };
 
-function selectComicCat(el,cat){
-  document.querySelectorAll('#comicPills .cat-pill').forEach(p=>p.classList.remove('active')); el.classList.add('active');
-  currentComicCat=cat; currentAdultSub='all';
-  const subRow=document.getElementById('adultSubRow');
-  if(cat==='adult'){
+function selectComicCat(el, cat) {
+  document.querySelectorAll('#comicPills .cat-pill').forEach(p => p.classList.remove('active')); el.classList.add('active');
+  currentComicCat = cat; currentAdultSub = 'all';
+  const subRow = document.getElementById('adultSubRow');
+  if (cat === 'adult') {
     subRow.classList.add('show');
-    document.querySelectorAll('.sub-pill').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.sub-pill').forEach(p => p.classList.remove('active'));
     document.querySelector('.sub-pill').classList.add('active');
-  }else{
+  } else {
     subRow.classList.remove('show');
   }
   loadComics(1);
 }
 
-function selectAdultSub(el,sub){
-  document.querySelectorAll('.sub-pill').forEach(p=>p.classList.remove('active')); el.classList.add('active');
-  currentAdultSub=sub; loadComics(1);
+function selectAdultSub(el, sub) {
+  document.querySelectorAll('.sub-pill').forEach(p => p.classList.remove('active')); el.classList.add('active');
+  currentAdultSub = sub; loadComics(1);
 }
 
-async function loadComics(page){
-  if(!page) page=1;
-  pg.comics.page=page;
-  const grid=document.getElementById('comicsGrid');
-  const heading=document.getElementById('comicsHeading');
-
-  const mainLabels={superhero:'Superhero',manga:'Manga',horror:'Horror','sci-fi':'Sci-Fi',fantasy:'Fantasy',romance:'Romance',war:'War',western:'Western',crime:'Crime',adult:'Adult'};
-  const subLabels={all:'Adult',straight:'Straight',gay:'Gay',lesbian:'Lesbian',trans:'Trans',bisexual:'Bisexual',interracial:'Interracial',milf:'MILF',bbw:'BBW',bdsm:'BDSM',hentai:'Hentai',underground:'Underground'};
-  heading.textContent=(currentComicCat==='adult' ? subLabels[currentAdultSub] : mainLabels[currentComicCat])+' Comics';
-
-  grid.innerHTML='<div class="loading"><div class="spinner"></div><span>Loading comics…</span></div>';
-  document.getElementById('comicsPagination').innerHTML='';
-
-  const q = currentComicCat==='adult' ? ADULT_QUERIES[currentAdultSub]||ADULT_QUERIES.all : COMIC_QUERIES[currentComicCat]||'mediatype:texts AND subject:comics';
-  const perPg=pg.comics.perPage;
-  const start=(page-1)*perPg;
-
-  try{
-    const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),11000);
-    const url=`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier,title,creator,date,subject&rows=${perPg}&start=${start}&output=json&sort[]=downloads+desc`;
-    const r=await fetch(url,{signal:ctrl.signal}); if(!r.ok) throw new Error();
-    const data=await r.json();
-    const resp=data.response||{};
-    const total=resp.numFound||0;
-
-    // De-dup
-    const seen=new Set();
-    let docs=(resp.docs||[]).filter(d=>{ if(seen.has(d.identifier)) return false; seen.add(d.identifier); return true; });
-
-    if(!docs.length){
-      // Fallback: generic comics query with same offset
-      const fb=await fetch(`https://archive.org/advancedsearch.php?q=mediatype:texts+AND+subject:comics&fl[]=identifier,title,creator,date&rows=${perPg}&start=${start}&output=json&sort[]=downloads+desc`);
-      const fd=await fb.json();
-      const seen2=new Set();
-      docs=((fd.response&&fd.response.docs)||[]).filter(d=>{ if(seen2.has(d.identifier)) return false; seen2.add(d.identifier); return true; });
-      const total2=(fd.response&&fd.response.numFound)||0;
-      if(docs.length){
-        grid.innerHTML=docs.map(buildComicCard).join('');
-        renderPagination('comicsPagination',page,total2,perPg,'loadComics');
-        if(page>1) scrollPageTop('page-comics');
-      }else{
-        grid.innerHTML='<div class="empty"><div class="ei">💥</div><p>No comics found for this category.</p></div>';
+async function loadComics(page) {
+  if (!page) page = 1;
+  pg.comics.page = page;
+  const grid    = document.getElementById('comicsGrid');
+  const heading = document.getElementById('comicsHeading');
+  const mainLabels = {superhero:'Superhero',manga:'Manga',horror:'Horror','sci-fi':'Sci-Fi',fantasy:'Fantasy',romance:'Romance',war:'War',western:'Western',crime:'Crime',adult:'Adult'};
+  const subLabels  = {all:'Adult',straight:'Straight',gay:'Gay',lesbian:'Lesbian',trans:'Trans',bisexual:'Bisexual',interracial:'Interracial',milf:'MILF',bbw:'BBW',bdsm:'BDSM',hentai:'Hentai',underground:'Underground'};
+  heading.textContent = (currentComicCat === 'adult' ? subLabels[currentAdultSub] : mainLabels[currentComicCat]) + ' Comics';
+  grid.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading comics…</span></div>';
+  document.getElementById('comicsPagination').innerHTML = '';
+  const q     = currentComicCat === 'adult' ? ADULT_QUERIES[currentAdultSub] || ADULT_QUERIES.all : COMIC_QUERIES[currentComicCat] || 'mediatype:texts AND subject:comics';
+  const perPg = pg.comics.perPage;
+  const start = (page - 1) * perPg;
+  try {
+    const ctrl = new AbortController(); setTimeout(() => ctrl.abort(), 11000);
+    const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier,title,creator,date,subject&rows=${perPg}&start=${start}&output=json&sort[]=downloads+desc`;
+    const r = await fetch(url, {signal: ctrl.signal}); if (!r.ok) throw new Error();
+    const data = await r.json();
+    const resp  = data.response || {};
+    const total = resp.numFound || 0;
+    const seen  = new Set();
+    let docs = (resp.docs || []).filter(d => { if (seen.has(d.identifier)) return false; seen.add(d.identifier); return true; });
+    if (!docs.length) {
+      const fb = await fetch(`https://archive.org/advancedsearch.php?q=mediatype:texts+AND+subject:comics&fl[]=identifier,title,creator,date&rows=${perPg}&start=${start}&output=json&sort[]=downloads+desc`);
+      const fd = await fb.json();
+      const seen2 = new Set();
+      docs = ((fd.response && fd.response.docs) || []).filter(d => { if (seen2.has(d.identifier)) return false; seen2.add(d.identifier); return true; });
+      const total2 = (fd.response && fd.response.numFound) || 0;
+      if (docs.length) {
+        grid.innerHTML = docs.map(buildComicCard).join('');
+        renderPagination('comicsPagination', page, total2, perPg, 'loadComics');
+        if (page > 1) scrollPageTop('page-comics');
+      } else {
+        grid.innerHTML = '<div class="empty"><div class="ei">💥</div><p>No comics found for this category.</p></div>';
       }
       return;
     }
-
-    grid.innerHTML=docs.map(buildComicCard).join('');
-    pg.comics.total=total;
-    renderPagination('comicsPagination',page,total,perPg,'loadComics');
-    if(page>1) scrollPageTop('page-comics');
-  }catch(e){
-    grid.innerHTML='<div class="empty"><div class="ei">⚠️</div><p>Could not load comics.<br>Check your connection.</p></div>';
+    grid.innerHTML = docs.map(buildComicCard).join('');
+    pg.comics.total = total;
+    renderPagination('comicsPagination', page, total, perPg, 'loadComics');
+    if (page > 1) scrollPageTop('page-comics');
+  } catch(e) {
+    grid.innerHTML = '<div class="empty"><div class="ei">⚠️</div><p>Could not load comics.<br>Check your connection.</p></div>';
   }
 }
 
-function buildComicCard(d){
-  const title=d.title||'Unknown Comic';
-  const creator=Array.isArray(d.creator)?d.creator[0]:(d.creator||'');
-  const year=d.date?d.date.substring(0,4):'';
-  const id=d.identifier;
-  const cover=`https://archive.org/services/img/${id}`;
+function buildComicCard(d) {
+  const title   = d.title || 'Unknown Comic';
+  const creator = Array.isArray(d.creator) ? d.creator[0] : (d.creator || '');
+  const year    = d.date ? d.date.substring(0, 4) : '';
+  const id      = d.identifier;
+  const cover   = `https://archive.org/services/img/${id}`;
   return `<div class="comic-card" onclick="openComicModal('${escJs(id)}','${escJs(title)}','${escJs(creator)}','${year}')">
     <img class="comic-cover" src="${cover}" alt="${escHtml(title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
     <div class="comic-cover-ph" style="display:none">💥</div>
-    <div class="comic-info"><div class="comic-title">${escHtml(title)}</div><div class="comic-year">${year||creator||'Internet Archive'}</div></div>
+    <div class="comic-info"><div class="comic-title">${escHtml(title)}</div><div class="comic-year">${year || creator || 'Internet Archive'}</div></div>
   </div>`;
 }
 
 // ============================================================
 // BOOK MODAL
 // ============================================================
-function openBookModal(dataStr){
-  let b; try{ b=JSON.parse(dataStr); }catch{ return; }
-  document.getElementById('bookModalTitle').textContent='Book Details';
-  document.getElementById('bookModalName').textContent=b.title;
-  document.getElementById('bookModalAuthor').textContent=b.author||'';
-  document.getElementById('bookModalBadges').innerHTML='<span class="badge">Project Gutenberg</span>';
-  document.getElementById('bookModalDesc').textContent='Classic literature from Project Gutenberg — free to read, download and share.';
-  const ce=document.getElementById('bookModalCover');
-  ce.innerHTML=b.cover?`<img class="book-detail-cover" src="${b.cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>📖</div>'">`:`<div class="book-detail-cover-ph">📖</div>`;
-  const f=b.formats||{};
-  const readUrl=f['text/html']||f['application/xhtml+xml']||f['text/plain']||f['application/pdf']||'';
-  const dlUrl=f['application/epub+zip']||f['application/x-mobipocket-ebook']||f['application/pdf']||readUrl;
-  const isSaved=savedBooks.some(s=>s.id==b.id);
-  document.getElementById('bookModalActions').innerHTML=`
-    ${readUrl?`<button class="btn btn-primary" onclick="openReader('${escJs(readUrl)}','${escJs(b.title)}')">📖 Read Now</button>`:''}
-    ${dlUrl?`<a class="btn btn-ghost" href="${dlUrl}" target="_blank" rel="noopener">⬇️ Download</a>`:''}
+function openBookModal(dataStr) {
+  let b; try { b = JSON.parse(dataStr); } catch { return; }
+  document.getElementById('bookModalTitle').textContent = 'Book Details';
+  document.getElementById('bookModalName').textContent  = b.title;
+  document.getElementById('bookModalAuthor').textContent = b.author || '';
+  document.getElementById('bookModalBadges').innerHTML  = '<span class="badge">Project Gutenberg</span>';
+  document.getElementById('bookModalDesc').textContent  = 'Classic literature from Project Gutenberg — free to read, download and share.';
+  const ce = document.getElementById('bookModalCover');
+  ce.innerHTML = b.cover
+    ? `<img class="book-detail-cover" src="${b.cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>📖</div>'">`
+    : `<div class="book-detail-cover-ph">📖</div>`;
+  const f       = b.formats || {};
+  const readUrl = f['text/html'] || f['application/xhtml+xml'] || f['text/plain'] || f['application/pdf'] || '';
+  const dlUrl   = f['application/epub+zip'] || f['application/x-mobipocket-ebook'] || f['application/pdf'] || readUrl;
+  const isSaved = savedBooks.some(s => s.id == b.id);
+  document.getElementById('bookModalActions').innerHTML = `
+    ${readUrl ? `<button class="btn btn-primary" onclick="openReader('${escJs(readUrl)}','${escJs(b.title)}')">📖 Read Now</button>` : ''}
+    ${dlUrl   ? `<a class="btn btn-ghost" href="${dlUrl}" target="_blank" rel="noopener">⬇️ Download</a>` : ''}
     <button class="btn btn-ghost" onclick="openNarration('${escJs(b.title)}','${escJs(b.author||'')}','gutenberg','${b.id}','')">🎧 Listen</button>
     <button class="btn btn-ghost" onclick="saveBook('${escAttr(JSON.stringify(b))}')">
-      ${isSaved?'✅ Saved':'🔖 Save'}
+      ${isSaved ? '✅ Saved' : '🔖 Save'}
     </button>`;
   openModal('bookModal');
 }
@@ -892,257 +991,500 @@ function openBookModal(dataStr){
 // ============================================================
 // ARCHIVE MODAL
 // ============================================================
-async function openArchiveModal(id,title,creator){
-  document.getElementById('bookModalTitle').textContent='Loading…';
-  document.getElementById('bookModalName').textContent=title;
-  document.getElementById('bookModalAuthor').textContent=creator;
-  document.getElementById('bookModalBadges').innerHTML='<span class="badge">Internet Archive</span>';
-  document.getElementById('bookModalDesc').textContent='Loading details…';
-  const cover=`https://archive.org/services/img/${id}`;
-  document.getElementById('bookModalCover').innerHTML=`<img class="book-detail-cover" src="${cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>📜</div>'">`;
-  document.getElementById('bookModalActions').innerHTML='<div class="loading" style="padding:10px"><div class="spinner"></div></div>';
+async function openArchiveModal(id, title, creator) {
+  document.getElementById('bookModalTitle').textContent  = 'Loading…';
+  document.getElementById('bookModalName').textContent   = title;
+  document.getElementById('bookModalAuthor').textContent = creator;
+  document.getElementById('bookModalBadges').innerHTML   = '<span class="badge">Internet Archive</span>';
+  document.getElementById('bookModalDesc').textContent   = 'Loading details…';
+  const cover = `https://archive.org/services/img/${id}`;
+  document.getElementById('bookModalCover').innerHTML = `<img class="book-detail-cover" src="${cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>📜</div>'">`;
+  document.getElementById('bookModalActions').innerHTML = '<div class="loading" style="padding:10px"><div class="spinner"></div></div>';
   openModal('bookModal');
-  try{
-    const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),6000);
-    const meta=(await(await fetch(`https://archive.org/metadata/${id}`,{signal:ctrl.signal})).json()).metadata||{};
-    const raw=meta.description||meta.subject||'From the Internet Archive.';
-    document.getElementById('bookModalTitle').textContent='Book Details';
-    document.getElementById('bookModalDesc').textContent=(Array.isArray(raw)?raw.join(', '):String(raw).replace(/<[^>]+>/g,'')).substring(0,300);
-  }catch{ document.getElementById('bookModalDesc').textContent='From the Internet Archive collection.'; }
-  const readUrl=`https://archive.org/embed/${id}`;
-  const pageUrl=`https://archive.org/details/${id}`;
-  const isSaved=savedBooks.some(s=>s.id===id);
-  const obj=escAttr(JSON.stringify({id,title,author:creator,cover,src:'archive',readUrl,pageUrl}));
-  document.getElementById('bookModalActions').innerHTML=`
+  try {
+    const ctrl = new AbortController(); setTimeout(() => ctrl.abort(), 6000);
+    const meta = (await (await fetch(`https://archive.org/metadata/${id}`, {signal: ctrl.signal})).json()).metadata || {};
+    const raw  = meta.description || meta.subject || 'From the Internet Archive.';
+    document.getElementById('bookModalTitle').textContent = 'Book Details';
+    document.getElementById('bookModalDesc').textContent  = (Array.isArray(raw) ? raw.join(', ') : String(raw).replace(/<[^>]+>/g, '')).substring(0, 300);
+  } catch {
+    document.getElementById('bookModalDesc').textContent = 'From the Internet Archive collection.';
+  }
+  const readUrl = `https://archive.org/embed/${id}`;
+  const pageUrl = `https://archive.org/details/${id}`;
+  const isSaved = savedBooks.some(s => s.id === id);
+  const obj = escAttr(JSON.stringify({id, title, author: creator, cover, src:'archive', readUrl, pageUrl}));
+  document.getElementById('bookModalActions').innerHTML = `
     <button class="btn btn-primary" onclick="openReader('${escJs(readUrl)}','${escJs(title)}')">📖 Read Now</button>
     <a class="btn btn-ghost" href="${pageUrl}" target="_blank" rel="noopener">🏛️ View on Archive</a>
     <button class="btn btn-ghost" onclick="openNarration('${escJs(title)}','${escJs(creator)}','archive','${escJs(id)}','')">🎧 Listen</button>
-    <button class="btn btn-ghost" onclick="saveBook('${obj}')">${isSaved?'✅ Saved':'🔖 Save'}</button>`;
+    <button class="btn btn-ghost" onclick="saveBook('${obj}')">${isSaved ? '✅ Saved' : '🔖 Save'}</button>`;
 }
 
 // ============================================================
 // COMIC MODAL
 // ============================================================
-async function openComicModal(id,title,creator,year){
-  document.getElementById('comicModalTitle').textContent='Loading…';
-  document.getElementById('comicModalName').textContent=title;
-  document.getElementById('comicModalMeta').textContent=[creator,year].filter(Boolean).join(' · ');
-  document.getElementById('comicModalBadges').innerHTML='<span class="badge">Internet Archive</span>';
-  document.getElementById('comicModalDesc').textContent='Loading details…';
-  const cover=`https://archive.org/services/img/${id}`;
-  document.getElementById('comicModalCover').innerHTML=`<img class="book-detail-cover" src="${cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>💥</div>'">`;
-  document.getElementById('comicModalActions').innerHTML='<div class="loading" style="padding:10px"><div class="spinner"></div></div>';
+async function openComicModal(id, title, creator, year) {
+  document.getElementById('comicModalTitle').textContent = 'Loading…';
+  document.getElementById('comicModalName').textContent  = title;
+  document.getElementById('comicModalMeta').textContent  = [creator, year].filter(Boolean).join(' · ');
+  document.getElementById('comicModalBadges').innerHTML  = '<span class="badge">Internet Archive</span>';
+  document.getElementById('comicModalDesc').textContent  = 'Loading details…';
+  const cover = `https://archive.org/services/img/${id}`;
+  document.getElementById('comicModalCover').innerHTML = `<img class="book-detail-cover" src="${cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>💥</div>'">`;
+  document.getElementById('comicModalActions').innerHTML = '<div class="loading" style="padding:10px"><div class="spinner"></div></div>';
   openModal('comicModal');
-  try{
-    const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),6000);
-    const meta=(await(await fetch(`https://archive.org/metadata/${id}`,{signal:ctrl.signal})).json()).metadata||{};
-    if(meta.title) document.getElementById('comicModalName').textContent=meta.title;
-    if(meta.description){
-      const d=Array.isArray(meta.description)?meta.description[0]:meta.description;
-      document.getElementById('comicModalDesc').textContent=d.replace(/<[^>]+>/g,'').substring(0,300);
-    }else{ document.getElementById('comicModalDesc').textContent='From the Internet Archive collection.'; }
-  }catch{ document.getElementById('comicModalDesc').textContent='From the Internet Archive collection.'; }
-  document.getElementById('comicModalTitle').textContent='Comic Details';
-  const readUrl=`https://archive.org/embed/${id}`;
-  const pageUrl=`https://archive.org/details/${id}`;
-  const isSaved=savedBooks.some(s=>s.id===id);
-  const obj=escAttr(JSON.stringify({id,title,author:creator,year,cover,src:'comic',readUrl,pageUrl}));
-  document.getElementById('comicModalActions').innerHTML=`
+  try {
+    const ctrl = new AbortController(); setTimeout(() => ctrl.abort(), 6000);
+    const meta = (await (await fetch(`https://archive.org/metadata/${id}`, {signal: ctrl.signal})).json()).metadata || {};
+    if (meta.title) document.getElementById('comicModalName').textContent = meta.title;
+    if (meta.description) {
+      const d = Array.isArray(meta.description) ? meta.description[0] : meta.description;
+      document.getElementById('comicModalDesc').textContent = d.replace(/<[^>]+>/g, '').substring(0, 300);
+    } else {
+      document.getElementById('comicModalDesc').textContent = 'From the Internet Archive collection.';
+    }
+  } catch {
+    document.getElementById('comicModalDesc').textContent = 'From the Internet Archive collection.';
+  }
+  document.getElementById('comicModalTitle').textContent = 'Comic Details';
+  const readUrl = `https://archive.org/embed/${id}`;
+  const pageUrl = `https://archive.org/details/${id}`;
+  const isSaved = savedBooks.some(s => s.id === id);
+  const obj = escAttr(JSON.stringify({id, title, author: creator, year, cover, src:'comic', readUrl, pageUrl}));
+  document.getElementById('comicModalActions').innerHTML = `
     <button class="btn btn-primary" onclick="openReader('${escJs(readUrl)}','${escJs(title)}')">📖 Read Now</button>
     <a class="btn btn-ghost" href="${pageUrl}" target="_blank" rel="noopener">🏛️ View on Archive</a>
     <button class="btn btn-ghost" onclick="openNarration('${escJs(title)}','${escJs(creator)}','archive','${escJs(id)}','')">🎧 Listen</button>
-    <button class="btn btn-ghost" onclick="saveBook('${obj}')">${isSaved?'✅ Saved':'🔖 Save'}</button>`;
+    <button class="btn btn-ghost" onclick="saveBook('${obj}')">${isSaved ? '✅ Saved' : '🔖 Save'}</button>`;
 }
 
 // ============================================================
 // READER
 // ============================================================
-function openReader(url,title){
+function openReader(url, title) {
   closeModal('bookModal'); closeModal('comicModal');
-  if(url.includes('gutenberg.org')&&!url.includes('embed')){ window.open(url,'_blank'); return; }
-  document.getElementById('readerTitle').textContent=title||'Reading';
-  document.getElementById('readerFrame').src=url;
-  document.getElementById('readerOpenLink').href=url.replace('/embed/','/details/');
+  if (url.includes('gutenberg.org') && !url.includes('embed')) { window.open(url, '_blank'); return; }
+  document.getElementById('readerTitle').textContent = title || 'Reading';
+  document.getElementById('readerFrame').src = url;
+  document.getElementById('readerOpenLink').href = url.replace('/embed/', '/details/');
   openModal('readerModal');
 }
 
 // ============================================================
 // SEARCH
 // ============================================================
-function setSearchSrc(src,el){
-  searchSrcMode=src;
-  document.querySelectorAll('#page-search .cat-pill').forEach(p=>p.classList.remove('active')); el.classList.add('active');
+function setSearchSrc(src, el) {
+  searchSrcMode = src;
+  document.querySelectorAll('#page-search .cat-pill').forEach(p => p.classList.remove('active')); el.classList.add('active');
 }
-async function doSearch(q){
-  if(!q||!q.trim()) return;
+
+async function doSearch(q) {
+  if (!q || !q.trim()) return;
   showPage('search');
-  document.getElementById('mainSearch').value=q; document.getElementById('topSearch').value=q;
-  const res=document.getElementById('searchResults');
-  res.innerHTML='<div class="loading"><div class="spinner"></div><span>Searching…</span></div>';
-  const results=[]; const promises=[];
-  if(searchSrcMode==='gutenberg'||searchSrcMode==='both'){
-    promises.push(fetch(`https://gutendex.com/books/?search=${encodeURIComponent(q)}&page=1`).then(r=>r.json()).then(d=>{
-      (d.results||[]).slice(0,10).forEach(b=>results.push({type:'book',id:b.id,title:b.title,author:(b.authors&&b.authors[0])?b.authors[0].name:'Unknown',cover:b.formats&&(b.formats['image/jpeg']||''),src:'gutenberg',formats:b.formats||{}}));
-    }).catch(()=>{}));
+  document.getElementById('mainSearch').value = q;
+  document.getElementById('topSearch').value  = q;
+  const res = document.getElementById('searchResults');
+  res.innerHTML = '<div class="loading"><div class="spinner"></div><span>Searching…</span></div>';
+  const results = [], promises = [];
+  if (searchSrcMode === 'gutenberg' || searchSrcMode === 'both') {
+    promises.push(fetch(`https://gutendex.com/books/?search=${encodeURIComponent(q)}&page=1`).then(r => r.json()).then(d => {
+      (d.results || []).slice(0, 10).forEach(b => results.push({
+        type:'book', id:b.id, title:b.title,
+        author:(b.authors && b.authors[0]) ? b.authors[0].name : 'Unknown',
+        cover: b.formats && (b.formats['image/jpeg'] || ''),
+        src:'gutenberg', formats: b.formats || {}
+      }));
+    }).catch(() => {}));
   }
-  if(searchSrcMode==='archive'||searchSrcMode==='both'){
-    promises.push(fetch(`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}+AND+mediatype:texts&fl[]=identifier,title,creator&rows=10&output=json&sort[]=downloads+desc`).then(r=>r.json()).then(d=>{
-      ((d.response&&d.response.docs)||[]).forEach(doc=>results.push({type:'archive',id:doc.identifier,title:doc.title,author:Array.isArray(doc.creator)?doc.creator[0]:(doc.creator||'Internet Archive'),cover:`https://archive.org/services/img/${doc.identifier}`,src:'archive'}));
-    }).catch(()=>{}));
+  if (searchSrcMode === 'archive' || searchSrcMode === 'both') {
+    promises.push(fetch(`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}+AND+mediatype:texts&fl[]=identifier,title,creator&rows=10&output=json&sort[]=downloads+desc`).then(r => r.json()).then(d => {
+      ((d.response && d.response.docs) || []).forEach(doc => results.push({
+        type:'archive', id:doc.identifier, title:doc.title,
+        author: Array.isArray(doc.creator) ? doc.creator[0] : (doc.creator || 'Internet Archive'),
+        cover: `https://archive.org/services/img/${doc.identifier}`,
+        src:'archive'
+      }));
+    }).catch(() => {}));
   }
   await Promise.all(promises);
-  const seen=new Set();
-  const dedup=results.filter(r=>{ if(seen.has(String(r.id))) return false; seen.add(String(r.id)); return true; });
-  if(!dedup.length){ res.innerHTML=`<div class="empty"><div class="ei">🔎</div><p>No results for "${escHtml(q)}"</p></div>`; return; }
-  res.innerHTML=`<div class="result-count">${dedup.length} result${dedup.length!==1?'s':''} for "${escHtml(q)}"</div>
-    <div class="book-grid">${dedup.map(b=>b.src==='gutenberg'?buildBookCard(b):buildArchiveCard({identifier:b.id,title:b.title,creator:b.author})).join('')}</div>`;
+  const seen  = new Set();
+  const dedup = results.filter(r => { if (seen.has(String(r.id))) return false; seen.add(String(r.id)); return true; });
+  if (!dedup.length) { res.innerHTML = `<div class="empty"><div class="ei">🔎</div><p>No results for "${escHtml(q)}"</p></div>`; return; }
+  res.innerHTML = `<div class="result-count">${dedup.length} result${dedup.length !== 1 ? 's' : ''} for "${escHtml(q)}"</div>
+    <div class="book-grid">${dedup.map(b => b.src === 'gutenberg' ? buildBookCard(b) : buildArchiveCard({identifier:b.id, title:b.title, creator:b.author})).join('')}</div>`;
 }
 
 // ============================================================
-// LIBRARY
+// LIBRARY (uploaded books)
 // ============================================================
-function handleUpload(event){
-  const file=event.target.files[0]; if(!file) return;
-  const entry={id:Date.now(),title:file.name.replace(/\.[^.]+$/,''),author:'Uploaded',size:(file.size/1024/1024).toFixed(1)+' MB',type:file.name.split('.').pop().toUpperCase(),date:new Date().toLocaleDateString(),dataUrl:null};
-  const reader=new FileReader();
-  reader.onload=e=>{ entry.dataUrl=e.target.result; uploadedBooks.unshift(entry); localStorage.setItem('aurelius_library',JSON.stringify(uploadedBooks.slice(0,50))); renderLibrary(); toast('Uploaded: '+entry.title,'success'); };
-  reader.readAsDataURL(file); event.target.value='';
+function handleUpload(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const entry = {
+    id: Date.now(), title: file.name.replace(/\.[^.]+$/, ''),
+    author: 'Uploaded', size: (file.size/1024/1024).toFixed(1) + ' MB',
+    type: file.name.split('.').pop().toUpperCase(),
+    date: new Date().toLocaleDateString(), dataUrl: null
+  };
+  const reader = new FileReader();
+  reader.onload = e => {
+    entry.dataUrl = e.target.result;
+    uploadedBooks.unshift(entry);
+    saveLibraryData();
+    renderLibrary();
+    toast('Uploaded: ' + entry.title, 'success');
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
 }
-function renderLibrary(){
-  const grid=document.getElementById('libraryGrid'),count=document.getElementById('uploadedCount');
-  count.textContent=uploadedBooks.length+' book'+(uploadedBooks.length!==1?'s':'');
-  if(!uploadedBooks.length){ grid.innerHTML='<div class="empty"><div class="ei">📚</div><p>No uploads yet.</p></div>'; return; }
-  grid.innerHTML=uploadedBooks.map(b=>`<div class="book-card">
+
+function renderLibrary() {
+  const grid  = document.getElementById('libraryGrid');
+  const count = document.getElementById('uploadedCount');
+  count.textContent = uploadedBooks.length + ' book' + (uploadedBooks.length !== 1 ? 's' : '');
+  if (!uploadedBooks.length) { grid.innerHTML = '<div class="empty"><div class="ei">📚</div><p>No uploads yet.</p></div>'; return; }
+  grid.innerHTML = uploadedBooks.map(b => `<div class="book-card">
     <div class="book-cover-placeholder">📄</div>
     <div class="book-info"><div class="book-title">${escHtml(b.title)}</div><div class="book-author" style="margin-bottom:8px">${b.type} · ${b.size}</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;">
-      ${b.dataUrl?`<button class="btn btn-sm btn-primary" onclick="readUploaded(${b.id})">📖 Read</button>`:''}
+      ${b.dataUrl ? `<button class="btn btn-sm btn-primary" onclick="readUploaded(${b.id})">📖 Read</button>` : ''}
       <button class="btn btn-sm btn-ghost" onclick="openNarration('${escJs(b.title)}','Uploaded','uploaded',${b.id},'')">🎧 Listen</button>
       <button class="btn btn-sm btn-ghost" onclick="removeUploaded(${b.id})">🗑️</button>
     </div></div></div>`).join('');
 }
-function readUploaded(id){
-  const b=uploadedBooks.find(x=>x.id===id); if(!b||!b.dataUrl) return;
-  if(b.type==='PDF'){ document.getElementById('readerTitle').textContent=b.title; document.getElementById('readerFrame').src=b.dataUrl; document.getElementById('readerOpenLink').href=b.dataUrl; openModal('readerModal'); }
-  else{ const w=window.open('','_blank'); if(w) w.document.write(`<html><head><title>${escHtml(b.title)}</title><meta charset="UTF-8"><style>body{font-family:Georgia,serif;max-width:720px;margin:40px auto;padding:20px;line-height:1.8;}</style></head><body><h1>${escHtml(b.title)}</h1><pre style="white-space:pre-wrap">${escHtml(atob(b.dataUrl.split(',')[1]))}</pre></body></html>`); }
+
+function readUploaded(id) {
+  const b = uploadedBooks.find(x => x.id === id); if (!b || !b.dataUrl) return;
+  if (b.type === 'PDF') {
+    document.getElementById('readerTitle').textContent = b.title;
+    document.getElementById('readerFrame').src = b.dataUrl;
+    document.getElementById('readerOpenLink').href = b.dataUrl;
+    openModal('readerModal');
+  } else {
+    const w = window.open('', '_blank');
+    if (w) w.document.write(`<html><head><title>${escHtml(b.title)}</title><meta charset="UTF-8"><style>body{font-family:Georgia,serif;max-width:720px;margin:40px auto;padding:20px;line-height:1.8;}</style></head><body><h1>${escHtml(b.title)}</h1><pre style="white-space:pre-wrap">${escHtml(atob(b.dataUrl.split(',')[1]))}</pre></body></html>`);
+  }
 }
-function removeUploaded(id){ uploadedBooks=uploadedBooks.filter(b=>b.id!==id); localStorage.setItem('aurelius_library',JSON.stringify(uploadedBooks)); renderLibrary(); }
-function clearLibrary(){ if(confirm('Remove all uploaded books?')){ uploadedBooks=[]; localStorage.setItem('aurelius_library',JSON.stringify([])); renderLibrary(); toast('Library cleared','info'); } }
+
+function removeUploaded(id) {
+  uploadedBooks = uploadedBooks.filter(b => b.id !== id);
+  saveLibraryData();
+  renderLibrary();
+}
+
+function clearLibrary() {
+  if (confirm('Remove all uploaded books?')) {
+    uploadedBooks = [];
+    saveLibraryData();
+    renderLibrary();
+    toast('Library cleared', 'info');
+  }
+}
 
 // ============================================================
-// DOWNLOADS
+// DOWNLOADS — save, render, read, narrate, remove
 // ============================================================
-function saveBook(jsonStr){
-  let b; try{ b=typeof jsonStr==='string'?JSON.parse(jsonStr):jsonStr; }catch{ return; }
-  if(!savedBooks.some(s=>s.id==b.id)){ savedBooks.unshift({...b,savedAt:new Date().toLocaleDateString()}); localStorage.setItem('aurelius_downloads',JSON.stringify(savedBooks.slice(0,100))); toast('Saved to Downloads','success'); }
-  else toast('Already saved','info');
+function saveBook(jsonStr) {
+  let b; try { b = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr; } catch { return; }
+  if (!savedBooks.some(s => s.id == b.id)) {
+    savedBooks.unshift({...b, savedAt: new Date().toLocaleDateString()});
+    saveDownloadsData();
+    toast('Saved to Downloads', 'success');
+  } else {
+    toast('Already saved', 'info');
+  }
 }
-function renderDownloads(){
-  const list=document.getElementById('downloadsList'),count=document.getElementById('downloadsCount'),btn=document.getElementById('clearDownloadsBtn');
-  count.textContent=savedBooks.length+' book'+(savedBooks.length!==1?'s':''); btn.style.display=savedBooks.length?'block':'none';
-  if(!savedBooks.length){ list.innerHTML='<div class="empty"><div class="ei">⬇️</div><p>No saved books yet.</p></div>'; return; }
-  list.innerHTML='<div class="downloads-list">'+savedBooks.map(b=>`<div class="download-item">
-    <div class="di-icon">${b.src==='comic'?'💥':b.src==='archive'?'🏛️':'📖'}</div>
-    <div class="di-info"><div class="di-title">${escHtml(b.title)}</div><div class="di-meta">${b.author||''} ${b.src?'· '+b.src:''} ${b.savedAt?'· Saved '+b.savedAt:''}</div></div>
-    <div class="di-actions">
-      ${b.readUrl?`<button class="btn btn-sm btn-primary" onclick="openReader('${escJs(b.readUrl)}','${escJs(b.title)}')">📖 Read</button>`:''}
-      <button class="btn btn-sm btn-ghost" onclick="removeDownload('${b.id}')">🗑️</button>
-    </div></div>`).join('')+'</div>';
+
+function renderDownloads() {
+  const list  = document.getElementById('downloadsList');
+  const count = document.getElementById('downloadsCount');
+  const btn   = document.getElementById('clearDownloadsBtn');
+  count.textContent = savedBooks.length + ' book' + (savedBooks.length !== 1 ? 's' : '');
+  btn.style.display = savedBooks.length ? 'block' : 'none';
+
+  if (!savedBooks.length) {
+    list.innerHTML = '<div class="empty"><div class="ei">⬇️</div><p>No saved books yet.</p></div>';
+    return;
+  }
+
+  list.innerHTML = '<div class="downloads-list">' + savedBooks.map(b => {
+    // Determine read URL
+    let readUrl = b.readUrl || '';
+    // For gutenberg books, build readUrl from formats if available
+    if (!readUrl && b.formats) {
+      readUrl = b.formats['text/html'] || b.formats['application/xhtml+xml'] || b.formats['text/plain'] || b.formats['application/pdf'] || '';
+    }
+    // For archive/comic, always have embed URL
+    if (!readUrl && b.src && b.src !== 'gutenberg') {
+      readUrl = `https://archive.org/embed/${b.id}`;
+    }
+    const icon   = b.src === 'comic' ? '💥' : b.src === 'archive' ? '🏛️' : '📖';
+    const srcLabel = b.src === 'comic' ? 'Comic' : b.src === 'archive' ? 'Archive' : 'Gutenberg';
+    const narrateSrc = (b.src === 'archive' || b.src === 'comic') ? 'archive' : 'gutenberg';
+    return `<div class="download-item">
+      <div class="di-icon">${icon}</div>
+      <div class="di-info">
+        <div class="di-title">${escHtml(b.title)}</div>
+        <div class="di-meta">${b.author ? escHtml(b.author) + ' · ' : ''}${srcLabel}${b.savedAt ? ' · Saved ' + b.savedAt : ''}</div>
+      </div>
+      <div class="di-actions">
+        ${readUrl ? `<button class="btn btn-sm btn-primary" onclick="openReader('${escJs(readUrl)}','${escJs(b.title)}')">📖 Read</button>` : ''}
+        <button class="btn btn-sm btn-ghost" onclick="openNarration('${escJs(b.title)}','${escJs(b.author||'')}','${narrateSrc}','${escJs(String(b.id))}','')">🎧 Listen</button>
+        <button class="btn btn-sm btn-ghost" onclick="removeDownload('${escJs(String(b.id))}')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
 }
-function removeDownload(id){ savedBooks=savedBooks.filter(b=>b.id!=id); localStorage.setItem('aurelius_downloads',JSON.stringify(savedBooks)); renderDownloads(); }
-function clearAllDownloads(){ if(confirm('Remove all saved books?')){ savedBooks=[]; localStorage.setItem('aurelius_downloads',JSON.stringify([])); renderDownloads(); toast('Downloads cleared','info'); } }
+
+function removeDownload(id) {
+  savedBooks = savedBooks.filter(b => String(b.id) !== String(id));
+  saveDownloadsData();
+  renderDownloads();
+  toast('Removed from Downloads', 'info');
+}
+
+function clearAllDownloads() {
+  if (confirm('Remove all saved books?')) {
+    savedBooks = [];
+    saveDownloadsData();
+    renderDownloads();
+    toast('Downloads cleared', 'info');
+  }
+}
 
 // ============================================================
 // DONATE / SETTINGS
 // ============================================================
-function setDonateAmt(amt,el){ donateAmt=amt; document.querySelectorAll('.donate-amt').forEach(b=>b.classList.remove('active')); el.classList.add('active'); document.getElementById('customAmt').value=''; }
-function goPayPal(){ const c=document.getElementById('customAmt').value; const a=c?parseFloat(c):donateAmt; if(!a||a<1){ toast('Please enter a valid amount','error'); return; } window.open(`https://www.paypal.com/donate/?business=hotinferno12%40gmail.com&amount=${a}&currency_code=USD&item_name=Aurelius+Library+Donation`,'_blank'); }
-function toggleDarkMode(cb){
-  if(!cb.checked){ document.documentElement.style.setProperty('--bg','#f5f5f0'); document.documentElement.style.setProperty('--surface','#ffffff'); document.documentElement.style.setProperty('--surface2','#f0f0e8'); document.documentElement.style.setProperty('--text','#1a1a14'); document.documentElement.style.setProperty('--muted','#666655'); }
-  else{ document.documentElement.style.setProperty('--bg','#0a0a14'); document.documentElement.style.setProperty('--surface','#12121f'); document.documentElement.style.setProperty('--surface2','#1a1a2e'); document.documentElement.style.setProperty('--text','#e8e8f0'); document.documentElement.style.setProperty('--muted','#888899'); }
+function setDonateAmt(amt, el) {
+  donateAmt = amt;
+  document.querySelectorAll('.donate-amt').forEach(b => b.classList.remove('active')); el.classList.add('active');
+  document.getElementById('customAmt').value = '';
+}
+function goPayPal() {
+  const c = document.getElementById('customAmt').value;
+  const a = c ? parseFloat(c) : donateAmt;
+  if (!a || a < 1) { toast('Please enter a valid amount', 'error'); return; }
+  window.open(`https://www.paypal.com/donate/?business=hotinferno12%40gmail.com&amount=${a}&currency_code=USD&item_name=Aurelius+Library+Donation`, '_blank');
+}
+function toggleDarkMode(cb) {
+  if (!cb.checked) {
+    document.documentElement.style.setProperty('--bg','#f5f5f0');
+    document.documentElement.style.setProperty('--surface','#ffffff');
+    document.documentElement.style.setProperty('--surface2','#f0f0e8');
+    document.documentElement.style.setProperty('--text','#1a1a14');
+    document.documentElement.style.setProperty('--muted','#666655');
+  } else {
+    document.documentElement.style.setProperty('--bg','#0a0a14');
+    document.documentElement.style.setProperty('--surface','#12121f');
+    document.documentElement.style.setProperty('--surface2','#1a1a2e');
+    document.documentElement.style.setProperty('--text','#e8e8f0');
+    document.documentElement.style.setProperty('--muted','#888899');
+  }
 }
 
 // ============================================================
 // MODAL UTILS
 // ============================================================
-function openModal(id){ const el=document.getElementById(id); if(el){ el.classList.add('show'); document.body.style.overflow='hidden'; } }
-function closeModal(id){ const el=document.getElementById(id); if(el) el.classList.remove('show'); if(!document.querySelector('.modal-overlay.show')) document.body.style.overflow=''; if(id==='readerModal') document.getElementById('readerFrame').src=''; }
-document.querySelectorAll('.modal-overlay').forEach(ov=>{ ov.addEventListener('click',function(e){ if(e.target===this) closeModal(this.id); }); });
+function openModal(id) {
+  const el = document.getElementById(id);
+  if (el) { el.classList.add('show'); document.body.style.overflow = 'hidden'; }
+}
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('show');
+  if (!document.querySelector('.modal-overlay.show')) document.body.style.overflow = '';
+  if (id === 'readerModal') document.getElementById('readerFrame').src = '';
+}
+document.querySelectorAll('.modal-overlay').forEach(ov => {
+  ov.addEventListener('click', function(e) { if (e.target === this) closeModal(this.id); });
+});
 
 // ============================================================
 // TOAST
 // ============================================================
-function toast(msg,type='info'){
-  const icons={success:'✅',error:'❌',info:'ℹ️'};
-  const el=document.createElement('div'); el.className=`toast-item ${type}`;
-  el.innerHTML=`<span>${icons[type]||''}</span><span>${escHtml(msg)}</span>`;
+function toast(msg, type = 'info') {
+  const icons = {success:'✅', error:'❌', info:'ℹ️'};
+  const el = document.createElement('div'); el.className = `toast-item ${type}`;
+  el.innerHTML = `<span>${icons[type] || ''}</span><span>${escHtml(msg)}</span>`;
   document.getElementById('toast').appendChild(el);
-  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .4s'; setTimeout(()=>el.remove(),400); },3000);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .4s'; setTimeout(() => el.remove(), 400); }, 3000);
 }
 
 // ============================================================
 // UTILS
 // ============================================================
-function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function escJs(s){   return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"').replace(/\n/g,'\\n').replace(/\r/g,'\\r'); }
-function escAttr(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function escHtml(s)  { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escJs(s)    { return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"').replace(/\n/g,'\\n').replace(/\r/g,'\\r'); }
+function escAttr(s)  { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 // ============================================================
 // NARRATION ENGINE
 // ============================================================
-let tts={utterance:null,sentences:[],currentIdx:0,isPlaying:false,title:'',author:'',fullText:'',voices:[],selectedVoice:null};
-function loadVoices(){ const v=window.speechSynthesis.getVoices(); if(v.length){ tts.voices=v; const sel=document.getElementById('narrateVoice'); if(!sel) return; sel.innerHTML=v.map((x,i)=>`<option value="${i}">${x.name} (${x.lang})</option>`).join(''); const ei=v.findIndex(x=>x.lang.startsWith('en')); if(ei>=0){ sel.value=ei; tts.selectedVoice=v[ei]; } } }
-window.speechSynthesis.onvoiceschanged=loadVoices;
-async function openNarration(title,author,src,id,extra){
-  stopNarration(); tts.title=title; tts.author=author; tts.sentences=[]; tts.currentIdx=0; tts.isPlaying=false;
-  document.getElementById('narrateTitle').textContent=title; document.getElementById('narrateAuthor').textContent=author||'';
-  document.getElementById('narratePlayBtn').textContent='▶'; document.getElementById('narrateProgressFill').style.width='0%';
-  document.getElementById('narratePos').textContent='0%'; document.getElementById('narrateStatus').textContent='Loading text…';
-  document.getElementById('narratePreview').textContent='Fetching text, please wait…';
-  openModal('narrateModal'); loadVoices();
-  let text='';
-  if(src==='uploaded'){ const book=uploadedBooks.find(b=>b.id==id); if(book&&book.dataUrl&&book.type==='TXT'){ try{ text=atob(book.dataUrl.split(',')[1]); }catch{} } if(!text) text=`Unable to extract text from "${title}". Try uploading a plain text file.`; }
-  else if(src==='gutenberg'){
-    try{
-      const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),10000);
-      const data=(await(await fetch(`https://gutendex.com/books/${id}`,{signal:ctrl.signal})).json());
-      const f=data.formats||{}; const turl=f['text/plain; charset=utf-8']||f['text/plain']||'';
-      if(turl){ let raw=await(await fetch(turl,{signal:ctrl.signal})).text(); const sm=['*** START OF','***START OF']; const em=['*** END OF','***END OF']; let s=0,e=raw.length; for(const m of sm){const i=raw.indexOf(m);if(i!==-1){const nl=raw.indexOf('\n',i);s=nl!==-1?nl+1:i+m.length;break;}} for(const m of em){const i=raw.indexOf(m);if(i!==-1){e=i;break;}} text=raw.substring(s,e).replace(/\r\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim(); if(text.length>50000) text=text.substring(0,50000)+'\n\n[Showing first portion]'; }
-    }catch{}
-    if(!text) text=`Now narrating "${title}" by ${author}. The full text could not be loaded.`;
-  }else{ try{ const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),6000); const meta=(await(await fetch(`https://archive.org/metadata/${id}`,{signal:ctrl.signal})).json()).metadata||{}; const desc=meta.description||meta.notes||''; text=`${title}. ${author?'By '+author+'. ':''}${(Array.isArray(desc)?desc.join(' '):String(desc).replace(/<[^>]+>/g,' '))||'From the Internet Archive.'}`; }catch{ text=`${title}. ${author?'By '+author+'.':''} From the Internet Archive.`; } }
-  tts.fullText=text; tts.sentences=(text.match(/[^.!?]+[.!?]+/g)||[text]).filter(s=>s.trim().length>2); if(!tts.sentences.length) tts.sentences=[text];
-  document.getElementById('narratePreview').textContent=text.substring(0,400)+(text.length>400?'…':'');
-  document.getElementById('narrateStatus').textContent='Ready · '+tts.sentences.length+' sentences';
+let tts = {utterance:null, sentences:[], currentIdx:0, isPlaying:false, title:'', author:'', fullText:'', voices:[], selectedVoice:null};
+
+function loadVoices() {
+  const v = window.speechSynthesis.getVoices();
+  if (v.length) {
+    tts.voices = v;
+    const sel = document.getElementById('narrateVoice'); if (!sel) return;
+    sel.innerHTML = v.map((x,i) => `<option value="${i}">${x.name} (${x.lang})</option>`).join('');
+    const ei = v.findIndex(x => x.lang.startsWith('en'));
+    if (ei >= 0) { sel.value = ei; tts.selectedVoice = v[ei]; }
+  }
 }
-function toggleNarration(){ tts.isPlaying?pauseNarration():playNarration(); }
-function playNarration(){ if(!('speechSynthesis' in window)){toast('Text-to-speech not supported','error');return;} if(tts.currentIdx>=tts.sentences.length) tts.currentIdx=0; speakFrom(tts.currentIdx); }
-function speakFrom(idx){ window.speechSynthesis.cancel(); tts.isPlaying=true; document.getElementById('narratePlayBtn').textContent='⏸'; document.getElementById('narrateStatus').textContent='Playing…'; speakSentence(idx); }
-function speakSentence(idx){
-  if(idx>=tts.sentences.length){ tts.isPlaying=false; tts.currentIdx=0; document.getElementById('narratePlayBtn').textContent='▶'; document.getElementById('narrateStatus').textContent='Finished'; document.getElementById('narrateProgressFill').style.width='100%'; document.getElementById('narratePos').textContent='100%'; return; }
-  tts.currentIdx=idx; const sentence=tts.sentences[idx]; const pct=Math.round((idx/tts.sentences.length)*100);
-  document.getElementById('narrateProgressFill').style.width=pct+'%'; document.getElementById('narratePos').textContent=pct+'%';
-  const preview=document.getElementById('narratePreview'); const tp=tts.fullText.indexOf(sentence.substring(0,40));
-  if(tp!==-1&&tp<400){ preview.innerHTML=escHtml(tts.fullText.substring(0,tp))+`<span class="highlight">${escHtml(sentence)}</span>`+escHtml(tts.fullText.substring(tp+sentence.length,400)); preview.querySelector('.highlight')?.scrollIntoView({block:'nearest'}); }
-  const u=new SpeechSynthesisUtterance(sentence); u.rate=parseFloat(document.getElementById('narrateSpeed')?.value||'1');
-  const vs=document.getElementById('narrateVoice'); if(vs&&tts.voices[vs.value]) u.voice=tts.voices[vs.value];
-  u.onend=()=>{ if(tts.isPlaying) speakSentence(idx+1); }; u.onerror=()=>{ if(tts.isPlaying) speakSentence(idx+1); };
-  tts.utterance=u; window.speechSynthesis.speak(u);
+window.speechSynthesis.onvoiceschanged = loadVoices;
+
+async function openNarration(title, author, src, id, extra) {
+  stopNarration();
+  tts.title = title; tts.author = author; tts.sentences = []; tts.currentIdx = 0; tts.isPlaying = false;
+  document.getElementById('narrateTitle').textContent     = title;
+  document.getElementById('narrateAuthor').textContent    = author || '';
+  document.getElementById('narratePlayBtn').textContent   = '▶';
+  document.getElementById('narrateProgressFill').style.width = '0%';
+  document.getElementById('narratePos').textContent       = '0%';
+  document.getElementById('narrateStatus').textContent    = 'Loading text…';
+  document.getElementById('narratePreview').textContent   = 'Fetching text, please wait…';
+  openModal('narrateModal');
+  loadVoices();
+
+  let text = '';
+
+  if (src === 'uploaded') {
+    const book = uploadedBooks.find(b => b.id == id);
+    if (book && book.dataUrl && book.type === 'TXT') {
+      try { text = atob(book.dataUrl.split(',')[1]); } catch {}
+    }
+    if (!text) text = `Unable to extract text from "${title}". Try uploading a plain text file.`;
+
+  } else if (src === 'gutenberg') {
+    try {
+      const ctrl = new AbortController(); setTimeout(() => ctrl.abort(), 10000);
+      const data = (await (await fetch(`https://gutendex.com/books/${id}`, {signal: ctrl.signal})).json());
+      const f    = data.formats || {};
+      const turl = f['text/plain; charset=utf-8'] || f['text/plain'] || '';
+      if (turl) {
+        let raw = await (await fetch(turl, {signal: ctrl.signal})).text();
+        const sm = ['*** START OF','***START OF']; const em = ['*** END OF','***END OF'];
+        let s = 0, e = raw.length;
+        for (const m of sm) { const i = raw.indexOf(m); if (i !== -1) { const nl = raw.indexOf('\n',i); s = nl !== -1 ? nl+1 : i+m.length; break; } }
+        for (const m of em) { const i = raw.indexOf(m); if (i !== -1) { e = i; break; } }
+        text = raw.substring(s, e).replace(/\r\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+        if (text.length > 50000) text = text.substring(0, 50000) + '\n\n[Showing first portion]';
+      }
+    } catch {}
+    if (!text) text = `Now narrating "${title}" by ${author}. The full text could not be loaded.`;
+
+  } else {
+    try {
+      const ctrl = new AbortController(); setTimeout(() => ctrl.abort(), 6000);
+      const meta = (await (await fetch(`https://archive.org/metadata/${id}`, {signal: ctrl.signal})).json()).metadata || {};
+      const desc = meta.description || meta.notes || '';
+      text = `${title}. ${author ? 'By ' + author + '. ' : ''}${(Array.isArray(desc) ? desc.join(' ') : String(desc).replace(/<[^>]+>/g,' ')) || 'From the Internet Archive.'}`;
+    } catch {
+      text = `${title}. ${author ? 'By ' + author + '.' : ''} From the Internet Archive.`;
+    }
+  }
+
+  tts.fullText  = text;
+  tts.sentences = (text.match(/[^.!?]+[.!?]+/g) || [text]).filter(s => s.trim().length > 2);
+  if (!tts.sentences.length) tts.sentences = [text];
+  document.getElementById('narratePreview').textContent = text.substring(0,400) + (text.length > 400 ? '…' : '');
+  document.getElementById('narrateStatus').textContent  = 'Ready · ' + tts.sentences.length + ' sentences';
 }
-function pauseNarration(){ window.speechSynthesis.cancel(); tts.isPlaying=false; document.getElementById('narratePlayBtn').textContent='▶'; document.getElementById('narrateStatus').textContent='Paused'; }
-function stopNarration(){ window.speechSynthesis.cancel(); tts.isPlaying=false; tts.currentIdx=0; const b=document.getElementById('narratePlayBtn'); if(b) b.textContent='▶'; }
-function rewindNarration(){ const was=tts.isPlaying; window.speechSynthesis.cancel(); tts.isPlaying=false; tts.currentIdx=Math.max(0,tts.currentIdx-5); if(was) speakFrom(tts.currentIdx); else{ const p=Math.round((tts.currentIdx/Math.max(1,tts.sentences.length))*100); document.getElementById('narrateProgressFill').style.width=p+'%'; document.getElementById('narratePos').textContent=p+'%'; } }
-function skipNarration(){ const was=tts.isPlaying; window.speechSynthesis.cancel(); tts.isPlaying=false; tts.currentIdx=Math.min(tts.sentences.length-1,tts.currentIdx+5); if(was) speakFrom(tts.currentIdx); }
-function seekNarration(e){ const bar=e.currentTarget; const pct=e.offsetX/bar.offsetWidth; const was=tts.isPlaying; window.speechSynthesis.cancel(); tts.isPlaying=false; tts.currentIdx=Math.floor(pct*tts.sentences.length); if(was) speakFrom(tts.currentIdx); else{ document.getElementById('narrateProgressFill').style.width=Math.round(pct*100)+'%'; document.getElementById('narratePos').textContent=Math.round(pct*100)+'%'; } }
-function updateNarrateSpeed(){ if(tts.isPlaying){ const i=tts.currentIdx; window.speechSynthesis.cancel(); tts.isPlaying=false; speakFrom(i); } }
-function updateNarrateVoice(){ const s=document.getElementById('narrateVoice'); tts.selectedVoice=tts.voices[s.value]||null; if(tts.isPlaying){ const i=tts.currentIdx; window.speechSynthesis.cancel(); tts.isPlaying=false; speakFrom(i); } }
-document.getElementById('narrateModal').addEventListener('click',function(e){ if(e.target===this){ stopNarration(); closeModal('narrateModal'); } });
+
+function toggleNarration()  { tts.isPlaying ? pauseNarration() : playNarration(); }
+function playNarration()    {
+  if (!('speechSynthesis' in window)) { toast('Text-to-speech not supported','error'); return; }
+  if (tts.currentIdx >= tts.sentences.length) tts.currentIdx = 0;
+  speakFrom(tts.currentIdx);
+}
+function speakFrom(idx) {
+  window.speechSynthesis.cancel();
+  tts.isPlaying = true;
+  document.getElementById('narratePlayBtn').textContent = '⏸';
+  document.getElementById('narrateStatus').textContent  = 'Playing…';
+  speakSentence(idx);
+}
+function speakSentence(idx) {
+  if (idx >= tts.sentences.length) {
+    tts.isPlaying = false; tts.currentIdx = 0;
+    document.getElementById('narratePlayBtn').textContent = '▶';
+    document.getElementById('narrateStatus').textContent  = 'Finished';
+    document.getElementById('narrateProgressFill').style.width = '100%';
+    document.getElementById('narratePos').textContent = '100%';
+    return;
+  }
+  tts.currentIdx = idx;
+  const sentence = tts.sentences[idx];
+  const pct      = Math.round((idx / tts.sentences.length) * 100);
+  document.getElementById('narrateProgressFill').style.width = pct + '%';
+  document.getElementById('narratePos').textContent          = pct + '%';
+  const preview = document.getElementById('narratePreview');
+  const tp      = tts.fullText.indexOf(sentence.substring(0, 40));
+  if (tp !== -1 && tp < 400) {
+    preview.innerHTML = escHtml(tts.fullText.substring(0, tp))
+      + `<span class="highlight">${escHtml(sentence)}</span>`
+      + escHtml(tts.fullText.substring(tp + sentence.length, 400));
+    preview.querySelector('.highlight')?.scrollIntoView({block:'nearest'});
+  }
+  const u  = new SpeechSynthesisUtterance(sentence);
+  u.rate   = parseFloat(document.getElementById('narrateSpeed')?.value || '1');
+  const vs = document.getElementById('narrateVoice');
+  if (vs && tts.voices[vs.value]) u.voice = tts.voices[vs.value];
+  u.onend  = () => { if (tts.isPlaying) speakSentence(idx + 1); };
+  u.onerror = () => { if (tts.isPlaying) speakSentence(idx + 1); };
+  tts.utterance = u;
+  window.speechSynthesis.speak(u);
+}
+function pauseNarration() {
+  window.speechSynthesis.cancel(); tts.isPlaying = false;
+  document.getElementById('narratePlayBtn').textContent = '▶';
+  document.getElementById('narrateStatus').textContent  = 'Paused';
+}
+function stopNarration() {
+  window.speechSynthesis.cancel(); tts.isPlaying = false; tts.currentIdx = 0;
+  const b = document.getElementById('narratePlayBtn'); if (b) b.textContent = '▶';
+}
+function rewindNarration() {
+  const was = tts.isPlaying; window.speechSynthesis.cancel(); tts.isPlaying = false;
+  tts.currentIdx = Math.max(0, tts.currentIdx - 5);
+  if (was) speakFrom(tts.currentIdx);
+  else { const p = Math.round((tts.currentIdx / Math.max(1,tts.sentences.length)) * 100); document.getElementById('narrateProgressFill').style.width = p+'%'; document.getElementById('narratePos').textContent = p+'%'; }
+}
+function skipNarration() {
+  const was = tts.isPlaying; window.speechSynthesis.cancel(); tts.isPlaying = false;
+  tts.currentIdx = Math.min(tts.sentences.length - 1, tts.currentIdx + 5);
+  if (was) speakFrom(tts.currentIdx);
+}
+function seekNarration(e) {
+  const bar = e.currentTarget; const pct = e.offsetX / bar.offsetWidth;
+  const was = tts.isPlaying; window.speechSynthesis.cancel(); tts.isPlaying = false;
+  tts.currentIdx = Math.floor(pct * tts.sentences.length);
+  if (was) speakFrom(tts.currentIdx);
+  else { document.getElementById('narrateProgressFill').style.width = Math.round(pct*100)+'%'; document.getElementById('narratePos').textContent = Math.round(pct*100)+'%'; }
+}
+function updateNarrateSpeed() {
+  if (tts.isPlaying) { const i = tts.currentIdx; window.speechSynthesis.cancel(); tts.isPlaying = false; speakFrom(i); }
+}
+function updateNarrateVoice() {
+  const s = document.getElementById('narrateVoice'); tts.selectedVoice = tts.voices[s.value] || null;
+  if (tts.isPlaying) { const i = tts.currentIdx; window.speechSynthesis.cancel(); tts.isPlaying = false; speakFrom(i); }
+}
+document.getElementById('narrateModal').addEventListener('click', function(e) {
+  if (e.target === this) { stopNarration(); closeModal('narrateModal'); }
+});
 
 // ============================================================
 // INIT
 // ============================================================
-(function init(){
-  if(window.innerWidth>768){ document.getElementById('sidebar').classList.remove('hidden'); document.getElementById('main').classList.remove('full'); }
+(function init() {
+  // Restore session FIRST (sets user, loads user data)
+  restoreSession();
+
+  if (window.innerWidth > 768) {
+    document.getElementById('sidebar').classList.remove('hidden');
+    document.getElementById('main').classList.remove('full');
+  }
   loadDiscover(1);
 })();
 </script>
