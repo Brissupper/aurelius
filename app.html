@@ -162,7 +162,6 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
 .narrate-voice{display:flex;align-items:center;gap:10px;justify-content:center;font-size:.82rem;color:var(--muted);margin-top:8px;}
 .narrate-voice select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-family:'Lato',sans-serif;max-width:200px;}
 .result-count{font-size:.85rem;color:var(--muted);margin-bottom:16px;}
-/* MESSAGES */
 .msg-unread-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:6px;flex-shrink:0;}
 .msg-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:12px;cursor:pointer;transition:border-color .2s;}
 .msg-card:hover{border-color:var(--accent);}
@@ -172,7 +171,6 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
 .msg-date{font-size:.75rem;color:var(--muted);white-space:nowrap;}
 .msg-body{font-size:.86rem;line-height:1.6;color:var(--muted);}
 .msg-badge{background:var(--accent);color:#0a0a14;border-radius:10px;padding:1px 7px;font-size:.72rem;font-weight:700;margin-left:6px;display:none;}
-/* ADMIN */
 .admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:28px;}
 .admin-stat{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;}
 .admin-stat .stat-num{font-family:'Cinzel',serif;font-size:2rem;color:var(--accent);margin-bottom:4px;}
@@ -214,24 +212,24 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
 <body>
 <nav id="sidebar" class="hidden">
   <div class="sidebar-logo">
-    <span style="font-size:1.6rem">📚</span>
+    <span style="font-size:1.6rem">&#128218;</span>
     <div><div style="font-family:'Cinzel',serif;color:var(--accent)">Aurelius</div><div class="sub">World Library</div></div>
   </div>
   <div class="nav-section">
     <div class="nav-section-title">Explore</div>
-    <button class="nav-btn active" id="nav-discover" onclick="navTo('discover')"><span class="icon">🔍</span> Discover</button>
-    <button class="nav-btn" id="nav-archive" onclick="navTo('archive')"><span class="icon">🏛️</span> Internet Archive</button>
-    <button class="nav-btn" id="nav-comics" onclick="navTo('comics')"><span class="icon">💥</span> Comics</button>
-    <button class="nav-btn" id="nav-search" onclick="navTo('search')"><span class="icon">🔎</span> Search</button>
-    <button class="nav-btn" id="nav-messages" onclick="navTo('messages')"><span class="icon">✉️</span> Messages<span class="msg-badge" id="msgBadge">0</span></button>
+    <button class="nav-btn active" id="nav-discover" onclick="navTo('discover')"><span class="icon">&#128269;</span> Discover</button>
+    <button class="nav-btn" id="nav-archive" onclick="navTo('archive')"><span class="icon">&#127963;&#65039;</span> Internet Archive</button>
+    <button class="nav-btn" id="nav-comics" onclick="navTo('comics')"><span class="icon">&#128165;</span> Comics</button>
+    <button class="nav-btn" id="nav-search" onclick="navTo('search')"><span class="icon">&#128270;</span> Search</button>
+    <button class="nav-btn" id="nav-messages" onclick="navTo('messages')"><span class="icon">&#9993;&#65039;</span> Messages<span class="msg-badge" id="msgBadge">0</span></button>
   </div>
   <div class="nav-section">
     <div class="nav-section-title">My Space</div>
-    <button class="nav-btn" id="nav-library" onclick="navTo('library')"><span class="icon">📖</span> My Library</button>
-    <button class="nav-btn" id="nav-downloads" onclick="navTo('downloads')"><span class="icon">⬇️</span> Downloads</button>
-    <button class="nav-btn" id="nav-requests" onclick="navTo('requests')"><span class="icon">📋</span> Request a Book</button>
-    <button class="nav-btn" id="nav-donate" onclick="navTo('donate')"><span class="icon">💛</span> Support Us</button>
-    <button class="nav-btn" id="nav-settings" onclick="navTo('settings')"><span class="icon">⚙️</span> Settings</button>
+    <button class="nav-btn" id="nav-library" onclick="navTo('library')"><span class="icon">&#128214;</span> My Library</button>
+    <button class="nav-btn" id="nav-downloads" onclick="navTo('downloads')"><span class="icon">&#11015;&#65039;</span> Downloads</button>
+    <button class="nav-btn" id="nav-requests" onclick="navTo('requests')"><span class="icon">&#128203;</span> Request a Book</button>
+    <button class="nav-btn" id="nav-donate" onclick="navTo('donate')"><span class="icon">&#128155;</span> Support Us</button>
+    <button class="nav-btn" id="nav-settings" onclick="navTo('settings')"><span class="icon">&#9881;&#65039;</span> Settings</button>
   </div>
   <div class="sidebar-bottom">
     <div id="sidebarUserArea">
@@ -240,94 +238,89 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
   </div>
 </nav>
 <div id="overlay" onclick="closeSidebar()"></div>
-
 <div id="main" class="full">
   <div class="topbar">
-    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <button class="menu-btn" onclick="toggleSidebar()">&#9776;</button>
     <span class="topbar-title">Aurelius</span>
-    <div class="search-wrap"><span class="si">🔍</span><input type="search" placeholder="Search books, authors…" id="topSearch" onkeydown="if(event.key==='Enter')doSearch(this.value)"></div>
+    <div class="search-wrap"><span class="si">&#128269;</span><input type="search" placeholder="Search books, authors..." id="topSearch" onkeydown="if(event.key==='Enter')doSearch(this.value)"></div>
     <div class="topbar-actions"><button class="btn btn-sm btn-ghost" onclick="openAuth()" id="topAuthBtn">Sign In</button></div>
   </div>
   <div id="pages">
 
-    <!-- DISCOVER -->
     <div class="page active" id="page-discover">
-      <div class="hero"><h1>📚 World Library</h1><p>Millions of books, comics & manuscripts from across history — free to explore and read.</p></div>
+      <div class="hero"><h1>&#128218; World Library</h1><p>Millions of books, comics &amp; manuscripts from across history &mdash; free to explore and read.</p></div>
       <div id="adminFeaturedSection" style="display:none;margin-bottom:28px;">
-        <div class="section-hdr"><h2>📌 Featured by Aurelius</h2></div>
+        <div class="section-hdr"><h2>&#128204; Featured by Aurelius</h2></div>
         <div id="adminFeaturedGrid" class="book-grid"></div>
       </div>
       <div class="cat-pills" id="discoverPills">
-        <button class="cat-pill active" onclick="selectDiscoverCat(this,'fiction')">📖 Fiction</button>
-        <button class="cat-pill" onclick="selectDiscoverCat(this,'science')">🔬 Science</button>
-        <button class="cat-pill" onclick="selectDiscoverCat(this,'history')">🏛️ History</button>
-        <button class="cat-pill" onclick="selectDiscoverCat(this,'philosophy')">🧠 Philosophy</button>
-        <button class="cat-pill" onclick="selectDiscoverCat(this,'biography')">👤 Biography</button>
-        <button class="cat-pill" onclick="selectDiscoverCat(this,'mystery')">🕵️ Mystery</button>
-        <button class="cat-pill" onclick="selectDiscoverCat(this,'romance')">💕 Romance</button>
-        <button class="cat-pill" onclick="selectDiscoverCat(this,'self-help')">⭐ Self-Help</button>
-        <button class="cat-pill" onclick="selectDiscoverCat(this,'technology')">💻 Technology</button>
-        <button class="cat-pill" onclick="selectDiscoverCat(this,'children')">🧒 Children</button>
+        <button class="cat-pill active" onclick="selectDiscoverCat(this,'fiction')">&#128214; Fiction</button>
+        <button class="cat-pill" onclick="selectDiscoverCat(this,'science')">&#128300; Science</button>
+        <button class="cat-pill" onclick="selectDiscoverCat(this,'history')">&#127963;&#65039; History</button>
+        <button class="cat-pill" onclick="selectDiscoverCat(this,'philosophy')">&#129504; Philosophy</button>
+        <button class="cat-pill" onclick="selectDiscoverCat(this,'biography')">&#128100; Biography</button>
+        <button class="cat-pill" onclick="selectDiscoverCat(this,'mystery')">&#128373;&#65039; Mystery</button>
+        <button class="cat-pill" onclick="selectDiscoverCat(this,'romance')">&#128149; Romance</button>
+        <button class="cat-pill" onclick="selectDiscoverCat(this,'self-help')">&#11088; Self-Help</button>
+        <button class="cat-pill" onclick="selectDiscoverCat(this,'technology')">&#128187; Technology</button>
+        <button class="cat-pill" onclick="selectDiscoverCat(this,'children')">&#129490; Children</button>
       </div>
       <div class="section-hdr"><h2 id="discoverHeading">Fiction Books</h2></div>
-      <div id="discoverGrid" class="book-grid"><div class="loading"><div class="spinner"></div><span>Loading books…</span></div></div>
+      <div id="discoverGrid" class="book-grid"><div class="loading"><div class="spinner"></div><span>Loading books...</span></div></div>
       <div id="discoverPagination"></div>
     </div>
 
-    <!-- ARCHIVE -->
     <div class="page" id="page-archive">
-      <div class="hero" style="padding:28px 32px;margin-bottom:24px;"><h1 style="font-size:1.4rem">🏛️ Internet Archive</h1><p>Millions of digitized books, historical texts and rare manuscripts.</p></div>
+      <div class="hero" style="padding:28px 32px;margin-bottom:24px;"><h1 style="font-size:1.4rem">&#127963;&#65039; Internet Archive</h1><p>Millions of digitized books, historical texts and rare manuscripts.</p></div>
       <div class="cat-pills" id="archivePills">
-        <button class="cat-pill active" onclick="selectArchiveCat(this,'books')">📚 Books</button>
-        <button class="cat-pill" onclick="selectArchiveCat(this,'texts')">📜 Texts</button>
-        <button class="cat-pill" onclick="selectArchiveCat(this,'periodicals')">📰 Periodicals</button>
-        <button class="cat-pill" onclick="selectArchiveCat(this,'audio')">🎙️ Audio</button>
-        <button class="cat-pill" onclick="selectArchiveCat(this,'manuscripts')">📋 Manuscripts</button>
+        <button class="cat-pill active" onclick="selectArchiveCat(this,'books')">&#128218; Books</button>
+        <button class="cat-pill" onclick="selectArchiveCat(this,'texts')">&#128220; Texts</button>
+        <button class="cat-pill" onclick="selectArchiveCat(this,'periodicals')">&#128240; Periodicals</button>
+        <button class="cat-pill" onclick="selectArchiveCat(this,'audio')">&#127897;&#65039; Audio</button>
+        <button class="cat-pill" onclick="selectArchiveCat(this,'manuscripts')">&#128203; Manuscripts</button>
       </div>
       <div class="section-hdr"><h2 id="archiveHeading">Books</h2></div>
-      <div id="archiveGrid" class="book-grid"><div class="loading"><div class="spinner"></div><span>Loading…</span></div></div>
+      <div id="archiveGrid" class="book-grid"><div class="loading"><div class="spinner"></div><span>Loading...</span></div></div>
       <div id="archivePagination"></div>
     </div>
 
-    <!-- COMICS -->
     <div class="page" id="page-comics">
-      <div class="hero" style="padding:28px 32px;margin-bottom:24px;"><h1 style="font-size:1.4rem">💥 Comics</h1><p>Superhero epics, manga, graphic novels and more from the Internet Archive.</p></div>
+      <div class="hero" style="padding:28px 32px;margin-bottom:24px;"><h1 style="font-size:1.4rem">&#128165; Comics</h1><p>Superhero epics, manga, graphic novels and more.</p></div>
       <div class="cat-pills" id="comicPills">
-        <button class="cat-pill active" onclick="selectComicCat(this,'superhero')">🦸 Superhero</button>
-        <button class="cat-pill" onclick="selectComicCat(this,'manga')">⛩️ Manga</button>
-        <button class="cat-pill" onclick="selectComicCat(this,'horror')">👻 Horror</button>
-        <button class="cat-pill" onclick="selectComicCat(this,'sci-fi')">🚀 Sci-Fi</button>
-        <button class="cat-pill" onclick="selectComicCat(this,'fantasy')">🐉 Fantasy</button>
-        <button class="cat-pill" onclick="selectComicCat(this,'romance')">💕 Romance</button>
-        <button class="cat-pill" onclick="selectComicCat(this,'war')">🪖 War</button>
-        <button class="cat-pill" onclick="selectComicCat(this,'western')">🤠 Western</button>
-        <button class="cat-pill" onclick="selectComicCat(this,'crime')">🔫 Crime</button>
-        <button class="cat-pill" onclick="selectComicCat(this,'adult')">🔞 Adult</button>
+        <button class="cat-pill active" onclick="selectComicCat(this,'superhero')">&#129464; Superhero</button>
+        <button class="cat-pill" onclick="selectComicCat(this,'manga')">&#9961;&#65039; Manga</button>
+        <button class="cat-pill" onclick="selectComicCat(this,'horror')">&#128123; Horror</button>
+        <button class="cat-pill" onclick="selectComicCat(this,'sci-fi')">&#128640; Sci-Fi</button>
+        <button class="cat-pill" onclick="selectComicCat(this,'fantasy')">&#128009; Fantasy</button>
+        <button class="cat-pill" onclick="selectComicCat(this,'romance')">&#128149; Romance</button>
+        <button class="cat-pill" onclick="selectComicCat(this,'war')">&#129686; War</button>
+        <button class="cat-pill" onclick="selectComicCat(this,'western')">&#129312; Western</button>
+        <button class="cat-pill" onclick="selectComicCat(this,'crime')">&#128299; Crime</button>
+        <button class="cat-pill" onclick="selectComicCat(this,'adult')">&#128286; Adult</button>
       </div>
       <div class="adult-subrow" id="adultSubRow">
-        <button class="sub-pill active" onclick="selectAdultSub(this,'all')">🔥 All Adult</button>
-        <button class="sub-pill" onclick="selectAdultSub(this,'straight')">♂♀ Straight</button>
-        <button class="sub-pill" onclick="selectAdultSub(this,'gay')">🏳️‍🌈 Gay</button>
-        <button class="sub-pill" onclick="selectAdultSub(this,'lesbian')">👩‍❤️‍👩 Lesbian</button>
-        <button class="sub-pill" onclick="selectAdultSub(this,'trans')">⚧ Trans</button>
-        <button class="sub-pill" onclick="selectAdultSub(this,'bisexual')">💜 Bisexual</button>
-        <button class="sub-pill" onclick="selectAdultSub(this,'interracial')">🌍 Interracial</button>
-        <button class="sub-pill" onclick="selectAdultSub(this,'milf')">🌹 MILF</button>
-        <button class="sub-pill" onclick="selectAdultSub(this,'bbw')">💋 BBW</button>
-        <button class="sub-pill" onclick="selectAdultSub(this,'bdsm')">⛓️ BDSM</button>
-        <button class="sub-pill" onclick="selectAdultSub(this,'hentai')">🇯🇵 Hentai</button>
-        <button class="sub-pill" onclick="selectAdultSub(this,'underground')">🌀 Underground</button>
+        <button class="sub-pill active" onclick="selectAdultSub(this,'all')">&#128293; All Adult</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'straight')">Straight</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'gay')">Gay</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'lesbian')">Lesbian</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'trans')">Trans</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'bisexual')">Bisexual</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'interracial')">Interracial</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'milf')">MILF</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'bbw')">BBW</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'bdsm')">BDSM</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'hentai')">Hentai</button>
+        <button class="sub-pill" onclick="selectAdultSub(this,'underground')">Underground</button>
       </div>
       <div class="section-hdr"><h2 id="comicsHeading">Superhero Comics</h2></div>
-      <div id="comicsGrid" class="comic-grid"><div class="loading"><div class="spinner"></div><span>Loading comics…</span></div></div>
+      <div id="comicsGrid" class="comic-grid"><div class="loading"><div class="spinner"></div><span>Loading comics...</span></div></div>
       <div id="comicsPagination"></div>
     </div>
 
-    <!-- SEARCH -->
     <div class="page" id="page-search">
-      <div class="hero" style="padding:24px 28px;margin-bottom:20px;"><h1 style="font-size:1.3rem">🔎 Search</h1></div>
+      <div class="hero" style="padding:24px 28px;margin-bottom:20px;"><h1 style="font-size:1.3rem">&#128270; Search</h1></div>
       <div style="display:flex;gap:10px;margin-bottom:20px;">
-        <div class="search-wrap" style="flex:1"><span class="si">🔍</span><input type="search" id="mainSearch" placeholder="Title, author, subject…" onkeydown="if(event.key==='Enter')doSearch(this.value)" style="width:100%"></div>
+        <div class="search-wrap" style="flex:1"><span class="si">&#128269;</span><input type="search" id="mainSearch" placeholder="Title, author, subject..." onkeydown="if(event.key==='Enter')doSearch(this.value)" style="width:100%"></div>
         <button class="btn btn-primary" onclick="doSearch(document.getElementById('mainSearch').value)">Search</button>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:16px;">
@@ -338,48 +331,43 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
       <div id="searchResults"></div>
     </div>
 
-    <!-- MESSAGES -->
     <div class="page" id="page-messages">
-      <div class="hero" style="padding:24px 28px;margin-bottom:20px;"><h1 style="font-size:1.3rem">✉️ Messages</h1><p>Messages from the Aurelius team — book announcements, request updates and more.</p></div>
-      <div id="messagesList"><div class="empty"><div class="ei">✉️</div><p>No messages yet.</p></div></div>
+      <div class="hero" style="padding:24px 28px;margin-bottom:20px;"><h1 style="font-size:1.3rem">&#9993;&#65039; Messages</h1><p>Messages from the Aurelius team &mdash; book announcements, request updates and more.</p></div>
+      <div id="messagesList"><div class="empty"><div class="ei">&#9993;&#65039;</div><p>No messages yet.</p></div></div>
     </div>
 
-    <!-- LIBRARY -->
     <div class="page" id="page-library">
-      <div class="hero" style="padding:24px 28px;margin-bottom:20px;"><h1 style="font-size:1.3rem">📖 My Library</h1><p>Books you've uploaded — your personal collection.</p></div>
+      <div class="hero" style="padding:24px 28px;margin-bottom:20px;"><h1 style="font-size:1.3rem">&#128214; My Library</h1><p>Books you've uploaded &mdash; your personal collection.</p></div>
       <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-        <div class="ui">📤</div><p><strong>Upload a Book</strong></p><p style="font-size:.8rem;margin-top:6px;">PDF, EPUB, MOBI, TXT · Click or tap to browse</p>
+        <div class="ui">&#128228;</div><p><strong>Upload a Book</strong></p><p style="font-size:.8rem;margin-top:6px;">PDF, EPUB, MOBI, TXT &middot; Click or tap to browse</p>
         <input type="file" id="fileInput" accept=".pdf,.epub,.mobi,.txt,.doc,.docx" style="display:none" onchange="handleUpload(event)">
       </div>
       <div class="section-hdr"><h2>Uploaded Books</h2><span id="uploadedCount" style="font-size:.82rem;color:var(--muted)">0 books</span></div>
-      <div id="libraryGrid" class="book-grid"><div class="empty"><div class="ei">📚</div><p>No uploads yet.</p></div></div>
+      <div id="libraryGrid" class="book-grid"><div class="empty"><div class="ei">&#128218;</div><p>No uploads yet.</p></div></div>
     </div>
 
-    <!-- DOWNLOADS -->
     <div class="page" id="page-downloads">
-      <div class="hero" style="padding:24px 28px;margin-bottom:20px;"><h1 style="font-size:1.3rem">⬇️ Downloads</h1><p>Books you've saved from Discover, Archive and Comics.</p></div>
+      <div class="hero" style="padding:24px 28px;margin-bottom:20px;"><h1 style="font-size:1.3rem">&#11015;&#65039; Downloads</h1><p>Books you've saved from Discover, Archive and Comics.</p></div>
       <div class="section-hdr"><h2>Saved Books</h2><div style="display:flex;gap:8px;align-items:center;"><span id="downloadsCount" style="font-size:.82rem;color:var(--muted)">0 books</span><button class="btn btn-sm btn-ghost" onclick="clearAllDownloads()" id="clearDownloadsBtn" style="display:none">Clear All</button></div></div>
-      <div id="downloadsList"><div class="empty"><div class="ei">⬇️</div><p>No saved books yet.</p></div></div>
+      <div id="downloadsList"><div class="empty"><div class="ei">&#11015;&#65039;</div><p>No saved books yet.</p></div></div>
     </div>
 
-    <!-- REQUESTS -->
     <div class="page" id="page-requests">
-      <div class="hero" style="padding:24px 28px;margin-bottom:20px;"><h1 style="font-size:1.3rem">📋 Request a Book</h1><p>Can't find what you're looking for? Request it and we'll try to add it.</p></div>
+      <div class="hero" style="padding:24px 28px;margin-bottom:20px;"><h1 style="font-size:1.3rem">&#128203; Request a Book</h1><p>Can't find what you're looking for? Request it and we'll try to add it.</p></div>
       <div class="req-form">
         <h3>Submit a Request</h3>
         <div class="form-group"><label>Book Title *</label><input type="text" id="reqTitle" placeholder="Enter the book title"></div>
         <div class="form-group"><label>Author</label><input type="text" id="reqAuthor" placeholder="Author name"></div>
-        <div class="form-group"><label>Additional Notes</label><textarea id="reqNotes" placeholder="ISBN, genre, reason you want this book…"></textarea></div>
-        <button class="btn btn-primary" onclick="submitRequest()">📋 Submit Request</button>
+        <div class="form-group"><label>Additional Notes</label><textarea id="reqNotes" placeholder="ISBN, genre, reason you want this book..."></textarea></div>
+        <button class="btn btn-primary" onclick="submitRequest()">&#128203; Submit Request</button>
       </div>
       <div class="section-hdr"><h2>Your Requests</h2></div>
-      <div id="requestsList"><div class="empty"><div class="ei">📋</div><p>No requests yet.</p></div></div>
+      <div id="requestsList"><div class="empty"><div class="ei">&#128203;</div><p>No requests yet.</p></div></div>
     </div>
 
-    <!-- DONATE -->
     <div class="page" id="page-donate">
       <div class="donate-card">
-        <div style="font-size:3rem;margin-bottom:12px">💛</div><h2>Support Aurelius</h2><p>Help us keep knowledge free for everyone.</p>
+        <div style="font-size:3rem;margin-bottom:12px">&#128155;</div><h2>Support Aurelius</h2><p>Help us keep knowledge free for everyone.</p>
         <div class="donate-amounts">
           <button class="donate-amt" onclick="setDonateAmt(5,this)">$5</button>
           <button class="donate-amt active" onclick="setDonateAmt(10,this)">$10</button>
@@ -391,14 +379,13 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
           <span style="color:var(--muted);font-size:.9rem">Custom:</span>
           <input type="number" id="customAmt" placeholder="Amount" min="1" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;width:140px;font-family:'Lato',sans-serif;">
         </div>
-        <button class="btn btn-primary" style="padding:12px 40px;font-size:1rem" onclick="goPayPal()">💳 Donate via PayPal</button>
-        <p style="font-size:.78rem;color:var(--muted);margin-top:12px;">Powered by PayPal · Secure & encrypted</p>
+        <button class="btn btn-primary" style="padding:12px 40px;font-size:1rem" onclick="goPayPal()">&#128179; Donate via PayPal</button>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:12px;">Powered by PayPal &middot; Secure &amp; encrypted</p>
       </div>
     </div>
 
-    <!-- SETTINGS -->
     <div class="page" id="page-settings">
-      <div class="hero" style="padding:24px 28px;margin-bottom:20px;"><h1 style="font-size:1.3rem">⚙️ Settings</h1></div>
+      <div class="hero" style="padding:24px 28px;margin-bottom:20px;"><h1 style="font-size:1.3rem">&#9881;&#65039; Settings</h1></div>
       <div class="settings-section">
         <h3>Reading Preferences</h3>
         <div class="setting-row"><label>Dark Mode</label><label class="toggle"><input type="checkbox" checked onchange="toggleDarkMode(this)"><span class="toggle-slider"></span></label></div>
@@ -411,7 +398,7 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
       </div>
       <div class="settings-section">
         <h3>Admin</h3>
-        <div class="setting-row"><label>Admin Panel</label><button class="btn btn-sm btn-ghost" onclick="promptAdminLogin()">🔐 Enter Admin</button></div>
+        <div class="setting-row"><label>Admin Panel</label><button class="btn btn-sm btn-ghost" onclick="promptAdminLogin()">&#128272; Enter Admin</button></div>
       </div>
       <div class="settings-section">
         <h3>About</h3>
@@ -420,17 +407,16 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
       </div>
     </div>
 
-    <!-- ADMIN -->
     <div class="page" id="page-admin">
       <div class="hero" style="padding:24px 28px;margin-bottom:20px;background:linear-gradient(135deg,#1a0a2e,#2e0a1a);">
-        <h1 style="font-size:1.3rem">🔐 Admin Panel</h1><p>Manage users, requests, featured books and messages.</p>
+        <h1 style="font-size:1.3rem">&#128272; Admin Panel</h1><p>Manage users, requests, featured books and messages.</p>
       </div>
       <div class="admin-grid" id="adminStatsGrid"></div>
       <div class="admin-tabs">
-        <button class="admin-tab active" id="atab-users" onclick="switchAdminTab('users',this)">👥 Users</button>
-        <button class="admin-tab" id="atab-requests" onclick="switchAdminTab('requests',this)">📋 Requests</button>
-        <button class="admin-tab" id="atab-featured" onclick="switchAdminTab('featured',this)">📌 Add Books</button>
-        <button class="admin-tab" id="atab-msg" onclick="switchAdminTab('msg',this)">✉️ Send Message</button>
+        <button class="admin-tab active" id="atab-users" onclick="switchAdminTab('users',this)">&#128101; Users</button>
+        <button class="admin-tab" id="atab-requests" onclick="switchAdminTab('requests',this)">&#128203; Requests</button>
+        <button class="admin-tab" id="atab-featured" onclick="switchAdminTab('featured',this)">&#128204; Add Books</button>
+        <button class="admin-tab" id="atab-msg" onclick="switchAdminTab('msg',this)">&#9993;&#65039; Send Message</button>
       </div>
       <div id="adminTabContent"></div>
     </div>
@@ -441,26 +427,26 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
 <!-- MODALS -->
 <div class="modal-overlay" id="bookModal">
   <div class="modal">
-    <div class="modal-hdr"><h3 id="bookModalTitle">Book Details</h3><button class="modal-close" onclick="closeModal('bookModal')">✕</button></div>
+    <div class="modal-hdr"><h3 id="bookModalTitle">Book Details</h3><button class="modal-close" onclick="closeModal('bookModal')">&#x2715;</button></div>
     <div class="modal-body"><div class="book-detail"><div id="bookModalCover"></div><div class="book-detail-info"><h2 id="bookModalName"></h2><div class="author" id="bookModalAuthor"></div><div id="bookModalBadges"></div><div class="desc" id="bookModalDesc"></div><div class="modal-actions" id="bookModalActions"></div></div></div></div>
   </div>
 </div>
 <div class="modal-overlay" id="comicModal">
   <div class="modal">
-    <div class="modal-hdr"><h3 id="comicModalTitle">Comic Details</h3><button class="modal-close" onclick="closeModal('comicModal')">✕</button></div>
+    <div class="modal-hdr"><h3 id="comicModalTitle">Comic Details</h3><button class="modal-close" onclick="closeModal('comicModal')">&#x2715;</button></div>
     <div class="modal-body"><div class="book-detail"><div id="comicModalCover"></div><div class="book-detail-info"><h2 id="comicModalName"></h2><div class="author" id="comicModalMeta"></div><div id="comicModalBadges"></div><div class="desc" id="comicModalDesc"></div><div class="modal-actions" id="comicModalActions"></div></div></div></div>
   </div>
 </div>
 <div class="modal-overlay" id="authModal">
-  <div class="modal">
-    <div class="modal-hdr"><h3>Welcome to Aurelius</h3><button class="modal-close" onclick="closeModal('authModal')">✕</button></div>
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-hdr"><h3>Welcome to Aurelius</h3><button class="modal-close" onclick="closeModal('authModal')">&#x2715;</button></div>
     <div class="modal-body">
       <div class="auth-tabs"><button class="auth-tab active" onclick="switchAuth('login',this)">Sign In</button><button class="auth-tab" onclick="switchAuth('register',this)">Create Account</button></div>
       <div id="authLoginForm">
         <div class="google-signin-wrap"><div id="googleBtnLogin"></div></div>
         <div class="divider">or</div>
         <div class="form-group"><label>Email</label><input type="email" id="loginEmail" placeholder="you@example.com"></div>
-        <div class="form-group"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="loginPass" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"></div>
         <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="doLogin()">Sign In</button>
       </div>
       <div id="authRegisterForm" style="display:none">
@@ -476,25 +462,25 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
 </div>
 <div class="modal-overlay" id="readerModal">
   <div class="modal" style="max-width:95vw;width:960px;">
-    <div class="modal-hdr"><h3 id="readerTitle">Reading</h3><div style="display:flex;gap:8px;align-items:center;"><a id="readerOpenLink" href="#" target="_blank" class="btn btn-sm btn-ghost">Open in new tab ↗</a><button class="modal-close" onclick="closeModal('readerModal')">✕</button></div></div>
+    <div class="modal-hdr"><h3 id="readerTitle">Reading</h3><div style="display:flex;gap:8px;align-items:center;"><a id="readerOpenLink" href="#" target="_blank" class="btn btn-sm btn-ghost">Open in new tab &#8599;</a><button class="modal-close" onclick="closeModal('readerModal')">&#x2715;</button></div></div>
     <div class="modal-body" style="padding:0"><iframe id="readerFrame" src="" allowfullscreen></iframe></div>
   </div>
 </div>
 <div class="modal-overlay" id="narrateModal">
   <div class="modal" style="max-width:460px;">
-    <div class="modal-hdr"><h3>🎧 Audio Narration</h3><button class="modal-close" onclick="stopNarration();closeModal('narrateModal')">✕</button></div>
+    <div class="modal-hdr"><h3>&#127911; Audio Narration</h3><button class="modal-close" onclick="stopNarration();closeModal('narrateModal')">&#x2715;</button></div>
     <div class="modal-body">
       <div class="narrate-player">
         <div class="narrate-title" id="narrateTitle"></div><div class="narrate-author" id="narrateAuthor"></div>
-        <div class="narrate-text-preview" id="narratePreview">Loading text…</div>
+        <div class="narrate-text-preview" id="narratePreview">Loading text...</div>
         <div class="narrate-progress" onclick="seekNarration(event)"><div class="narrate-progress-fill" id="narrateProgressFill" style="width:0%"></div></div>
         <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);margin-bottom:16px;"><span id="narratePos">0%</span><span id="narrateStatus">Ready</span></div>
         <div class="narrate-controls">
-          <button class="narrate-btn secondary" onclick="rewindNarration()">⏮</button>
-          <button class="narrate-btn" id="narratePlayBtn" onclick="toggleNarration()">▶</button>
-          <button class="narrate-btn secondary" onclick="skipNarration()">⏭</button>
+          <button class="narrate-btn secondary" onclick="rewindNarration()">&#9198;</button>
+          <button class="narrate-btn" id="narratePlayBtn" onclick="toggleNarration()">&#9654;</button>
+          <button class="narrate-btn secondary" onclick="skipNarration()">&#9197;</button>
         </div>
-        <div class="narrate-speed"><span>Speed:</span><select id="narrateSpeed" onchange="updateNarrateSpeed()"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></div>
+        <div class="narrate-speed"><span>Speed:</span><select id="narrateSpeed" onchange="updateNarrateSpeed()"><option value="0.75">0.75x</option><option value="1" selected>1x</option><option value="1.25">1.25x</option><option value="1.5">1.5x</option><option value="2">2x</option></select></div>
         <div class="narrate-voice"><span>Voice:</span><select id="narrateVoice" onchange="updateNarrateVoice()"></select></div>
       </div>
     </div>
@@ -502,302 +488,179 @@ html,body{height:100%;overflow:hidden;font-family:'Lato',sans-serif;background:v
 </div>
 <div id="toast"></div>
 <script>
-// ============ CONSTANTS ============
-// CHANGE THIS PASSWORD — it's the only way to access admin
+// ============ ADMIN EMAIL — only this account gets admin access ============
+const ADMIN_EMAIL = 'joselineolan81@gmail.com';
 const ADMIN_PASSWORD = 'Aurelius@Admin2024';
 const GOOGLE_CLIENT_ID = '1017805317287-me5v533ju9kd0vcjq7d8u5add8mpniha.apps.googleusercontent.com';
 
 // ============ STORAGE HELPERS ============
-// Each user's data is stored under their email-derived key.
-// Global shared data (users registry, messages, requests, featured) is shared.
-
-function uKey(suffix){
-  const email = user ? user.email : 'guest';
-  return 'aur_' + suffix + '_' + btoa(unescape(encodeURIComponent(email))).replace(/=/g,'').substring(0,20);
-}
-function gKey(k){ return 'aur_global_' + k; }
-
-function ls(k){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch{ return null; } }
-function ss(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){ console.warn('Storage full',e); } }
-
-// Global data accessors
-function getUsers(){ return ls(gKey('users')) || {}; }
-function setUsers(u){ ss(gKey('users'), u); }
-function getRequests(){ return ls(gKey('requests')) || []; }
-function setRequests(r){ ss(gKey('requests'), r); }
-function getMessages(){ return ls(gKey('messages')) || []; }
-function setMessages(m){ ss(gKey('messages'), m); }
-function getFeatured(){ return ls(gKey('featured')) || []; }
-function setFeatured(f){ ss(gKey('featured'), f); }
-
-// Per-user data
-function loadUserData(){
-  savedBooks    = ls(uKey('dl'))  || [];
-  uploadedBooks = ls(uKey('lib')) || [];
-}
-function saveDownloads(){ ss(uKey('dl'),  savedBooks.slice(0,200)); }
-function saveLibrary(){   ss(uKey('lib'), uploadedBooks.slice(0,50)); }
-
-// Register / update user in global registry
-function registerUser(profile){
-  const users = getUsers();
-  if(!users[profile.email]){
-    users[profile.email] = {...profile, joinedAt: new Date().toISOString()};
-  } else {
-    // Update name/picture but keep joinedAt
-    users[profile.email] = {...users[profile.email], ...profile};
-  }
-  setUsers(users);
-}
+function uKey(suffix){const email=user?user.email:'guest';return 'aur_'+suffix+'_'+btoa(unescape(encodeURIComponent(email))).replace(/=/g,'').substring(0,20);}
+function gKey(k){return 'aur_global_'+k;}
+function ls(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch{return null;}}
+function ss(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){console.warn('Storage full',e);}}
+function getUsers(){return ls(gKey('users'))||{};}
+function setUsers(u){ss(gKey('users'),u);}
+function getRequests(){return ls(gKey('requests'))||[];}
+function setRequests(r){ss(gKey('requests'),r);}
+function getMessages(){return ls(gKey('messages'))||[];}
+function setMessages(m){ss(gKey('messages'),m);}
+function getFeatured(){return ls(gKey('featured'))||[];}
+function setFeatured(f){ss(gKey('featured'),f);}
+function loadUserData(){savedBooks=ls(uKey('dl'))||[];uploadedBooks=ls(uKey('lib'))||[];}
+function saveDownloads(){ss(uKey('dl'),savedBooks.slice(0,200));}
+function saveLibrary(){ss(uKey('lib'),uploadedBooks.slice(0,50));}
+function registerUser(profile){const users=getUsers();if(!users[profile.email]){users[profile.email]={...profile,joinedAt:new Date().toISOString()};}else{users[profile.email]={...users[profile.email],...profile};}setUsers(users);}
 
 // ============ STATE ============
-let currentPage       = 'discover';
-let currentDiscoverCat= 'fiction';
-let currentArchiveCat = 'books';
-let currentComicCat   = 'superhero';
-let currentAdultSub   = 'all';
-let searchSrcMode     = 'gutenberg';
-let donateAmt         = 10;
-let user              = null;
-let uploadedBooks     = [];
-let savedBooks        = [];
-let adminTabActive    = 'users';
-
-const pg = {
-  discover:{ page:1, perPage:32, total:0 },
-  archive: { page:1, perPage:20, total:0 },
-  comics:  { page:1, perPage:20, total:0 }
-};
+let currentPage='discover',currentDiscoverCat='fiction',currentArchiveCat='books',currentComicCat='superhero',currentAdultSub='all',searchSrcMode='gutenberg',donateAmt=10,user=null,uploadedBooks=[],savedBooks=[],adminTabActive='users';
+const pg={discover:{page:1,perPage:32,total:0},archive:{page:1,perPage:20,total:0},comics:{page:1,perPage:20,total:0}};
 
 // ============ SESSION PERSISTENCE ============
-function restoreSession(){
-  try{
-    const s = ls('aur_session');
-    if(s && s.email){ user = s; updateUserUI(); }
-  }catch(e){}
-  loadUserData();
-}
-function persistSession(){
-  if(user) ss('aur_session', user);
-  else localStorage.removeItem('aur_session');
-}
+function restoreSession(){try{const s=ls('aur_session');if(s&&s.email){user=s;updateUserUI();}}catch(e){}loadUserData();}
+function persistSession(){if(user)ss('aur_session',user);else localStorage.removeItem('aur_session');}
 
 // ============ GOOGLE AUTH ============
-function initGoogleSignIn(){
-  if(!window.google||!window.google.accounts) return;
-  window.google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:handleGoogleCredential,auto_select:false,cancel_on_tap_outside:true});
-  renderGoogleButtons();
-}
-function renderGoogleButtons(){
-  if(!window.google||!window.google.accounts) return;
-  const cfg={theme:'outline',size:'large',width:360,shape:'rectangular',logo_alignment:'left'};
-  const l=document.getElementById('googleBtnLogin'); const r=document.getElementById('googleBtnRegister');
-  if(l) window.google.accounts.id.renderButton(l,{...cfg,text:'signin_with'});
-  if(r) window.google.accounts.id.renderButton(r,{...cfg,text:'signup_with'});
-}
-function handleGoogleCredential(resp){
-  try{
-    const p=JSON.parse(atob(resp.credential.split('.')[1]));
-    user={name:p.name||p.email,email:p.email,google:true,picture:p.picture||''};
-    finishLogin(); closeModal('authModal'); toast('Signed in as '+user.name,'success');
-  }catch(e){ toast('Google sign-in failed','error'); }
-}
-function waitForGoogleSDK(){ window.google&&window.google.accounts?initGoogleSignIn():setTimeout(waitForGoogleSDK,200); }
+function initGoogleSignIn(){if(!window.google||!window.google.accounts)return;window.google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:handleGoogleCredential,auto_select:false,cancel_on_tap_outside:true});renderGoogleButtons();}
+function renderGoogleButtons(){if(!window.google||!window.google.accounts)return;const cfg={theme:'outline',size:'large',width:360,shape:'rectangular',logo_alignment:'left'};const l=document.getElementById('googleBtnLogin');const r=document.getElementById('googleBtnRegister');if(l)window.google.accounts.id.renderButton(l,{...cfg,text:'signin_with'});if(r)window.google.accounts.id.renderButton(r,{...cfg,text:'signup_with'});}
+function handleGoogleCredential(resp){try{const p=JSON.parse(atob(resp.credential.split('.')[1]));user={name:p.name||p.email,email:p.email,google:true,picture:p.picture||''};finishLogin();closeModal('authModal');toast('Signed in as '+user.name,'success');}catch(e){toast('Google sign-in failed','error');}}
+function waitForGoogleSDK(){window.google&&window.google.accounts?initGoogleSignIn():setTimeout(waitForGoogleSDK,200);}
 waitForGoogleSDK();
-function openAuth(){ openModal('authModal'); setTimeout(renderGoogleButtons,150); }
+function openAuth(){openModal('authModal');setTimeout(renderGoogleButtons,150);}
 
 // ============ EMAIL AUTH ============
-function switchAuth(mode,el){
-  document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active')); el.classList.add('active');
-  document.getElementById('authLoginForm').style.display   =mode==='login'?'':'none';
-  document.getElementById('authRegisterForm').style.display=mode==='register'?'':'none';
-  setTimeout(renderGoogleButtons,100);
-}
-function doLogin(){
-  const e=document.getElementById('loginEmail').value.trim(),p=document.getElementById('loginPass').value;
-  if(!e||!p){toast('Fill in all fields','error');return;}
-  const users=getUsers();
-  if(users[e] && users[e].pwHash && users[e].pwHash!==simHash(p)){toast('Incorrect password','error');return;}
-  const prof=users[e]||{name:e.split('@')[0],email:e};
-  user={name:prof.name,email:e,google:false,picture:prof.picture||''};
-  finishLogin(); closeModal('authModal'); toast('Welcome back, '+user.name+'!','success');
-}
-function doRegister(){
-  const n=document.getElementById('regName').value.trim(),e=document.getElementById('regEmail').value.trim(),p=document.getElementById('regPass').value;
-  if(!n||!e||!p){toast('Fill in all fields','error');return;}
-  if(p.length<8){toast('Password must be at least 8 characters','error');return;}
-  user={name:n,email:e,google:false,picture:'',pwHash:simHash(p)};
-  finishLogin(); closeModal('authModal'); toast('Welcome, '+n+'!','success');
-}
-function simHash(s){ let h=0; for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;} return 'h'+Math.abs(h).toString(36); }
-
-function finishLogin(){
-  registerUser(user);
-  persistSession();
-  loadUserData();
-  updateUserUI();
-  updateMsgBadge();
-  renderFeaturedBooks();
-}
-function signOut(){
-  saveDownloads(); saveLibrary();
-  user=null; savedBooks=[]; uploadedBooks=[];
-  persistSession();
-  if(window.google&&window.google.accounts) window.google.accounts.id.disableAutoSelect();
-  loadUserData();
-  updateUserUI();
-  updateMsgBadge();
-  toast('Signed out','info');
-  if(currentPage==='downloads') renderDownloads();
-  if(currentPage==='library')   renderLibrary();
-  if(currentPage==='messages')  renderMessages();
-  if(currentPage==='requests')  renderRequests();
-}
+function switchAuth(mode,el){document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');document.getElementById('authLoginForm').style.display=mode==='login'?'':'none';document.getElementById('authRegisterForm').style.display=mode==='register'?'':'none';setTimeout(renderGoogleButtons,100);}
+function doLogin(){const e=document.getElementById('loginEmail').value.trim(),p=document.getElementById('loginPass').value;if(!e||!p){toast('Fill in all fields','error');return;}const users=getUsers();if(users[e]&&users[e].pwHash&&users[e].pwHash!==simHash(p)){toast('Incorrect password','error');return;}const prof=users[e]||{name:e.split('@')[0],email:e};user={name:prof.name,email:e,google:false,picture:prof.picture||''};finishLogin();closeModal('authModal');toast('Welcome back, '+user.name+'!','success');}
+function doRegister(){const n=document.getElementById('regName').value.trim(),e=document.getElementById('regEmail').value.trim(),p=document.getElementById('regPass').value;if(!n||!e||!p){toast('Fill in all fields','error');return;}if(p.length<8){toast('Password must be at least 8 characters','error');return;}user={name:n,email:e,google:false,picture:'',pwHash:simHash(p)};finishLogin();closeModal('authModal');toast('Welcome, '+n+'!','success');}
+function simHash(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return 'h'+Math.abs(h).toString(36);}
+function finishLogin(){registerUser(user);persistSession();loadUserData();updateUserUI();updateMsgBadge();renderFeaturedBooks();}
+function signOut(){saveDownloads();saveLibrary();user=null;savedBooks=[];uploadedBooks=[];persistSession();if(window.google&&window.google.accounts)window.google.accounts.id.disableAutoSelect();loadUserData();updateUserUI();updateMsgBadge();toast('Signed out','info');if(currentPage==='downloads')renderDownloads();if(currentPage==='library')renderLibrary();if(currentPage==='messages')renderMessages();if(currentPage==='requests')renderRequests();}
 function updateUserUI(){
   const area=document.getElementById('sidebarUserArea'),topBtn=document.getElementById('topAuthBtn');
   if(user){
     const av=user.picture?`<img src="${user.picture}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;" onerror="this.style.display='none'">`:`<div style="width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:#0a0a14">${escHtml(user.name[0].toUpperCase())}</div>`;
     area.innerHTML=`<div style="display:flex;align-items:center;gap:10px;">${av}<div style="flex:1;min-width:0;"><div style="font-size:.9rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(user.name)}</div><button style="background:none;border:none;color:var(--muted);font-size:.75rem;cursor:pointer;padding:0" onclick="signOut()">Sign out</button></div></div>`;
-    topBtn.textContent=user.name[0].toUpperCase(); topBtn.style.borderRadius='50%'; topBtn.style.width='36px'; topBtn.style.height='36px'; topBtn.style.padding='0';
-  } else {
-    area.innerHTML=`<button class="btn btn-primary" style="width:100%" onclick="closeSidebar();openAuth()">Sign In</button>`;
-    const b=document.getElementById('topAuthBtn'); b.textContent='Sign In'; b.style='';
-  }
+    topBtn.textContent=user.name[0].toUpperCase();topBtn.style.borderRadius='50%';topBtn.style.width='36px';topBtn.style.height='36px';topBtn.style.padding='0';
+  }else{area.innerHTML=`<button class="btn btn-primary" style="width:100%" onclick="closeSidebar();openAuth()">Sign In</button>`;const b=document.getElementById('topAuthBtn');b.textContent='Sign In';b.style='';}
 }
 
-// ============ SIDEBAR / NAV ============
-function toggleSidebar(){
-  const sb=document.getElementById('sidebar'),ov=document.getElementById('overlay');
-  sb.classList.contains('hidden')?(sb.classList.remove('hidden'),ov.classList.add('show')):closeSidebar();
-}
-function closeSidebar(){ document.getElementById('sidebar').classList.add('hidden'); document.getElementById('overlay').classList.remove('show'); }
-function navTo(page){ closeSidebar(); setTimeout(()=>showPage(page),50); }
+// ============ SIDEBAR ============
+function toggleSidebar(){const sb=document.getElementById('sidebar'),ov=document.getElementById('overlay');sb.classList.contains('hidden')?(sb.classList.remove('hidden'),ov.classList.add('show')):closeSidebar();}
+function closeSidebar(){document.getElementById('sidebar').classList.add('hidden');document.getElementById('overlay').classList.remove('show');}
+function navTo(page){closeSidebar();setTimeout(()=>showPage(page),50);}
 function showPage(page){
   currentPage=page;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  const pg2=document.getElementById('page-'+page); if(pg2) pg2.classList.add('active');
-  const nb=document.getElementById('nav-'+page); if(nb) nb.classList.add('active');
-  if(page==='discover'&&!document.getElementById('discoverGrid').querySelector('.book-card')) loadDiscover(1);
-  if(page==='archive' &&!document.getElementById('archiveGrid').querySelector('.book-card'))  loadArchive(1);
-  if(page==='comics'  &&!document.getElementById('comicsGrid').querySelector('.comic-card'))  loadComics(1);
-  if(page==='library')   renderLibrary();
-  if(page==='downloads') renderDownloads();
-  if(page==='messages')  renderMessages();
-  if(page==='requests')  renderRequests();
-  if(page==='admin')     renderAdminPage();
+  const pg2=document.getElementById('page-'+page);if(pg2)pg2.classList.add('active');
+  const nb=document.getElementById('nav-'+page);if(nb)nb.classList.add('active');
+  if(page==='discover'&&!document.getElementById('discoverGrid').querySelector('.book-card'))loadDiscover(1);
+  if(page==='archive'&&!document.getElementById('archiveGrid').querySelector('.book-card'))loadArchive(1);
+  if(page==='comics'&&!document.getElementById('comicsGrid').querySelector('.comic-card'))loadComics(1);
+  if(page==='library')renderLibrary();
+  if(page==='downloads')renderDownloads();
+  if(page==='messages')renderMessages();
+  if(page==='requests')renderRequests();
+  if(page==='admin')renderAdminPage();
 }
 
 // ============ PAGINATION ============
-function renderPagination(id,cur,total,perPg,fn){
-  const el=document.getElementById(id); if(!el) return;
-  const tot=Math.ceil(total/perPg); if(total===0){el.innerHTML='';return;}
-  el.innerHTML=`<div class="pagination-bar"><button class="btn-prev" ${cur<=1?'disabled':''} onclick="${fn}(${cur-1})">← Previous</button><span class="page-info">Page ${cur} of ${tot}</span><button class="btn-next" ${cur>=tot?'disabled':''} onclick="${fn}(${cur+1})">Next →</button></div>`;
-}
-function scrollTop(id){ const p=document.getElementById(id); if(p) p.scrollTo({top:0,behavior:'smooth'}); }
+function renderPagination(id,cur,total,perPg,fn){const el=document.getElementById(id);if(!el)return;const tot=Math.ceil(total/perPg);if(total===0){el.innerHTML='';return;}el.innerHTML=`<div class="pagination-bar"><button class="btn-prev" ${cur<=1?'disabled':''} onclick="${fn}(${cur-1})">← Previous</button><span class="page-info">Page ${cur} of ${tot}</span><button class="btn-next" ${cur>=tot?'disabled':''} onclick="${fn}(${cur+1})">Next →</button></div>`;}
+function scrollTop(id){const p=document.getElementById(id);if(p)p.scrollTo({top:0,behavior:'smooth'});}
 
 // ============ DISCOVER ============
 const GS={fiction:['subject=fiction','topic=novel','topic=short+stories','subject=adventure','subject=drama'],science:['topic=science','subject=natural+history','subject=physics','subject=chemistry','subject=biology'],history:['topic=history','subject=ancient+history','subject=world+history','subject=medieval','subject=biography'],philosophy:['topic=philosophy','subject=ethics','subject=metaphysics','subject=logic','subject=epistemology'],biography:['topic=biography','subject=autobiography','subject=memoir','subject=letters','subject=diaries'],mystery:['topic=mystery','subject=detective','subject=crime+fiction','subject=thriller','subject=suspense'],romance:['topic=romance','subject=love+stories','subject=courtship','subject=marriage','subject=sentimental'],'self-help':['topic=self+improvement','subject=conduct+of+life','subject=success','subject=happiness','subject=mind'],technology:['topic=technology','subject=engineering','subject=inventions','subject=electricity','subject=mechanics'],children:['topic=children','subject=fairy+tales','subject=juvenile+fiction','subject=fables','subject=nursery+rhymes']};
-function selectDiscoverCat(el,cat){ document.querySelectorAll('#discoverPills .cat-pill').forEach(p=>p.classList.remove('active')); el.classList.add('active'); currentDiscoverCat=cat; loadDiscover(1); }
+function selectDiscoverCat(el,cat){document.querySelectorAll('#discoverPills .cat-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');currentDiscoverCat=cat;loadDiscover(1);}
 async function loadDiscover(page){
-  if(!page) page=1; pg.discover.page=page;
+  if(!page)page=1;pg.discover.page=page;
   const grid=document.getElementById('discoverGrid'),heading=document.getElementById('discoverHeading');
-  grid.innerHTML='<div class="loading"><div class="spinner"></div><span>Loading…</span></div>';
+  grid.innerHTML='<div class="loading"><div class="spinner"></div><span>Loading...</span></div>';
   document.getElementById('discoverPagination').innerHTML='';
   const labels={fiction:'Fiction',science:'Science',history:'History',philosophy:'Philosophy',biography:'Biography',mystery:'Mystery',romance:'Romance','self-help':'Self-Help',technology:'Technology',children:"Children's"};
   heading.textContent=(labels[currentDiscoverCat]||currentDiscoverCat)+' Books';
   const subs=GS[currentDiscoverCat]||['topic=fiction'];
   try{
-    const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),9000);
-    const r=await fetch(`https://gutendex.com/books/?${subs[(page-1)%subs.length]}&page=${page}`,{signal:ctrl.signal}); if(!r.ok) throw 0;
-    const d=await r.json(); const total=d.count||0;
-    const seen=new Set(); const books=(d.results||[]).filter(b=>{ if(seen.has(b.id)) return false; seen.add(b.id); return true; });
+    const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),9000);
+    const r=await fetch(`https://gutendex.com/books/?${subs[(page-1)%subs.length]}&page=${page}`,{signal:ctrl.signal});if(!r.ok)throw 0;
+    const d=await r.json();const total=d.count||0;
+    const seen=new Set();const books=(d.results||[]).filter(b=>{if(seen.has(b.id))return false;seen.add(b.id);return true;});
     if(!books.length){grid.innerHTML='<div class="empty"><div class="ei">📚</div><p>No books found.</p></div>';return;}
     grid.innerHTML=books.map(b=>buildBookCard(b)).join('');
     renderPagination('discoverPagination',page,total,pg.discover.perPage,'loadDiscover');
-    if(page>1) scrollTop('page-discover');
-  }catch(e){ grid.innerHTML='<div class="empty"><div class="ei">⚠️</div><p>Could not load books.</p></div>'; }
+    if(page>1)scrollTop('page-discover');
+  }catch(e){grid.innerHTML='<div class="empty"><div class="ei">⚠️</div><p>Could not load books.</p></div>';}
 }
 function buildBookCard(b){
   const title=b.title||'Unknown Title',author=(b.authors&&b.authors[0])?b.authors[0].name:'Unknown Author',cover=b.formats&&(b.formats['image/jpeg']||b.formats['image/png']||'');
   const d=escAttr(JSON.stringify({id:b.id,title,author,cover,src:'gutenberg',formats:b.formats||{}}));
-  return `<div class="book-card" onclick="openBookModal('${d}')">${cover?`<img class="book-cover" src="${cover}" alt="${escHtml(title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}
-  <div class="book-cover-placeholder" ${cover?'style="display:none"':''}>📖</div>
-  <div class="book-info"><div class="book-title">${escHtml(title)}</div><div class="book-author">${escHtml(author)}</div></div></div>`;
+  return `<div class="book-card" onclick="openBookModal('${d}')">${cover?`<img class="book-cover" src="${cover}" alt="${escHtml(title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}<div class="book-cover-placeholder" ${cover?'style="display:none"':''}>📖</div><div class="book-info"><div class="book-title">${escHtml(title)}</div><div class="book-author">${escHtml(author)}</div></div></div>`;
 }
 
 // ============ ARCHIVE ============
 const AQ={books:'subject:book AND mediatype:texts AND language:eng',texts:'mediatype:texts AND subject:literature AND language:eng',periodicals:'mediatype:texts AND subject:periodicals',audio:'mediatype:audio AND collection:librivoxaudio',manuscripts:'subject:manuscripts AND mediatype:texts'};
-function selectArchiveCat(el,cat){ document.querySelectorAll('#archivePills .cat-pill').forEach(p=>p.classList.remove('active')); el.classList.add('active'); currentArchiveCat=cat; loadArchive(1); }
+function selectArchiveCat(el,cat){document.querySelectorAll('#archivePills .cat-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');currentArchiveCat=cat;loadArchive(1);}
 async function loadArchive(page){
-  if(!page) page=1; pg.archive.page=page;
+  if(!page)page=1;pg.archive.page=page;
   const grid=document.getElementById('archiveGrid'),heading=document.getElementById('archiveHeading');
   const labels={books:'Books',texts:'Texts',periodicals:'Periodicals',audio:'Audio Books',manuscripts:'Manuscripts'};
   heading.textContent=labels[currentArchiveCat]||currentArchiveCat;
-  grid.innerHTML='<div class="loading"><div class="spinner"></div><span>Loading…</span></div>';
+  grid.innerHTML='<div class="loading"><div class="spinner"></div><span>Loading...</span></div>';
   document.getElementById('archivePagination').innerHTML='';
-  const q=AQ[currentArchiveCat]||'mediatype:texts'; const start=(page-1)*pg.archive.perPage;
+  const q=AQ[currentArchiveCat]||'mediatype:texts';const start=(page-1)*pg.archive.perPage;
   try{
-    const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),10000);
-    const r=await fetch(`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier,title,creator,description,subject&rows=${pg.archive.perPage}&start=${start}&output=json&sort[]=downloads+desc`,{signal:ctrl.signal}); if(!r.ok) throw 0;
-    const d=await r.json(); const resp=d.response||{}; const total=resp.numFound||0;
-    const seen=new Set(); const docs=(resp.docs||[]).filter(x=>{ if(seen.has(x.identifier)) return false; seen.add(x.identifier); return true; });
+    const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),10000);
+    const r=await fetch(`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier,title,creator,description,subject&rows=${pg.archive.perPage}&start=${start}&output=json&sort[]=downloads+desc`,{signal:ctrl.signal});if(!r.ok)throw 0;
+    const d=await r.json();const resp=d.response||{};const total=resp.numFound||0;
+    const seen=new Set();const docs=(resp.docs||[]).filter(x=>{if(seen.has(x.identifier))return false;seen.add(x.identifier);return true;});
     if(!docs.length){grid.innerHTML='<div class="empty"><div class="ei">🏛️</div><p>No items found.</p></div>';return;}
     grid.innerHTML=docs.map(x=>buildArchiveCard(x)).join('');
     renderPagination('archivePagination',page,total,pg.archive.perPage,'loadArchive');
-    if(page>1) scrollTop('page-archive');
-  }catch(e){ grid.innerHTML='<div class="empty"><div class="ei">⚠️</div><p>Could not load items.</p></div>'; }
+    if(page>1)scrollTop('page-archive');
+  }catch(e){grid.innerHTML='<div class="empty"><div class="ei">⚠️</div><p>Could not load items.</p></div>';}
 }
 function buildArchiveCard(d){
   const title=d.title||'Unknown',creator=Array.isArray(d.creator)?d.creator[0]:(d.creator||'Internet Archive'),id=d.identifier,cover=`https://archive.org/services/img/${id}`;
-  return `<div class="book-card" onclick="openArchiveModal('${escJs(id)}','${escJs(title)}','${escJs(creator)}')">
-  <img class="book-cover" src="${cover}" alt="${escHtml(title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-  <div class="book-cover-placeholder" style="display:none">📜</div>
-  <div class="book-info"><div class="book-title">${escHtml(title)}</div><div class="book-author">${escHtml(creator)}</div></div></div>`;
+  return `<div class="book-card" onclick="openArchiveModal('${escJs(id)}','${escJs(title)}','${escJs(creator)}')"><img class="book-cover" src="${cover}" alt="${escHtml(title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="book-cover-placeholder" style="display:none">📜</div><div class="book-info"><div class="book-title">${escHtml(title)}</div><div class="book-author">${escHtml(creator)}</div></div></div>`;
 }
 
 // ============ COMICS ============
 const CQ={superhero:'collection:(ComicBookPlus OR dccomics OR marvel_comics) AND mediatype:texts AND subject:(superhero OR batman OR superman OR avengers OR xmen)',manga:'mediatype:texts AND (subject:manga OR collection:manga)',horror:'mediatype:texts AND subject:(comics OR "comic book") AND subject:(horror OR terror OR vampire OR zombie)','sci-fi':'mediatype:texts AND subject:(comics OR "comic book") AND subject:("science fiction" OR "sci-fi" OR space OR robot)',fantasy:'mediatype:texts AND subject:(comics OR "comic book") AND subject:(fantasy OR dragon OR magic OR sword)',romance:'mediatype:texts AND subject:(comics OR "comic book") AND subject:(romance OR love)',war:'mediatype:texts AND subject:(comics OR "comic book") AND subject:(war OR military OR soldier OR combat)',western:'mediatype:texts AND subject:(comics OR "comic book") AND subject:(western OR cowboy OR outlaw)',crime:'mediatype:texts AND subject:(comics OR "comic book") AND subject:(crime OR detective OR noir OR gangster)'};
-const AQ2={all:'mediatype:texts AND (collection:"adult_comics" OR subject:"underground comix" OR subject:"adult comics" OR subject:"erotic comics")',straight:'mediatype:texts AND (subject:"underground comix" OR subject:"adult comics") AND (subject:heterosexual OR subject:straight)',gay:'mediatype:texts AND (subject:"underground comix" OR subject:"adult comics" OR subject:"gay comics") AND subject:gay',lesbian:'mediatype:texts AND (subject:"underground comix" OR subject:"adult comics" OR subject:"lesbian comics") AND subject:lesbian',trans:'mediatype:texts AND (subject:"adult comics" OR subject:"underground comix") AND (subject:transgender OR subject:trans)',bisexual:'mediatype:texts AND (subject:"adult comics" OR subject:"underground comix") AND subject:bisexual',interracial:'mediatype:texts AND (subject:"adult comics" OR subject:"underground comix") AND subject:interracial',milf:'mediatype:texts AND (subject:"adult comics" OR subject:"underground comix") AND (subject:mature OR subject:milf)',bbw:'mediatype:texts AND (subject:"adult comics" OR subject:"underground comix") AND (subject:bbw OR subject:"plus size")',bdsm:'mediatype:texts AND (subject:"adult comics" OR subject:"underground comix") AND (subject:bdsm OR subject:bondage OR subject:fetish)',hentai:'mediatype:texts AND (subject:hentai OR subject:"adult manga" OR collection:hentai)',underground:'mediatype:texts AND (subject:"underground comix" OR collection:"underground_comix" OR subject:"comix")'};
-function selectComicCat(el,cat){ document.querySelectorAll('#comicPills .cat-pill').forEach(p=>p.classList.remove('active')); el.classList.add('active'); currentComicCat=cat; currentAdultSub='all'; const sr=document.getElementById('adultSubRow'); if(cat==='adult'){sr.classList.add('show');document.querySelectorAll('.sub-pill').forEach(p=>p.classList.remove('active'));document.querySelector('.sub-pill').classList.add('active');}else sr.classList.remove('show'); loadComics(1); }
-function selectAdultSub(el,sub){ document.querySelectorAll('.sub-pill').forEach(p=>p.classList.remove('active')); el.classList.add('active'); currentAdultSub=sub; loadComics(1); }
+const ADQ={all:'mediatype:texts AND (collection:adult_comics OR subject:"underground comix" OR subject:"adult comics" OR subject:"erotic comics")',straight:'mediatype:texts AND (subject:"underground comix" OR subject:"adult comics") AND (subject:heterosexual OR subject:straight)',gay:'mediatype:texts AND (subject:"underground comix" OR subject:"adult comics" OR subject:"gay comics") AND subject:gay',lesbian:'mediatype:texts AND (subject:"underground comix" OR subject:"adult comics" OR subject:"lesbian comics") AND subject:lesbian',trans:'mediatype:texts AND (subject:"adult comics" OR subject:"underground comix") AND (subject:transgender OR subject:trans)',bisexual:'mediatype:texts AND (subject:"adult comics" OR subject:"underground comix") AND subject:bisexual',interracial:'mediatype:texts AND (subject:"adult comics" OR subject:"underground comix") AND subject:interracial',milf:'mediatype:texts AND (subject:"adult comics" OR subject:"underground comix") AND (subject:mature OR subject:milf)',bbw:'mediatype:texts AND (subject:"adult comics" OR subject:"underground comix") AND (subject:bbw OR subject:"plus size")',bdsm:'mediatype:texts AND (subject:"adult comics" OR subject:"underground comix") AND (subject:bdsm OR subject:bondage OR subject:fetish)',hentai:'mediatype:texts AND (subject:hentai OR subject:"adult manga" OR collection:hentai)',underground:'mediatype:texts AND (subject:"underground comix" OR collection:underground_comix OR subject:comix)'};
+function selectComicCat(el,cat){document.querySelectorAll('#comicPills .cat-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');currentComicCat=cat;currentAdultSub='all';const sr=document.getElementById('adultSubRow');if(cat==='adult'){sr.classList.add('show');document.querySelectorAll('.sub-pill').forEach(p=>p.classList.remove('active'));document.querySelector('.sub-pill').classList.add('active');}else sr.classList.remove('show');loadComics(1);}
+function selectAdultSub(el,sub){document.querySelectorAll('.sub-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');currentAdultSub=sub;loadComics(1);}
 async function loadComics(page){
-  if(!page) page=1; pg.comics.page=page;
+  if(!page)page=1;pg.comics.page=page;
   const grid=document.getElementById('comicsGrid'),heading=document.getElementById('comicsHeading');
   const mL={superhero:'Superhero',manga:'Manga',horror:'Horror','sci-fi':'Sci-Fi',fantasy:'Fantasy',romance:'Romance',war:'War',western:'Western',crime:'Crime',adult:'Adult'},sL={all:'Adult',straight:'Straight',gay:'Gay',lesbian:'Lesbian',trans:'Trans',bisexual:'Bisexual',interracial:'Interracial',milf:'MILF',bbw:'BBW',bdsm:'BDSM',hentai:'Hentai',underground:'Underground'};
   heading.textContent=(currentComicCat==='adult'?sL[currentAdultSub]:mL[currentComicCat])+' Comics';
-  grid.innerHTML='<div class="loading"><div class="spinner"></div><span>Loading comics…</span></div>';
+  grid.innerHTML='<div class="loading"><div class="spinner"></div><span>Loading comics...</span></div>';
   document.getElementById('comicsPagination').innerHTML='';
-  const q=currentComicCat==='adult'?AQ2[currentAdultSub]||AQ2.all:CQ[currentComicCat]||'mediatype:texts AND subject:comics';
+  const q=currentComicCat==='adult'?ADQ[currentAdultSub]||ADQ.all:CQ[currentComicCat]||'mediatype:texts AND subject:comics';
   const start=(page-1)*pg.comics.perPage;
   try{
-    const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),11000);
-    const r=await fetch(`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier,title,creator,date,subject&rows=${pg.comics.perPage}&start=${start}&output=json&sort[]=downloads+desc`,{signal:ctrl.signal}); if(!r.ok) throw 0;
-    const d=await r.json(); const resp=d.response||{}; const total=resp.numFound||0;
-    const seen=new Set(); let docs=(resp.docs||[]).filter(x=>{ if(seen.has(x.identifier)) return false; seen.add(x.identifier); return true; });
+    const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),11000);
+    const r=await fetch(`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}&fl[]=identifier,title,creator,date,subject&rows=${pg.comics.perPage}&start=${start}&output=json&sort[]=downloads+desc`,{signal:ctrl.signal});if(!r.ok)throw 0;
+    const d=await r.json();const resp=d.response||{};const total=resp.numFound||0;
+    const seen=new Set();let docs=(resp.docs||[]).filter(x=>{if(seen.has(x.identifier))return false;seen.add(x.identifier);return true;});
     if(!docs.length){
       const fb=await fetch(`https://archive.org/advancedsearch.php?q=mediatype:texts+AND+subject:comics&fl[]=identifier,title,creator,date&rows=${pg.comics.perPage}&start=${start}&output=json&sort[]=downloads+desc`);
-      const fd=await fb.json(); const s2=new Set(); docs=((fd.response&&fd.response.docs)||[]).filter(x=>{ if(s2.has(x.identifier)) return false; s2.add(x.identifier); return true; });
+      const fd=await fb.json();const s2=new Set();docs=((fd.response&&fd.response.docs)||[]).filter(x=>{if(s2.has(x.identifier))return false;s2.add(x.identifier);return true;});
       const tot2=(fd.response&&fd.response.numFound)||0;
       grid.innerHTML=docs.length?docs.map(buildComicCard).join(''):'<div class="empty"><div class="ei">💥</div><p>No comics found.</p></div>';
-      if(docs.length) renderPagination('comicsPagination',page,tot2,pg.comics.perPage,'loadComics');
+      if(docs.length)renderPagination('comicsPagination',page,tot2,pg.comics.perPage,'loadComics');
       return;
     }
-    grid.innerHTML=docs.map(buildComicCard).join(''); renderPagination('comicsPagination',page,total,pg.comics.perPage,'loadComics');
-    if(page>1) scrollTop('page-comics');
-  }catch(e){ grid.innerHTML='<div class="empty"><div class="ei">⚠️</div><p>Could not load comics.</p></div>'; }
+    grid.innerHTML=docs.map(buildComicCard).join('');renderPagination('comicsPagination',page,total,pg.comics.perPage,'loadComics');
+    if(page>1)scrollTop('page-comics');
+  }catch(e){grid.innerHTML='<div class="empty"><div class="ei">⚠️</div><p>Could not load comics.</p></div>';}
 }
 function buildComicCard(d){
   const title=d.title||'Unknown Comic',creator=Array.isArray(d.creator)?d.creator[0]:(d.creator||''),year=d.date?d.date.substring(0,4):'',id=d.identifier,cover=`https://archive.org/services/img/${id}`;
-  return `<div class="comic-card" onclick="openComicModal('${escJs(id)}','${escJs(title)}','${escJs(creator)}','${year}')">
-  <img class="comic-cover" src="${cover}" alt="${escHtml(title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-  <div class="comic-cover-ph" style="display:none">💥</div>
-  <div class="comic-info"><div class="comic-title">${escHtml(title)}</div><div class="comic-year">${year||creator||'Internet Archive'}</div></div></div>`;
+  return `<div class="comic-card" onclick="openComicModal('${escJs(id)}','${escJs(title)}','${escJs(creator)}','${year}')"><img class="comic-cover" src="${cover}" alt="${escHtml(title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="comic-cover-ph" style="display:none">💥</div><div class="comic-info"><div class="comic-title">${escHtml(title)}</div><div class="comic-year">${year||creator||'Internet Archive'}</div></div></div>`;
 }
 
-// ============ MODALS — BOOK ============
+// ============ BOOK MODAL ============
 function openBookModal(dataStr){
-  let b; try{ b=JSON.parse(dataStr); }catch{ return; }
+  let b;try{b=JSON.parse(dataStr);}catch{return;}
   document.getElementById('bookModalTitle').textContent='Book Details';
   document.getElementById('bookModalName').textContent=b.title;
   document.getElementById('bookModalAuthor').textContent=b.author||'';
@@ -815,21 +678,15 @@ function openBookModal(dataStr){
   openModal('bookModal');
 }
 async function openArchiveModal(id,title,creator){
-  document.getElementById('bookModalTitle').textContent='Loading…';
-  document.getElementById('bookModalName').textContent=title; document.getElementById('bookModalAuthor').textContent=creator;
+  document.getElementById('bookModalTitle').textContent='Loading...';
+  document.getElementById('bookModalName').textContent=title;document.getElementById('bookModalAuthor').textContent=creator;
   document.getElementById('bookModalBadges').innerHTML='<span class="badge">Internet Archive</span>';
-  document.getElementById('bookModalDesc').textContent='Loading details…';
+  document.getElementById('bookModalDesc').textContent='Loading details...';
   const cover=`https://archive.org/services/img/${id}`;
   document.getElementById('bookModalCover').innerHTML=`<img class="book-detail-cover" src="${cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>📜</div>'">`;
   document.getElementById('bookModalActions').innerHTML='<div class="loading" style="padding:10px"><div class="spinner"></div></div>';
   openModal('bookModal');
-  try{
-    const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),6000);
-    const meta=(await(await fetch(`https://archive.org/metadata/${id}`,{signal:ctrl.signal})).json()).metadata||{};
-    const raw=meta.description||meta.subject||'From the Internet Archive.';
-    document.getElementById('bookModalTitle').textContent='Book Details';
-    document.getElementById('bookModalDesc').textContent=(Array.isArray(raw)?raw.join(', '):String(raw).replace(/<[^>]+>/g,'')).substring(0,300);
-  }catch{ document.getElementById('bookModalDesc').textContent='From the Internet Archive collection.'; }
+  try{const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),6000);const meta=(await(await fetch(`https://archive.org/metadata/${id}`,{signal:ctrl.signal})).json()).metadata||{};const raw=meta.description||meta.subject||'From the Internet Archive.';document.getElementById('bookModalTitle').textContent='Book Details';document.getElementById('bookModalDesc').textContent=(Array.isArray(raw)?raw.join(', '):String(raw).replace(/<[^>]+>/g,'')).substring(0,300);}catch{document.getElementById('bookModalDesc').textContent='From the Internet Archive collection.';}
   const readUrl=`https://archive.org/embed/${id}`,pageUrl=`https://archive.org/details/${id}`;
   const isSaved=savedBooks.some(s=>s.id===id);
   const obj=escAttr(JSON.stringify({id,title,author:creator,cover,src:'archive',readUrl,pageUrl}));
@@ -840,21 +697,15 @@ async function openArchiveModal(id,title,creator){
     <button class="btn btn-ghost" onclick="saveBook('${obj}')">${isSaved?'✅ Saved':'🔖 Save'}</button>`;
 }
 async function openComicModal(id,title,creator,year){
-  document.getElementById('comicModalTitle').textContent='Loading…';
-  document.getElementById('comicModalName').textContent=title; document.getElementById('comicModalMeta').textContent=[creator,year].filter(Boolean).join(' · ');
+  document.getElementById('comicModalTitle').textContent='Loading...';
+  document.getElementById('comicModalName').textContent=title;document.getElementById('comicModalMeta').textContent=[creator,year].filter(Boolean).join(' · ');
   document.getElementById('comicModalBadges').innerHTML='<span class="badge">Internet Archive</span>';
-  document.getElementById('comicModalDesc').textContent='Loading details…';
+  document.getElementById('comicModalDesc').textContent='Loading details...';
   const cover=`https://archive.org/services/img/${id}`;
   document.getElementById('comicModalCover').innerHTML=`<img class="book-detail-cover" src="${cover}" alt="" onerror="this.outerHTML='<div class=book-detail-cover-ph>💥</div>'">`;
   document.getElementById('comicModalActions').innerHTML='<div class="loading" style="padding:10px"><div class="spinner"></div></div>';
   openModal('comicModal');
-  try{
-    const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),6000);
-    const meta=(await(await fetch(`https://archive.org/metadata/${id}`,{signal:ctrl.signal})).json()).metadata||{};
-    if(meta.title) document.getElementById('comicModalName').textContent=meta.title;
-    const dsc=meta.description?(Array.isArray(meta.description)?meta.description[0]:meta.description):'From the Internet Archive.';
-    document.getElementById('comicModalDesc').textContent=dsc.replace(/<[^>]+>/g,'').substring(0,300);
-  }catch{ document.getElementById('comicModalDesc').textContent='From the Internet Archive collection.'; }
+  try{const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),6000);const meta=(await(await fetch(`https://archive.org/metadata/${id}`,{signal:ctrl.signal})).json()).metadata||{};if(meta.title)document.getElementById('comicModalName').textContent=meta.title;const dsc=meta.description?(Array.isArray(meta.description)?meta.description[0]:meta.description):'From the Internet Archive.';document.getElementById('comicModalDesc').textContent=dsc.replace(/<[^>]+>/g,'').substring(0,300);}catch{document.getElementById('comicModalDesc').textContent='From the Internet Archive collection.';}
   document.getElementById('comicModalTitle').textContent='Comic Details';
   const readUrl=`https://archive.org/embed/${id}`,pageUrl=`https://archive.org/details/${id}`;
   const isSaved=savedBooks.some(s=>s.id===id);
@@ -867,360 +718,187 @@ async function openComicModal(id,title,creator,year){
 }
 
 // ============ READER ============
-function openReader(url,title){
-  closeModal('bookModal'); closeModal('comicModal');
-  if(url.includes('gutenberg.org')&&!url.includes('embed')){ window.open(url,'_blank'); return; }
-  document.getElementById('readerTitle').textContent=title||'Reading';
-  document.getElementById('readerFrame').src=url;
-  document.getElementById('readerOpenLink').href=url.replace('/embed/','/details/');
-  openModal('readerModal');
-}
+function openReader(url,title){closeModal('bookModal');closeModal('comicModal');if(url.includes('gutenberg.org')&&!url.includes('embed')){window.open(url,'_blank');return;}document.getElementById('readerTitle').textContent=title||'Reading';document.getElementById('readerFrame').src=url;document.getElementById('readerOpenLink').href=url.replace('/embed/','/details/');openModal('readerModal');}
 
 // ============ SEARCH ============
-function setSearchSrc(src,el){ searchSrcMode=src; document.querySelectorAll('#page-search .cat-pill').forEach(p=>p.classList.remove('active')); el.classList.add('active'); }
+function setSearchSrc(src,el){searchSrcMode=src;document.querySelectorAll('#page-search .cat-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');}
 async function doSearch(q){
-  if(!q||!q.trim()) return;
-  showPage('search'); document.getElementById('mainSearch').value=q; document.getElementById('topSearch').value=q;
-  const res=document.getElementById('searchResults'); res.innerHTML='<div class="loading"><div class="spinner"></div><span>Searching…</span></div>';
+  if(!q||!q.trim())return;
+  showPage('search');document.getElementById('mainSearch').value=q;document.getElementById('topSearch').value=q;
+  const res=document.getElementById('searchResults');res.innerHTML='<div class="loading"><div class="spinner"></div><span>Searching...</span></div>';
   const results=[],promises=[];
-  if(searchSrcMode==='gutenberg'||searchSrcMode==='both') promises.push(fetch(`https://gutendex.com/books/?search=${encodeURIComponent(q)}&page=1`).then(r=>r.json()).then(d=>{ (d.results||[]).slice(0,10).forEach(b=>results.push({type:'book',id:b.id,title:b.title,author:(b.authors&&b.authors[0])?b.authors[0].name:'Unknown',cover:b.formats&&(b.formats['image/jpeg']||''),src:'gutenberg',formats:b.formats||{}})); }).catch(()=>{}));
-  if(searchSrcMode==='archive'||searchSrcMode==='both') promises.push(fetch(`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}+AND+mediatype:texts&fl[]=identifier,title,creator&rows=10&output=json&sort[]=downloads+desc`).then(r=>r.json()).then(d=>{ ((d.response&&d.response.docs)||[]).forEach(doc=>results.push({type:'archive',id:doc.identifier,title:doc.title,author:Array.isArray(doc.creator)?doc.creator[0]:(doc.creator||'Internet Archive'),cover:`https://archive.org/services/img/${doc.identifier}`,src:'archive'})); }).catch(()=>{}));
+  if(searchSrcMode==='gutenberg'||searchSrcMode==='both')promises.push(fetch(`https://gutendex.com/books/?search=${encodeURIComponent(q)}&page=1`).then(r=>r.json()).then(d=>{(d.results||[]).slice(0,10).forEach(b=>results.push({type:'book',id:b.id,title:b.title,author:(b.authors&&b.authors[0])?b.authors[0].name:'Unknown',cover:b.formats&&(b.formats['image/jpeg']||''),src:'gutenberg',formats:b.formats||{}}));}).catch(()=>{}));
+  if(searchSrcMode==='archive'||searchSrcMode==='both')promises.push(fetch(`https://archive.org/advancedsearch.php?q=${encodeURIComponent(q)}+AND+mediatype:texts&fl[]=identifier,title,creator&rows=10&output=json&sort[]=downloads+desc`).then(r=>r.json()).then(d=>{((d.response&&d.response.docs)||[]).forEach(doc=>results.push({type:'archive',id:doc.identifier,title:doc.title,author:Array.isArray(doc.creator)?doc.creator[0]:(doc.creator||'Internet Archive'),cover:`https://archive.org/services/img/${doc.identifier}`,src:'archive'}));}).catch(()=>{}));
   await Promise.all(promises);
-  const seen=new Set(),dedup=results.filter(r=>{ if(seen.has(String(r.id))) return false; seen.add(String(r.id)); return true; });
-  if(!dedup.length){ res.innerHTML=`<div class="empty"><div class="ei">🔎</div><p>No results for "${escHtml(q)}"</p></div>`; return; }
+  const seen=new Set(),dedup=results.filter(r=>{if(seen.has(String(r.id)))return false;seen.add(String(r.id));return true;});
+  if(!dedup.length){res.innerHTML=`<div class="empty"><div class="ei">🔎</div><p>No results for "${escHtml(q)}"</p></div>`;return;}
   res.innerHTML=`<div class="result-count">${dedup.length} result${dedup.length!==1?'s':''} for "${escHtml(q)}"</div><div class="book-grid">${dedup.map(b=>b.src==='gutenberg'?buildBookCard(b):buildArchiveCard({identifier:b.id,title:b.title,creator:b.author})).join('')}</div>`;
 }
 
 // ============ MESSAGES ============
-function getMyMessages(){
-  if(!user) return [];
-  return getMessages().filter(m=>m.to==='all'||m.to===user.email);
-}
-function countUnread(){
-  if(!user) return 0;
-  return getMyMessages().filter(m=>!(m.readBy||[]).includes(user.email)).length;
-}
-function updateMsgBadge(){
-  const badge=document.getElementById('msgBadge'); if(!badge) return;
-  const n=countUnread(); badge.style.display=n>0?'inline':'none'; badge.textContent=n;
-}
-function markMsgRead(id){
-  const msgs=getMessages(); const m=msgs.find(x=>x.id===id);
-  if(m&&user){ if(!m.readBy) m.readBy=[]; if(!m.readBy.includes(user.email)){m.readBy.push(user.email); setMessages(msgs); updateMsgBadge();} }
-}
+function getMyMessages(){if(!user)return[];return getMessages().filter(m=>m.to==='all'||m.to===user.email);}
+function countUnread(){if(!user)return 0;return getMyMessages().filter(m=>!(m.readBy||[]).includes(user.email)).length;}
+function updateMsgBadge(){const badge=document.getElementById('msgBadge');if(!badge)return;const n=countUnread();badge.style.display=n>0?'inline':'none';badge.textContent=n;}
+function markMsgRead(id){const msgs=getMessages();const m=msgs.find(x=>x.id===id);if(m&&user){if(!m.readBy)m.readBy=[];if(!m.readBy.includes(user.email)){m.readBy.push(user.email);setMessages(msgs);updateMsgBadge();}}}
 function renderMessages(){
   const list=document.getElementById('messagesList');
-  if(!user){ list.innerHTML='<div class="empty"><div class="ei">🔒</div><p>Sign in to view your messages.</p></div>'; return; }
+  if(!user){list.innerHTML='<div class="empty"><div class="ei">🔒</div><p>Sign in to view your messages.</p></div>';return;}
   const msgs=getMyMessages().sort((a,b)=>new Date(b.sentAt)-new Date(a.sentAt));
-  if(!msgs.length){ list.innerHTML='<div class="empty"><div class="ei">✉️</div><p>No messages yet. Book announcements will appear here.</p></div>'; return; }
-  list.innerHTML=msgs.map(m=>{
-    const unread=!(m.readBy||[]).includes(user.email);
-    return `<div class="msg-card ${unread?'unread':''}" onclick="markMsgRead('${m.id}');this.classList.remove('unread');updateMsgBadge()">
-      <div class="msg-card-hdr"><span class="msg-subject">${unread?'<span class="msg-unread-dot"></span>':''} ${escHtml(m.subject)}</span><span class="msg-date">${new Date(m.sentAt).toLocaleDateString()}</span></div>
-      <div class="msg-body">${escHtml(m.body)}</div>
-      ${m.bookUrl?`<div style="margin-top:10px"><button class="btn btn-sm btn-primary" onclick="event.stopPropagation();openReader('${escJs(m.bookUrl)}','${escJs(m.subject)}')">📖 Read Book</button></div>`:''}
-    </div>`;
-  }).join('');
+  if(!msgs.length){list.innerHTML='<div class="empty"><div class="ei">✉️</div><p>No messages yet. Book announcements will appear here.</p></div>';return;}
+  list.innerHTML=msgs.map(m=>{const unread=!(m.readBy||[]).includes(user.email);return `<div class="msg-card ${unread?'unread':''}" onclick="markMsgRead('${m.id}');this.classList.remove('unread');updateMsgBadge()"><div class="msg-card-hdr"><span class="msg-subject">${unread?'<span class="msg-unread-dot"></span>':''} ${escHtml(m.subject)}</span><span class="msg-date">${new Date(m.sentAt).toLocaleDateString()}</span></div><div class="msg-body">${escHtml(m.body)}</div>${m.bookUrl?`<div style="margin-top:10px"><button class="btn btn-sm btn-primary" onclick="event.stopPropagation();openReader('${escJs(m.bookUrl)}','${escJs(m.subject)}')">📖 Read Book</button></div>`:''}</div>`;}).join('');
 }
 
 // ============ LIBRARY ============
-function handleUpload(event){
-  const file=event.target.files[0]; if(!file) return;
-  const entry={id:Date.now(),title:file.name.replace(/\.[^.]+$/,''),author:'Uploaded',size:(file.size/1024/1024).toFixed(1)+' MB',type:file.name.split('.').pop().toUpperCase(),date:new Date().toLocaleDateString(),dataUrl:null};
-  const reader=new FileReader();
-  reader.onload=e=>{ entry.dataUrl=e.target.result; uploadedBooks.unshift(entry); saveLibrary(); renderLibrary(); toast('Uploaded: '+entry.title,'success'); };
-  reader.readAsDataURL(file); event.target.value='';
-}
-function renderLibrary(){
-  const grid=document.getElementById('libraryGrid'),count=document.getElementById('uploadedCount');
-  count.textContent=uploadedBooks.length+' book'+(uploadedBooks.length!==1?'s':'');
-  if(!uploadedBooks.length){grid.innerHTML='<div class="empty"><div class="ei">📚</div><p>No uploads yet.</p></div>';return;}
-  grid.innerHTML=uploadedBooks.map(b=>`<div class="book-card"><div class="book-cover-placeholder">📄</div>
-  <div class="book-info"><div class="book-title">${escHtml(b.title)}</div><div class="book-author" style="margin-bottom:8px">${b.type} · ${b.size}</div>
-  <div style="display:flex;gap:6px;flex-wrap:wrap;">
-    ${b.dataUrl?`<button class="btn btn-sm btn-primary" onclick="readUploaded(${b.id})">📖 Read</button>`:''}
-    <button class="btn btn-sm btn-ghost" onclick="openNarration('${escJs(b.title)}','Uploaded','uploaded',${b.id},'')">🎧 Listen</button>
-    <button class="btn btn-sm btn-ghost" onclick="removeUploaded(${b.id})">🗑️</button>
-  </div></div></div>`).join('');
-}
-function readUploaded(id){
-  const b=uploadedBooks.find(x=>x.id===id); if(!b||!b.dataUrl) return;
-  if(b.type==='PDF'){ document.getElementById('readerTitle').textContent=b.title; document.getElementById('readerFrame').src=b.dataUrl; document.getElementById('readerOpenLink').href=b.dataUrl; openModal('readerModal'); }
-  else{ const w=window.open('','_blank'); if(w) w.document.write(`<html><head><title>${escHtml(b.title)}</title><meta charset="UTF-8"><style>body{font-family:Georgia,serif;max-width:720px;margin:40px auto;padding:20px;line-height:1.8;}</style></head><body><h1>${escHtml(b.title)}</h1><pre style="white-space:pre-wrap">${escHtml(atob(b.dataUrl.split(',')[1]))}</pre></body></html>`); }
-}
-function removeUploaded(id){ uploadedBooks=uploadedBooks.filter(b=>b.id!==id); saveLibrary(); renderLibrary(); }
-function clearLibrary(){ if(confirm('Remove all uploaded books?')){ uploadedBooks=[]; saveLibrary(); renderLibrary(); toast('Library cleared','info'); } }
+function handleUpload(event){const file=event.target.files[0];if(!file)return;const entry={id:Date.now(),title:file.name.replace(/\.[^.]+$/,''),author:'Uploaded',size:(file.size/1024/1024).toFixed(1)+' MB',type:file.name.split('.').pop().toUpperCase(),date:new Date().toLocaleDateString(),dataUrl:null};const reader=new FileReader();reader.onload=e=>{entry.dataUrl=e.target.result;uploadedBooks.unshift(entry);saveLibrary();renderLibrary();toast('Uploaded: '+entry.title,'success');};reader.readAsDataURL(file);event.target.value='';}
+function renderLibrary(){const grid=document.getElementById('libraryGrid'),count=document.getElementById('uploadedCount');count.textContent=uploadedBooks.length+' book'+(uploadedBooks.length!==1?'s':'');if(!uploadedBooks.length){grid.innerHTML='<div class="empty"><div class="ei">📚</div><p>No uploads yet.</p></div>';return;}grid.innerHTML=uploadedBooks.map(b=>`<div class="book-card"><div class="book-cover-placeholder">📄</div><div class="book-info"><div class="book-title">${escHtml(b.title)}</div><div class="book-author" style="margin-bottom:8px">${b.type} · ${b.size}</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${b.dataUrl?`<button class="btn btn-sm btn-primary" onclick="readUploaded(${b.id})">📖 Read</button>`:''}<button class="btn btn-sm btn-ghost" onclick="openNarration('${escJs(b.title)}','Uploaded','uploaded',${b.id},'')">🎧 Listen</button><button class="btn btn-sm btn-ghost" onclick="removeUploaded(${b.id})">🗑️</button></div></div></div>`).join('');}
+function readUploaded(id){const b=uploadedBooks.find(x=>x.id===id);if(!b||!b.dataUrl)return;if(b.type==='PDF'){document.getElementById('readerTitle').textContent=b.title;document.getElementById('readerFrame').src=b.dataUrl;document.getElementById('readerOpenLink').href=b.dataUrl;openModal('readerModal');}else{const w=window.open('','_blank');if(w)w.document.write(`<html><head><title>${escHtml(b.title)}</title><meta charset="UTF-8"><style>body{font-family:Georgia,serif;max-width:720px;margin:40px auto;padding:20px;line-height:1.8;}</style></head><body><h1>${escHtml(b.title)}</h1><pre style="white-space:pre-wrap">${escHtml(atob(b.dataUrl.split(',')[1]))}</pre></body></html>`);}}
+function removeUploaded(id){uploadedBooks=uploadedBooks.filter(b=>b.id!==id);saveLibrary();renderLibrary();}
+function clearLibrary(){if(confirm('Remove all uploaded books?')){uploadedBooks=[];saveLibrary();renderLibrary();toast('Library cleared','info');}}
 
 // ============ DOWNLOADS ============
-function saveBook(jsonStr){
-  let b; try{ b=typeof jsonStr==='string'?JSON.parse(jsonStr):jsonStr; }catch{ return; }
-  if(!savedBooks.some(s=>s.id==b.id)){ savedBooks.unshift({...b,savedAt:new Date().toLocaleDateString()}); saveDownloads(); toast('Saved to Downloads','success'); }
-  else toast('Already saved','info');
-}
+function saveBook(jsonStr){let b;try{b=typeof jsonStr==='string'?JSON.parse(jsonStr):jsonStr;}catch{return;}if(!savedBooks.some(s=>s.id==b.id)){savedBooks.unshift({...b,savedAt:new Date().toLocaleDateString()});saveDownloads();toast('Saved to Downloads','success');}else toast('Already saved','info');}
 function renderDownloads(){
   const list=document.getElementById('downloadsList'),count=document.getElementById('downloadsCount'),btn=document.getElementById('clearDownloadsBtn');
-  count.textContent=savedBooks.length+' book'+(savedBooks.length!==1?'s':''); btn.style.display=savedBooks.length?'block':'none';
+  count.textContent=savedBooks.length+' book'+(savedBooks.length!==1?'s':'');btn.style.display=savedBooks.length?'block':'none';
   if(!savedBooks.length){list.innerHTML='<div class="empty"><div class="ei">⬇️</div><p>No saved books yet.</p></div>';return;}
   list.innerHTML='<div class="downloads-list">'+savedBooks.map(b=>{
     let readUrl=b.readUrl||'';
-    if(!readUrl&&b.formats){ readUrl=b.formats['text/html']||b.formats['application/xhtml+xml']||b.formats['text/plain']||b.formats['application/pdf']||''; }
-    if(!readUrl&&b.src&&b.src!=='gutenberg') readUrl=`https://archive.org/embed/${b.id}`;
+    if(!readUrl&&b.formats){readUrl=b.formats['text/html']||b.formats['application/xhtml+xml']||b.formats['text/plain']||b.formats['application/pdf']||'';}
+    if(!readUrl&&b.src&&b.src!=='gutenberg')readUrl=`https://archive.org/embed/${b.id}`;
     const icon=b.src==='comic'?'💥':b.src==='archive'?'🏛️':'📖';
     const ns=(b.src==='archive'||b.src==='comic')?'archive':'gutenberg';
-    return `<div class="download-item">
-      <div class="di-icon">${icon}</div>
-      <div class="di-info"><div class="di-title">${escHtml(b.title)}</div><div class="di-meta">${escHtml(b.author||'')} · ${b.src||'book'}${b.savedAt?' · Saved '+b.savedAt:''}</div></div>
-      <div class="di-actions">
-        ${readUrl?`<button class="btn btn-sm btn-primary" onclick="openReader('${escJs(readUrl)}','${escJs(b.title)}')">📖 Read</button>`:''}
-        <button class="btn btn-sm btn-ghost" onclick="openNarration('${escJs(b.title)}','${escJs(b.author||'')}','${ns}','${escJs(String(b.id))}','')">🎧</button>
-        <button class="btn btn-sm btn-ghost" onclick="removeDownload('${escJs(String(b.id))}')">🗑️</button>
-      </div></div>`;
+    return `<div class="download-item"><div class="di-icon">${icon}</div><div class="di-info"><div class="di-title">${escHtml(b.title)}</div><div class="di-meta">${escHtml(b.author||'')} · ${b.src||'book'}${b.savedAt?' · Saved '+b.savedAt:''}</div></div><div class="di-actions">${readUrl?`<button class="btn btn-sm btn-primary" onclick="openReader('${escJs(readUrl)}','${escJs(b.title)}')">📖 Read</button>`:''}<button class="btn btn-sm btn-ghost" onclick="openNarration('${escJs(b.title)}','${escJs(b.author||'')}','${ns}','${escJs(String(b.id))}','')">🎧</button><button class="btn btn-sm btn-ghost" onclick="removeDownload('${escJs(String(b.id))}')">🗑️</button></div></div>`;
   }).join('')+'</div>';
 }
-function removeDownload(id){ savedBooks=savedBooks.filter(b=>String(b.id)!==String(id)); saveDownloads(); renderDownloads(); }
-function clearAllDownloads(){ if(confirm('Remove all saved books?')){ savedBooks=[]; saveDownloads(); renderDownloads(); toast('Downloads cleared','info'); } }
+function removeDownload(id){savedBooks=savedBooks.filter(b=>String(b.id)!==String(id));saveDownloads();renderDownloads();}
+function clearAllDownloads(){if(confirm('Remove all saved books?')){savedBooks=[];saveDownloads();renderDownloads();toast('Downloads cleared','info');}}
 
 // ============ REQUESTS ============
 function submitRequest(){
-  if(!user){ toast('Sign in to request books','info'); openAuth(); return; }
-  const title=document.getElementById('reqTitle').value.trim();
-  const author=document.getElementById('reqAuthor').value.trim();
-  const notes=document.getElementById('reqNotes').value.trim();
-  if(!title){ toast('Please enter a book title','error'); return; }
+  if(!user){toast('Sign in to request books','info');openAuth();return;}
+  const title=document.getElementById('reqTitle').value.trim(),author=document.getElementById('reqAuthor').value.trim(),notes=document.getElementById('reqNotes').value.trim();
+  if(!title){toast('Please enter a book title','error');return;}
   const reqs=getRequests();
   reqs.unshift({id:'req_'+Date.now(),userEmail:user.email,userName:user.name,title,author,notes,date:new Date().toISOString(),status:'pending'});
   setRequests(reqs);
-  document.getElementById('reqTitle').value=''; document.getElementById('reqAuthor').value=''; document.getElementById('reqNotes').value='';
-  toast('Request submitted!','success'); renderRequests();
+  document.getElementById('reqTitle').value='';document.getElementById('reqAuthor').value='';document.getElementById('reqNotes').value='';
+  toast('Request submitted!','success');renderRequests();
 }
 function renderRequests(){
   const list=document.getElementById('requestsList');
   if(!user){list.innerHTML='<div class="empty"><div class="ei">🔒</div><p>Sign in to view your requests.</p></div>';return;}
   const mine=getRequests().filter(r=>r.userEmail===user.email);
   if(!mine.length){list.innerHTML='<div class="empty"><div class="ei">📋</div><p>No requests yet.</p></div>';return;}
-  list.innerHTML='<div class="downloads-list">'+mine.map(r=>`<div class="download-item">
-    <div class="di-icon">📋</div>
-    <div class="di-info">
-      <div class="di-title">${escHtml(r.title)}${r.author?' — '+escHtml(r.author):''}</div>
-      <div class="di-meta">${new Date(r.date).toLocaleDateString()} · <span class="req-badge ${r.status}">${r.status}</span>${r.notes?' · '+escHtml(r.notes.substring(0,50)):''}</div>
-    </div></div>`).join('')+'</div>';
+  list.innerHTML='<div class="downloads-list">'+mine.map(r=>`<div class="download-item"><div class="di-icon">📋</div><div class="di-info"><div class="di-title">${escHtml(r.title)}${r.author?' — '+escHtml(r.author):''}</div><div class="di-meta">${new Date(r.date).toLocaleDateString()} · <span class="req-badge ${r.status}">${r.status}</span>${r.notes?' · '+escHtml(r.notes.substring(0,50)):''}</div></div></div>`).join('')+'</div>';
 }
 
-// ============ FEATURED BOOKS (admin uploads shown on discover) ============
-function renderFeaturedBooks(){
-  const feat=getFeatured(); const sec=document.getElementById('adminFeaturedSection'); const grid=document.getElementById('adminFeaturedGrid');
-  if(!feat.length){sec.style.display='none';return;}
-  sec.style.display='block';
-  grid.innerHTML=feat.map(f=>`<div class="book-card" onclick="openFeaturedBook('${escAttr(JSON.stringify(f))}')">`+
-    (f.cover?`<img class="book-cover" src="${escHtml(f.cover)}" alt="${escHtml(f.title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:'')+
-    `<div class="book-cover-placeholder" ${f.cover?'style="display:none"':''}>📌</div>
-    <div class="book-info"><div class="book-title">${escHtml(f.title)}</div><div class="book-author">${escHtml(f.author||'Featured')}</div></div></div>`).join('');
-}
-function openFeaturedBook(dataStr){
-  let f; try{ f=JSON.parse(dataStr); }catch{ return; }
-  document.getElementById('bookModalTitle').textContent='Featured Book';
-  document.getElementById('bookModalName').textContent=f.title;
-  document.getElementById('bookModalAuthor').textContent=f.author||'';
-  document.getElementById('bookModalBadges').innerHTML='<span class="badge">📌 Featured by Aurelius</span>';
-  document.getElementById('bookModalDesc').textContent=f.desc||'Hand-picked and added to Aurelius by our team.';
-  const ce=document.getElementById('bookModalCover');
-  ce.innerHTML=f.cover?`<img class="book-detail-cover" src="${escHtml(f.cover)}" alt="">`:`<div class="book-detail-cover-ph">📌</div>`;
-  const isSaved=savedBooks.some(s=>s.id===f.id);
-  document.getElementById('bookModalActions').innerHTML=`
-    ${f.readUrl?`<button class="btn btn-primary" onclick="openReader('${escJs(f.readUrl)}','${escJs(f.title)}')">📖 Read Now</button>`:''}
-    ${f.pageUrl?`<a class="btn btn-ghost" href="${escHtml(f.pageUrl)}" target="_blank">🔗 View Page</a>`:''}
-    <button class="btn btn-ghost" onclick="openNarration('${escJs(f.title)}','${escJs(f.author||'')}','archive','${escJs(f.id)}','')">🎧 Listen</button>
-    <button class="btn btn-ghost" onclick="saveBook('${escAttr(JSON.stringify({id:f.id,title:f.title,author:f.author||'',cover:f.cover,src:'featured',readUrl:f.readUrl,pageUrl:f.pageUrl}))}')">${isSaved?'✅ Saved':'🔖 Save'}</button>`;
-  openModal('bookModal');
-}
+// ============ FEATURED BOOKS ============
+function renderFeaturedBooks(){const feat=getFeatured();const sec=document.getElementById('adminFeaturedSection');const grid=document.getElementById('adminFeaturedGrid');if(!feat.length){sec.style.display='none';return;}sec.style.display='block';grid.innerHTML=feat.map(f=>`<div class="book-card" onclick="openFeaturedBook('${escAttr(JSON.stringify(f))}')">${f.cover?`<img class="book-cover" src="${escHtml(f.cover)}" alt="${escHtml(f.title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:''}  <div class="book-cover-placeholder" ${f.cover?'style="display:none"':''}>📌</div><div class="book-info"><div class="book-title">${escHtml(f.title)}</div><div class="book-author">${escHtml(f.author||'Featured')}</div></div></div>`).join('');}
+function openFeaturedBook(dataStr){let f;try{f=JSON.parse(dataStr);}catch{return;}document.getElementById('bookModalTitle').textContent='Featured Book';document.getElementById('bookModalName').textContent=f.title;document.getElementById('bookModalAuthor').textContent=f.author||'';document.getElementById('bookModalBadges').innerHTML='<span class="badge">📌 Featured by Aurelius</span>';document.getElementById('bookModalDesc').textContent=f.desc||'Hand-picked and added to Aurelius by our team.';const ce=document.getElementById('bookModalCover');ce.innerHTML=f.cover?`<img class="book-detail-cover" src="${escHtml(f.cover)}" alt="">`:`<div class="book-detail-cover-ph">📌</div>`;const isSaved=savedBooks.some(s=>s.id===f.id);document.getElementById('bookModalActions').innerHTML=`${f.readUrl?`<button class="btn btn-primary" onclick="openReader('${escJs(f.readUrl)}','${escJs(f.title)}')">📖 Read Now</button>`:''} ${f.pageUrl?`<a class="btn btn-ghost" href="${escHtml(f.pageUrl)}" target="_blank">🔗 View Page</a>`:''}<button class="btn btn-ghost" onclick="openNarration('${escJs(f.title)}','${escJs(f.author||'')}','archive','${escJs(f.id)}','')">🎧 Listen</button><button class="btn btn-ghost" onclick="saveBook('${escAttr(JSON.stringify({id:f.id,title:f.title,author:f.author||'',cover:f.cover,src:'featured',readUrl:f.readUrl,pageUrl:f.pageUrl}))}')">${isSaved?'✅ Saved':'🔖 Save'}</button>`;openModal('bookModal');}
 
 // ============ ADMIN ============
+// Admin is accessible ONLY to joselineolan81@gmail.com via password OR by matching email
+function isAdmin(){return user&&user.email===ADMIN_EMAIL;}
 function promptAdminLogin(){
+  if(isAdmin()){showPage('admin');return;}
   const pw=prompt('Enter admin password:');
-  if(pw===ADMIN_PASSWORD){ showPage('admin'); toast('Welcome, Admin!','success'); }
-  else if(pw!==null) toast('Incorrect password','error');
+  if(pw===ADMIN_PASSWORD){showPage('admin');toast('Admin access granted','success');}
+  else if(pw!==null)toast('Incorrect password','error');
 }
-function switchAdminTab(tab,el){
-  adminTabActive=tab;
-  document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active')); el.classList.add('active');
-  renderAdminTabContent();
-}
+function switchAdminTab(tab,el){adminTabActive=tab;document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderAdminTabContent();}
 function renderAdminPage(){
   const users=getUsers(),reqs=getRequests(),msgs=getMessages(),feat=getFeatured();
   document.getElementById('adminStatsGrid').innerHTML=`
     <div class="admin-stat"><div class="stat-num">${Object.keys(users).length}</div><div class="stat-label">Total Users</div></div>
     <div class="admin-stat"><div class="stat-num">${reqs.length}</div><div class="stat-label">Book Requests</div></div>
-    <div class="admin-stat"><div class="stat-num">${reqs.filter(r=>r.status==='pending').length}</div><div class="stat-label">Pending</div></div>
+    <div class="admin-stat"><div class="stat-num">${reqs.filter(r=>r.status==='pending').length}</div><div class="stat-label">Pending Requests</div></div>
     <div class="admin-stat"><div class="stat-num">${msgs.length}</div><div class="stat-label">Messages Sent</div></div>
     <div class="admin-stat"><div class="stat-num">${feat.length}</div><div class="stat-label">Featured Books</div></div>`;
   renderAdminTabContent();
 }
-function renderAdminTabContent(){
-  const el=document.getElementById('adminTabContent');
-  if(adminTabActive==='users') renderAdminUsers(el);
-  else if(adminTabActive==='requests') renderAdminRequests(el);
-  else if(adminTabActive==='featured') renderAdminFeaturedTab(el);
-  else if(adminTabActive==='msg') renderAdminMsgTab(el);
-}
+function renderAdminTabContent(){const el=document.getElementById('adminTabContent');if(adminTabActive==='users')renderAdminUsers(el);else if(adminTabActive==='requests')renderAdminRequests(el);else if(adminTabActive==='featured')renderAdminFeaturedTab(el);else if(adminTabActive==='msg')renderAdminMsgTab(el);}
 function renderAdminUsers(el){
   const users=Object.values(getUsers());
   if(!users.length){el.innerHTML='<div class="empty"><div class="ei">👥</div><p>No registered users yet.</p></div>';return;}
-  el.innerHTML=`<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Name</th><th>Email</th><th>Auth</th><th>Joined</th><th>Saved</th><th>Requests</th></tr></thead><tbody>`+
-    users.map(u=>{
-      const dl=(ls('aur_dl_'+btoa(unescape(encodeURIComponent(u.email))).replace(/=/g,'').substring(0,20))||[]).length;
-      const rq=getRequests().filter(r=>r.userEmail===u.email).length;
-      return `<tr><td>${escHtml(u.name)}</td><td>${escHtml(u.email)}</td><td>${u.google?'Google':'Email'}</td><td>${u.joinedAt?new Date(u.joinedAt).toLocaleDateString():'-'}</td><td>${dl}</td><td>${rq}</td></tr>`;
-    }).join('')+`</tbody></table></div>`;
+  el.innerHTML=`<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Name</th><th>Email</th><th>Auth</th><th>Joined</th></tr></thead><tbody>`+
+    users.map(u=>`<tr><td>${escHtml(u.name)}</td><td>${escHtml(u.email)}</td><td>${u.google?'Google':'Email'}</td><td>${u.joinedAt?new Date(u.joinedAt).toLocaleDateString():'-'}</td></tr>`).join('')+`</tbody></table></div>`;
 }
 function renderAdminRequests(el){
   const reqs=getRequests();
   if(!reqs.length){el.innerHTML='<div class="empty"><div class="ei">📋</div><p>No requests yet.</p></div>';return;}
   el.innerHTML=`<div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Title</th><th>Author</th><th>User</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody>`+
-    reqs.map(r=>`<tr>
-      <td>${escHtml(r.title)}</td><td>${escHtml(r.author||'-')}</td>
-      <td><div>${escHtml(r.userName||'-')}</div><div style="font-size:.75rem;color:var(--muted)">${escHtml(r.userEmail)}</div></td>
-      <td>${new Date(r.date).toLocaleDateString()}</td>
-      <td><span class="req-badge ${r.status}">${r.status}</span></td>
-      <td style="display:flex;gap:6px;flex-wrap:wrap;">
-        ${r.status==='pending'?`<button class="btn btn-sm btn-primary" onclick="fulfillRequest('${r.id}')">✅ Fulfill</button>`:''}
-        <button class="btn btn-sm btn-ghost" onclick="prefillMsg('${escJs(r.userEmail)}','${escJs(r.title)}')">✉️ Msg</button>
-      </td></tr>`).join('')+`</tbody></table></div>`;
+    reqs.map(r=>`<tr><td>${escHtml(r.title)}</td><td>${escHtml(r.author||'-')}</td><td><div>${escHtml(r.userName||'-')}</div><div style="font-size:.75rem;color:var(--muted)">${escHtml(r.userEmail)}</div></td><td>${new Date(r.date).toLocaleDateString()}</td><td><span class="req-badge ${r.status}">${r.status}</span></td><td style="display:flex;gap:6px;flex-wrap:wrap;">${r.status==='pending'?`<button class="btn btn-sm btn-primary" onclick="fulfillRequest('${r.id}')">✅ Fulfill</button>`:''}<button class="btn btn-sm btn-ghost" onclick="prefillMsg('${escJs(r.userEmail)}','${escJs(r.title)}')">✉️ Msg</button></td></tr>`).join('')+`</tbody></table></div>`;
 }
-function fulfillRequest(id){
-  const reqs=getRequests(); const r=reqs.find(x=>x.id===id); if(!r) return; r.status='fulfilled'; setRequests(reqs);
-  toast('Marked as fulfilled','success'); renderAdminRequests(document.getElementById('adminTabContent'));
-}
-function prefillMsg(email,title){
-  adminTabActive='msg'; document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active')); document.getElementById('atab-msg').classList.add('active');
-  renderAdminMsgTab(document.getElementById('adminTabContent'));
-  setTimeout(()=>{
-    const sel=document.getElementById('adminMsgTo'); if(sel) sel.value=email;
-    const sub=document.getElementById('adminMsgSubject'); if(sub) sub.value='Your requested book: '+title;
-    const body=document.getElementById('adminMsgBody'); if(body) body.value=`Great news! The book "${title}" you requested has been added to the Aurelius library. Search for it in Discover or use the Search feature to find it now.`;
-  },100);
-}
+function fulfillRequest(id){const reqs=getRequests();const r=reqs.find(x=>x.id===id);if(!r)return;r.status='fulfilled';setRequests(reqs);toast('Marked as fulfilled','success');renderAdminRequests(document.getElementById('adminTabContent'));}
+function prefillMsg(email,title){adminTabActive='msg';document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));document.getElementById('atab-msg').classList.add('active');renderAdminMsgTab(document.getElementById('adminTabContent'));setTimeout(()=>{const sel=document.getElementById('adminMsgTo');if(sel)sel.value=email;const sub=document.getElementById('adminMsgSubject');if(sub)sub.value='Your requested book: '+title;const body=document.getElementById('adminMsgBody');if(body)body.value=`Great news! The book "${title}" you requested has been added. Search for it in Discover or use the Search feature.`;},100);}
 function renderAdminFeaturedTab(el){
   const feat=getFeatured();
-  el.innerHTML=`<div class="req-form" style="margin-bottom:20px;">
-    <h3>📌 Add Featured Book to Discover</h3>
-    <div class="form-group"><label>Title *</label><input type="text" id="fTitle" placeholder="Book title"></div>
-    <div class="form-group"><label>Author</label><input type="text" id="fAuthor" placeholder="Author name"></div>
-    <div class="form-group"><label>Description</label><textarea id="fDesc" placeholder="Short description (optional)"></textarea></div>
-    <div class="form-group"><label>Cover Image URL</label><input type="text" id="fCover" placeholder="https://...image.jpg"></div>
-    <div class="form-group"><label>Read URL *</label><input type="text" id="fReadUrl" placeholder="https://archive.org/embed/... or gutenberg link"></div>
-    <div class="form-group"><label>Page URL</label><input type="text" id="fPageUrl" placeholder="https://archive.org/details/..."></div>
-    <button class="btn btn-primary" onclick="addFeatured()">📌 Add to Discover Page</button>
-  </div>`+
+  el.innerHTML=`<div class="req-form" style="margin-bottom:20px;"><h3>📌 Add Featured Book to Discover</h3><div class="form-group"><label>Title *</label><input type="text" id="fTitle" placeholder="Book title"></div><div class="form-group"><label>Author</label><input type="text" id="fAuthor" placeholder="Author name"></div><div class="form-group"><label>Description</label><textarea id="fDesc" placeholder="Short description (optional)"></textarea></div><div class="form-group"><label>Cover Image URL</label><input type="text" id="fCover" placeholder="https://...image.jpg"></div><div class="form-group"><label>Read URL *</label><input type="text" id="fReadUrl" placeholder="https://archive.org/embed/..."></div><div class="form-group"><label>Page URL</label><input type="text" id="fPageUrl" placeholder="https://archive.org/details/..."></div><button class="btn btn-primary" onclick="addFeatured()">📌 Add to Discover Page</button></div>`+
   (feat.length?`<div class="section-hdr"><h2>Featured Books (${feat.length})</h2></div><div style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Title</th><th>Author</th><th>Added</th><th></th></tr></thead><tbody>`+feat.map(f=>`<tr><td>${escHtml(f.title)}</td><td>${escHtml(f.author||'-')}</td><td>${new Date(f.addedAt).toLocaleDateString()}</td><td><button class="btn btn-sm btn-danger" onclick="removeFeatured('${f.id}')">Remove</button></td></tr>`).join('')+`</tbody></table></div>`:'<div class="empty" style="padding:30px 0"><div class="ei" style="font-size:2rem">📌</div><p>No featured books yet.</p></div>');
 }
-function addFeatured(){
-  const title=document.getElementById('fTitle').value.trim(),author=document.getElementById('fAuthor').value.trim(),desc=document.getElementById('fDesc').value.trim(),cover=document.getElementById('fCover').value.trim(),readUrl=document.getElementById('fReadUrl').value.trim(),pageUrl=document.getElementById('fPageUrl').value.trim();
-  if(!title||!readUrl){toast('Title and Read URL are required','error');return;}
-  const feat=getFeatured(); feat.unshift({id:'feat_'+Date.now(),title,author,desc,cover,readUrl,pageUrl,addedAt:new Date().toISOString()}); setFeatured(feat);
-  toast('Featured book added to Discover!','success'); renderAdminFeaturedTab(document.getElementById('adminTabContent')); renderFeaturedBooks();
-}
-function removeFeatured(id){ const feat=getFeatured().filter(f=>f.id!==id); setFeatured(feat); toast('Removed','info'); renderAdminFeaturedTab(document.getElementById('adminTabContent')); renderFeaturedBooks(); }
+function addFeatured(){const title=document.getElementById('fTitle').value.trim(),author=document.getElementById('fAuthor').value.trim(),desc=document.getElementById('fDesc').value.trim(),cover=document.getElementById('fCover').value.trim(),readUrl=document.getElementById('fReadUrl').value.trim(),pageUrl=document.getElementById('fPageUrl').value.trim();if(!title||!readUrl){toast('Title and Read URL are required','error');return;}const feat=getFeatured();feat.unshift({id:'feat_'+Date.now(),title,author,desc,cover,readUrl,pageUrl,addedAt:new Date().toISOString()});setFeatured(feat);toast('Featured book added!','success');renderAdminFeaturedTab(document.getElementById('adminTabContent'));renderFeaturedBooks();}
+function removeFeatured(id){const feat=getFeatured().filter(f=>f.id!==id);setFeatured(feat);toast('Removed','info');renderAdminFeaturedTab(document.getElementById('adminTabContent'));renderFeaturedBooks();}
 function renderAdminMsgTab(el){
-  const users=Object.values(getUsers());
-  const sent=getMessages().sort((a,b)=>new Date(b.sentAt)-new Date(a.sentAt));
-  el.innerHTML=`<div class="req-form" style="margin-bottom:20px;">
-    <h3>✉️ Send Message to Users</h3>
-    <div class="form-group"><label>Send To</label>
-      <select id="adminMsgTo" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-family:'Lato',sans-serif;width:100%">
-        <option value="all">📢 All Users</option>
-        ${users.map(u=>`<option value="${escHtml(u.email)}">${escHtml(u.name)} (${escHtml(u.email)})</option>`).join('')}
-      </select>
-    </div>
-    <div class="form-group"><label>Subject *</label><input type="text" id="adminMsgSubject" placeholder="Message subject"></div>
-    <div class="form-group"><label>Message *</label><textarea id="adminMsgBody" placeholder="Write your message to users…"></textarea></div>
-    <div class="form-group"><label>Book Read URL (optional — adds a Read button in message)</label><input type="text" id="adminMsgBook" placeholder="https://archive.org/embed/... (leave blank if not applicable)"></div>
-    <button class="btn btn-primary" onclick="sendAdminMsg()">✉️ Send Message</button>
-  </div>
+  const users=Object.values(getUsers());const sent=getMessages().sort((a,b)=>new Date(b.sentAt)-new Date(a.sentAt));
+  el.innerHTML=`<div class="req-form" style="margin-bottom:20px;"><h3>✉️ Send Message to Users</h3><div class="form-group"><label>Send To</label><select id="adminMsgTo" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-family:'Lato',sans-serif;width:100%"><option value="all">📢 All Users</option>${users.map(u=>`<option value="${escHtml(u.email)}">${escHtml(u.name)} (${escHtml(u.email)})</option>`).join('')}</select></div><div class="form-group"><label>Subject *</label><input type="text" id="adminMsgSubject" placeholder="Message subject"></div><div class="form-group"><label>Message *</label><textarea id="adminMsgBody" placeholder="Write your message to users..."></textarea></div><div class="form-group"><label>Book Read URL (optional — adds a Read button in message)</label><input type="text" id="adminMsgBook" placeholder="https://archive.org/embed/..."></div><button class="btn btn-primary" onclick="sendAdminMsg()">✉️ Send Message</button></div>
   <div class="section-hdr"><h2>Sent Messages (${sent.length})</h2></div>`+
   (sent.length?sent.map(m=>`<div class="admin-msg-sent"><div class="ams-hdr"><span>${m.to==='all'?'📢 All users':escHtml(m.to)}</span><span>${new Date(m.sentAt).toLocaleDateString()}</span></div><div class="ams-subject">${escHtml(m.subject)}</div><div class="ams-body">${escHtml(m.body)}</div></div>`).join(''):'<div class="empty" style="padding:30px 0"><div class="ei" style="font-size:2rem">✉️</div><p>No messages sent yet.</p></div>');
 }
-function sendAdminMsg(){
-  const to=document.getElementById('adminMsgTo').value,sub=document.getElementById('adminMsgSubject').value.trim(),body=document.getElementById('adminMsgBody').value.trim(),bookUrl=document.getElementById('adminMsgBook').value.trim();
-  if(!sub||!body){toast('Subject and message are required','error');return;}
-  const msgs=getMessages(); msgs.unshift({id:'msg_'+Date.now(),to,subject:sub,body,bookUrl:bookUrl||null,sentAt:new Date().toISOString(),readBy:[]});
-  setMessages(msgs); toast('Message sent!','success'); updateMsgBadge(); renderAdminMsgTab(document.getElementById('adminTabContent'));
-}
+function sendAdminMsg(){const to=document.getElementById('adminMsgTo').value,sub=document.getElementById('adminMsgSubject').value.trim(),body=document.getElementById('adminMsgBody').value.trim(),bookUrl=document.getElementById('adminMsgBook').value.trim();if(!sub||!body){toast('Subject and message are required','error');return;}const msgs=getMessages();msgs.unshift({id:'msg_'+Date.now(),to,subject:sub,body,bookUrl:bookUrl||null,sentAt:new Date().toISOString(),readBy:[]});setMessages(msgs);toast('Message sent!','success');updateMsgBadge();renderAdminMsgTab(document.getElementById('adminTabContent'));}
 
 // ============ DONATE / SETTINGS ============
-function setDonateAmt(amt,el){ donateAmt=amt; document.querySelectorAll('.donate-amt').forEach(b=>b.classList.remove('active')); el.classList.add('active'); document.getElementById('customAmt').value=''; }
-function goPayPal(){ const c=document.getElementById('customAmt').value,a=c?parseFloat(c):donateAmt; if(!a||a<1){toast('Please enter a valid amount','error');return;} window.open(`https://www.paypal.com/donate/?business=hotinferno12%40gmail.com&amount=${a}&currency_code=USD&item_name=Aurelius+Library+Donation`,'_blank'); }
-function toggleDarkMode(cb){
-  if(!cb.checked){document.documentElement.style.setProperty('--bg','#f5f5f0');document.documentElement.style.setProperty('--surface','#ffffff');document.documentElement.style.setProperty('--surface2','#f0f0e8');document.documentElement.style.setProperty('--text','#1a1a14');document.documentElement.style.setProperty('--muted','#666655');}
-  else{document.documentElement.style.setProperty('--bg','#0a0a14');document.documentElement.style.setProperty('--surface','#12121f');document.documentElement.style.setProperty('--surface2','#1a1a2e');document.documentElement.style.setProperty('--text','#e8e8f0');document.documentElement.style.setProperty('--muted','#888899');}
-}
+function setDonateAmt(amt,el){donateAmt=amt;document.querySelectorAll('.donate-amt').forEach(b=>b.classList.remove('active'));el.classList.add('active');document.getElementById('customAmt').value='';}
+function goPayPal(){const c=document.getElementById('customAmt').value,a=c?parseFloat(c):donateAmt;if(!a||a<1){toast('Please enter a valid amount','error');return;}window.open(`https://www.paypal.com/donate/?business=hotinferno12%40gmail.com&amount=${a}&currency_code=USD&item_name=Aurelius+Library+Donation`,'_blank');}
+function toggleDarkMode(cb){if(!cb.checked){document.documentElement.style.setProperty('--bg','#f5f5f0');document.documentElement.style.setProperty('--surface','#ffffff');document.documentElement.style.setProperty('--surface2','#f0f0e8');document.documentElement.style.setProperty('--text','#1a1a14');document.documentElement.style.setProperty('--muted','#666655');}else{document.documentElement.style.setProperty('--bg','#0a0a14');document.documentElement.style.setProperty('--surface','#12121f');document.documentElement.style.setProperty('--surface2','#1a1a2e');document.documentElement.style.setProperty('--text','#e8e8f0');document.documentElement.style.setProperty('--muted','#888899');}}
 
 // ============ MODAL UTILS ============
-function openModal(id){ const el=document.getElementById(id); if(el){el.classList.add('show');document.body.style.overflow='hidden';} }
-function closeModal(id){ const el=document.getElementById(id); if(el) el.classList.remove('show'); if(!document.querySelector('.modal-overlay.show')) document.body.style.overflow=''; if(id==='readerModal') document.getElementById('readerFrame').src=''; }
-document.querySelectorAll('.modal-overlay').forEach(ov=>{ ov.addEventListener('click',function(e){ if(e.target===this) closeModal(this.id); }); });
+function openModal(id){const el=document.getElementById(id);if(el){el.classList.add('show');document.body.style.overflow='hidden';}}
+function closeModal(id){const el=document.getElementById(id);if(el)el.classList.remove('show');if(!document.querySelector('.modal-overlay.show'))document.body.style.overflow='';if(id==='readerModal')document.getElementById('readerFrame').src='';}
+document.querySelectorAll('.modal-overlay').forEach(ov=>{ov.addEventListener('click',function(e){if(e.target===this)closeModal(this.id);});});
 
 // ============ TOAST ============
-function toast(msg,type='info'){
-  const icons={success:'✅',error:'❌',info:'ℹ️'};
-  const el=document.createElement('div'); el.className=`toast-item ${type}`;
-  el.innerHTML=`<span>${icons[type]||''}</span><span>${escHtml(msg)}</span>`;
-  document.getElementById('toast').appendChild(el);
-  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .4s'; setTimeout(()=>el.remove(),400); },3500);
-}
+function toast(msg,type='info'){const icons={success:'✅',error:'❌',info:'ℹ️'};const el=document.createElement('div');el.className=`toast-item ${type}`;el.innerHTML=`<span>${icons[type]||''}</span><span>${escHtml(msg)}</span>`;document.getElementById('toast').appendChild(el);setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .4s';setTimeout(()=>el.remove(),400);},3500);}
 
 // ============ UTILS ============
-function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function escJs(s){ return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"').replace(/\n/g,'\\n').replace(/\r/g,'\\r'); }
-function escAttr(s){ return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escJs(s){return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"').replace(/\n/g,'\\n').replace(/\r/g,'\\r');}
+function escAttr(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 // ============ NARRATION ============
 let tts={utterance:null,sentences:[],currentIdx:0,isPlaying:false,title:'',author:'',fullText:'',voices:[],selectedVoice:null};
-function loadVoices(){ const v=window.speechSynthesis.getVoices(); if(v.length){tts.voices=v;const sel=document.getElementById('narrateVoice');if(!sel)return;sel.innerHTML=v.map((x,i)=>`<option value="${i}">${x.name} (${x.lang})</option>`).join('');const ei=v.findIndex(x=>x.lang.startsWith('en'));if(ei>=0){sel.value=ei;tts.selectedVoice=v[ei];}}}
+function loadVoices(){const v=window.speechSynthesis.getVoices();if(v.length){tts.voices=v;const sel=document.getElementById('narrateVoice');if(!sel)return;sel.innerHTML=v.map((x,i)=>`<option value="${i}">${x.name} (${x.lang})</option>`).join('');const ei=v.findIndex(x=>x.lang.startsWith('en'));if(ei>=0){sel.value=ei;tts.selectedVoice=v[ei];}}}
 window.speechSynthesis.onvoiceschanged=loadVoices;
 async function openNarration(title,author,src,id,extra){
-  stopNarration(); tts.title=title; tts.author=author; tts.sentences=[]; tts.currentIdx=0; tts.isPlaying=false;
-  document.getElementById('narrateTitle').textContent=title; document.getElementById('narrateAuthor').textContent=author||'';
-  document.getElementById('narratePlayBtn').textContent='▶'; document.getElementById('narrateProgressFill').style.width='0%';
-  document.getElementById('narratePos').textContent='0%'; document.getElementById('narrateStatus').textContent='Loading text…';
-  document.getElementById('narratePreview').textContent='Fetching text, please wait…';
-  openModal('narrateModal'); loadVoices();
+  stopNarration();tts.title=title;tts.author=author;tts.sentences=[];tts.currentIdx=0;tts.isPlaying=false;
+  document.getElementById('narrateTitle').textContent=title;document.getElementById('narrateAuthor').textContent=author||'';
+  document.getElementById('narratePlayBtn').textContent='▶';document.getElementById('narrateProgressFill').style.width='0%';
+  document.getElementById('narratePos').textContent='0%';document.getElementById('narrateStatus').textContent='Loading text...';
+  document.getElementById('narratePreview').textContent='Fetching text, please wait...';
+  openModal('narrateModal');loadVoices();
   let text='';
-  if(src==='uploaded'){ const book=uploadedBooks.find(b=>b.id==id); if(book&&book.dataUrl&&book.type==='TXT'){try{text=atob(book.dataUrl.split(',')[1]);}catch{}} if(!text) text=`Unable to extract text from "${title}".`; }
-  else if(src==='gutenberg'){
-    try{ const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),10000); const data=(await(await fetch(`https://gutendex.com/books/${id}`,{signal:ctrl.signal})).json()); const f=data.formats||{}; const turl=f['text/plain; charset=utf-8']||f['text/plain']||'';
-    if(turl){ let raw=await(await fetch(turl,{signal:ctrl.signal})).text(); const sm=['*** START OF','***START OF'],em=['*** END OF','***END OF']; let s=0,e=raw.length; for(const m of sm){const i=raw.indexOf(m);if(i!==-1){const nl=raw.indexOf('\n',i);s=nl!==-1?nl+1:i+m.length;break;}} for(const m of em){const i=raw.indexOf(m);if(i!==-1){e=i;break;}} text=raw.substring(s,e).replace(/\r\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim(); if(text.length>50000) text=text.substring(0,50000)+'\n\n[Showing first portion]'; }
-    }catch{} if(!text) text=`Now narrating "${title}" by ${author}.`;
-  }else{ try{ const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),6000); const meta=(await(await fetch(`https://archive.org/metadata/${id}`,{signal:ctrl.signal})).json()).metadata||{}; const desc=meta.description||meta.notes||''; text=`${title}. ${author?'By '+author+'. ':''}${(Array.isArray(desc)?desc.join(' '):String(desc).replace(/<[^>]+>/g,' '))||'From the Internet Archive.'}`; }catch{ text=`${title}. ${author?'By '+author+'.':''} From the Internet Archive.`; } }
-  tts.fullText=text; tts.sentences=(text.match(/[^.!?]+[.!?]+/g)||[text]).filter(s=>s.trim().length>2); if(!tts.sentences.length) tts.sentences=[text];
-  document.getElementById('narratePreview').textContent=text.substring(0,400)+(text.length>400?'…':'');
+  if(src==='uploaded'){const book=uploadedBooks.find(b=>b.id==id);if(book&&book.dataUrl&&book.type==='TXT'){try{text=atob(book.dataUrl.split(',')[1]);}catch{}}if(!text)text=`Unable to extract text from "${title}".`;}
+  else if(src==='gutenberg'){try{const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),10000);const data=(await(await fetch(`https://gutendex.com/books/${id}`,{signal:ctrl.signal})).json());const f=data.formats||{};const turl=f['text/plain; charset=utf-8']||f['text/plain']||'';if(turl){let raw=await(await fetch(turl,{signal:ctrl.signal})).text();const sm=['*** START OF','***START OF'],em=['*** END OF','***END OF'];let s=0,e=raw.length;for(const m of sm){const i=raw.indexOf(m);if(i!==-1){const nl=raw.indexOf('\n',i);s=nl!==-1?nl+1:i+m.length;break;}}for(const m of em){const i=raw.indexOf(m);if(i!==-1){e=i;break;}}text=raw.substring(s,e).replace(/\r\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();if(text.length>50000)text=text.substring(0,50000)+'\n\n[Showing first portion]';}}catch{}if(!text)text=`Now narrating "${title}" by ${author}.`;}
+  else{try{const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),6000);const meta=(await(await fetch(`https://archive.org/metadata/${id}`,{signal:ctrl.signal})).json()).metadata||{};const desc=meta.description||meta.notes||'';text=`${title}. ${author?'By '+author+'. ':''}${(Array.isArray(desc)?desc.join(' '):String(desc).replace(/<[^>]+>/g,' '))||'From the Internet Archive.'}`;}catch{text=`${title}. ${author?'By '+author+'.':''} From the Internet Archive.`;}}
+  tts.fullText=text;tts.sentences=(text.match(/[^.!?]+[.!?]+/g)||[text]).filter(s=>s.trim().length>2);if(!tts.sentences.length)tts.sentences=[text];
+  document.getElementById('narratePreview').textContent=text.substring(0,400)+(text.length>400?'...':'');
   document.getElementById('narrateStatus').textContent='Ready · '+tts.sentences.length+' sentences';
 }
-function toggleNarration(){ tts.isPlaying?pauseNarration():playNarration(); }
-function playNarration(){ if(!('speechSynthesis' in window)){toast('Text-to-speech not supported','error');return;} if(tts.currentIdx>=tts.sentences.length) tts.currentIdx=0; speakFrom(tts.currentIdx); }
-function speakFrom(idx){ window.speechSynthesis.cancel(); tts.isPlaying=true; document.getElementById('narratePlayBtn').textContent='⏸'; document.getElementById('narrateStatus').textContent='Playing…'; speakSentence(idx); }
-function speakSentence(idx){
-  if(idx>=tts.sentences.length){tts.isPlaying=false;tts.currentIdx=0;document.getElementById('narratePlayBtn').textContent='▶';document.getElementById('narrateStatus').textContent='Finished';document.getElementById('narrateProgressFill').style.width='100%';document.getElementById('narratePos').textContent='100%';return;}
-  tts.currentIdx=idx; const sentence=tts.sentences[idx]; const pct=Math.round((idx/tts.sentences.length)*100);
-  document.getElementById('narrateProgressFill').style.width=pct+'%'; document.getElementById('narratePos').textContent=pct+'%';
-  const preview=document.getElementById('narratePreview'); const tp=tts.fullText.indexOf(sentence.substring(0,40));
-  if(tp!==-1&&tp<400){preview.innerHTML=escHtml(tts.fullText.substring(0,tp))+`<span class="highlight">${escHtml(sentence)}</span>`+escHtml(tts.fullText.substring(tp+sentence.length,400));preview.querySelector('.highlight')?.scrollIntoView({block:'nearest'});}
-  const u=new SpeechSynthesisUtterance(sentence); u.rate=parseFloat(document.getElementById('narrateSpeed')?.value||'1');
-  const vs=document.getElementById('narrateVoice'); if(vs&&tts.voices[vs.value]) u.voice=tts.voices[vs.value];
-  u.onend=()=>{if(tts.isPlaying) speakSentence(idx+1);}; u.onerror=()=>{if(tts.isPlaying) speakSentence(idx+1);};
-  tts.utterance=u; window.speechSynthesis.speak(u);
-}
-function pauseNarration(){ window.speechSynthesis.cancel(); tts.isPlaying=false; document.getElementById('narratePlayBtn').textContent='▶'; document.getElementById('narrateStatus').textContent='Paused'; }
-function stopNarration(){ window.speechSynthesis.cancel(); tts.isPlaying=false; tts.currentIdx=0; const b=document.getElementById('narratePlayBtn'); if(b) b.textContent='▶'; }
-function rewindNarration(){ const was=tts.isPlaying; window.speechSynthesis.cancel(); tts.isPlaying=false; tts.currentIdx=Math.max(0,tts.currentIdx-5); if(was) speakFrom(tts.currentIdx); else{const p=Math.round((tts.currentIdx/Math.max(1,tts.sentences.length))*100);document.getElementById('narrateProgressFill').style.width=p+'%';document.getElementById('narratePos').textContent=p+'%';} }
-function skipNarration(){ const was=tts.isPlaying; window.speechSynthesis.cancel(); tts.isPlaying=false; tts.currentIdx=Math.min(tts.sentences.length-1,tts.currentIdx+5); if(was) speakFrom(tts.currentIdx); }
-function seekNarration(e){ const bar=e.currentTarget,pct=e.offsetX/bar.offsetWidth,was=tts.isPlaying; window.speechSynthesis.cancel(); tts.isPlaying=false; tts.currentIdx=Math.floor(pct*tts.sentences.length); if(was) speakFrom(tts.currentIdx); else{document.getElementById('narrateProgressFill').style.width=Math.round(pct*100)+'%';document.getElementById('narratePos').textContent=Math.round(pct*100)+'%';} }
-function updateNarrateSpeed(){ if(tts.isPlaying){const i=tts.currentIdx;window.speechSynthesis.cancel();tts.isPlaying=false;speakFrom(i);} }
-function updateNarrateVoice(){ const s=document.getElementById('narrateVoice');tts.selectedVoice=tts.voices[s.value]||null;if(tts.isPlaying){const i=tts.currentIdx;window.speechSynthesis.cancel();tts.isPlaying=false;speakFrom(i);} }
+function toggleNarration(){tts.isPlaying?pauseNarration():playNarration();}
+function playNarration(){if(!('speechSynthesis' in window)){toast('Text-to-speech not supported','error');return;}if(tts.currentIdx>=tts.sentences.length)tts.currentIdx=0;speakFrom(tts.currentIdx);}
+function speakFrom(idx){window.speechSynthesis.cancel();tts.isPlaying=true;document.getElementById('narratePlayBtn').textContent='⏸';document.getElementById('narrateStatus').textContent='Playing...';speakSentence(idx);}
+function speakSentence(idx){if(idx>=tts.sentences.length){tts.isPlaying=false;tts.currentIdx=0;document.getElementById('narratePlayBtn').textContent='▶';document.getElementById('narrateStatus').textContent='Finished';document.getElementById('narrateProgressFill').style.width='100%';document.getElementById('narratePos').textContent='100%';return;}tts.currentIdx=idx;const sentence=tts.sentences[idx];const pct=Math.round((idx/tts.sentences.length)*100);document.getElementById('narrateProgressFill').style.width=pct+'%';document.getElementById('narratePos').textContent=pct+'%';const preview=document.getElementById('narratePreview');const tp=tts.fullText.indexOf(sentence.substring(0,40));if(tp!==-1&&tp<400){preview.innerHTML=escHtml(tts.fullText.substring(0,tp))+`<span class="highlight">${escHtml(sentence)}</span>`+escHtml(tts.fullText.substring(tp+sentence.length,400));preview.querySelector('.highlight')?.scrollIntoView({block:'nearest'});}const u=new SpeechSynthesisUtterance(sentence);u.rate=parseFloat(document.getElementById('narrateSpeed')?.value||'1');const vs=document.getElementById('narrateVoice');if(vs&&tts.voices[vs.value])u.voice=tts.voices[vs.value];u.onend=()=>{if(tts.isPlaying)speakSentence(idx+1);};u.onerror=()=>{if(tts.isPlaying)speakSentence(idx+1);};tts.utterance=u;window.speechSynthesis.speak(u);}
+function pauseNarration(){window.speechSynthesis.cancel();tts.isPlaying=false;document.getElementById('narratePlayBtn').textContent='▶';document.getElementById('narrateStatus').textContent='Paused';}
+function stopNarration(){window.speechSynthesis.cancel();tts.isPlaying=false;tts.currentIdx=0;const b=document.getElementById('narratePlayBtn');if(b)b.textContent='▶';}
+function rewindNarration(){const was=tts.isPlaying;window.speechSynthesis.cancel();tts.isPlaying=false;tts.currentIdx=Math.max(0,tts.currentIdx-5);if(was)speakFrom(tts.currentIdx);else{const p=Math.round((tts.currentIdx/Math.max(1,tts.sentences.length))*100);document.getElementById('narrateProgressFill').style.width=p+'%';document.getElementById('narratePos').textContent=p+'%';}}
+function skipNarration(){const was=tts.isPlaying;window.speechSynthesis.cancel();tts.isPlaying=false;tts.currentIdx=Math.min(tts.sentences.length-1,tts.currentIdx+5);if(was)speakFrom(tts.currentIdx);}
+function seekNarration(e){const bar=e.currentTarget,pct=e.offsetX/bar.offsetWidth,was=tts.isPlaying;window.speechSynthesis.cancel();tts.isPlaying=false;tts.currentIdx=Math.floor(pct*tts.sentences.length);if(was)speakFrom(tts.currentIdx);else{document.getElementById('narrateProgressFill').style.width=Math.round(pct*100)+'%';document.getElementById('narratePos').textContent=Math.round(pct*100)+'%';}}
+function updateNarrateSpeed(){if(tts.isPlaying){const i=tts.currentIdx;window.speechSynthesis.cancel();tts.isPlaying=false;speakFrom(i);}}
+function updateNarrateVoice(){const s=document.getElementById('narrateVoice');tts.selectedVoice=tts.voices[s.value]||null;if(tts.isPlaying){const i=tts.currentIdx;window.speechSynthesis.cancel();tts.isPlaying=false;speakFrom(i);}}
 document.getElementById('narrateModal').addEventListener('click',function(e){if(e.target===this){stopNarration();closeModal('narrateModal');}});
 
 // ============ INIT ============
 (function init(){
-  restoreSession(); // restores user + loads their data
+  restoreSession();
   updateMsgBadge();
   renderFeaturedBooks();
   if(window.innerWidth>768){document.getElementById('sidebar').classList.remove('hidden');document.getElementById('main').classList.remove('full');}
