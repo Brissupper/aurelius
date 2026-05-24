@@ -822,7 +822,7 @@ function renderMessages(){
 
 // ============ LIBRARY ============
 function handleUpload(event){const file=event.target.files[0];if(!file)return;const entry={id:Date.now(),title:file.name.replace(/\.[^.]+$/,''),author:'Uploaded',size:(file.size/1024/1024).toFixed(1)+' MB',type:file.name.split('.').pop().toUpperCase(),date:new Date().toLocaleDateString(),dataUrl:null};const reader=new FileReader();reader.onload=e=>{entry.dataUrl=e.target.result;uploadedBooks.unshift(entry);saveLibrary();renderLibrary();toast('Uploaded: '+entry.title,'success');};reader.readAsDataURL(file);event.target.value='';}
-function renderLibrary(){const grid=document.getElementById('libraryGrid'),count=document.getElementById('uploadedCount');count.textContent=uploadedBooks.length+' book'+(uploadedBooks.length!==1?'s':'');if(!uploadedBooks.length){grid.innerHTML='<div class="empty"><div class="ei">📚</div><p>No uploads yet.</p></div>';return;}grid.innerHTML=uploadedBooks.map(b=>`<div class="book-card"><div class="book-cover-placeholder">📄</div><div class="book-info"><div class="book-title">${escHtml(b.title)}</div><div class="book-author" style="margin-bottom:8px">${b.type} · ${b.size}</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${b.dataUrl?`<button class="btn btn-sm btn-primary" onclick="readUploaded(${b.id})">📖 Read</button>`:''}<button class="btn btn-sm btn-ghost" onclick="openNarration('${escJs(b.title)}','Uploaded','uploaded',${b.id},'')">🎧 Listen</button><button class="btn btn-sm btn-ghost" onclick="removeUploaded(${b.id})">🗑️</button></div></div></div>`).join('');}
+function renderLibrary(){const grid=document.getElementById('libraryGrid'),count=document.getElementById('uploadedCount');count.textContent=uploadedBooks.length+' book'+(uploadedBooks.length!==1?'s':'');if(!uploadedBooks.length){grid.innerHTML='<div class="empty"><div class="ei">📚</div><p>No uploads yet.</p></div>';return;}grid.innerHTML=uploadedBooks.map(b=>`<div class="book-card"><div class="book-cover-placeholder">📄</div><div class="book-info"><div class="book-title">${escHtml(b.title)}</div><div class="book-author" style="margin-bottom:8px">${b.type} · ${b.size}</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${b.dataUrl?`<button class="btn btn-sm btn-primary" onclick="readUploaded(${b.id})">📖 Read</button>`:''}<button class="btn btn-sm btn-ghost" onclick="openNarration('${escJs(b.title)}','Uploaded','uploaded',${b.id},'${b.type||''}')">🎧 Listen</button><button class="btn btn-sm btn-ghost" onclick="removeUploaded(${b.id})">🗑️</button></div></div></div>`).join('');}
 function readUploaded(id){const b=uploadedBooks.find(x=>x.id===id);if(!b||!b.dataUrl)return;if(b.type==='PDF'){document.getElementById('readerTitle').textContent=b.title;document.getElementById('readerFrame').src=b.dataUrl;document.getElementById('readerOpenLink').href=b.dataUrl;openModal('readerModal');}else{const w=window.open('','_blank');if(w)w.document.write(`<html><head><title>${escHtml(b.title)}</title><meta charset="UTF-8"><style>body{font-family:Georgia,serif;max-width:720px;margin:40px auto;padding:20px;line-height:1.8;}</style></head><body><h1>${escHtml(b.title)}</h1><pre style="white-space:pre-wrap">${escHtml(atob(b.dataUrl.split(',')[1]))}</pre></body></html>`);}}
 function removeUploaded(id){uploadedBooks=uploadedBooks.filter(b=>b.id!==id);saveLibrary();renderLibrary();}
 function clearLibrary(){if(confirm('Remove all uploaded books?')){uploadedBooks=[];saveLibrary();renderLibrary();toast('Library cleared','info');}}
@@ -948,9 +948,54 @@ async function openNarration(title,author,src,id,extra){
   document.getElementById('narratePreview').textContent='Fetching text, please wait...';
   openModal('narrateModal');loadVoices();
   let text='';
-  if(src==='uploaded'){const book=uploadedBooks.find(b=>b.id==id);if(book&&book.dataUrl&&book.type==='TXT'){try{text=atob(book.dataUrl.split(',')[1]);}catch{}}if(!text)text=`Unable to extract text from "${title}".`;}
+  if(src==='uploaded'){
+    const book=uploadedBooks.find(b=>b.id==id);
+    if(book&&book.dataUrl){
+      if(book.type==='TXT'||book.type==='MD'){
+        try{ text=decodeURIComponent(escape(atob(book.dataUrl.split(',')[1]))); }catch(e){ try{ text=atob(book.dataUrl.split(',')[1]); }catch{} }
+      } else if(book.type==='PDF'){
+        // Extract text from PDF using pdf.js
+        try{
+          text = await extractPdfText(book.dataUrl);
+        }catch(e){ text=''; }
+      } else {
+        // Try raw base64 decode for EPUB/MOBI/DOCX — best effort
+        try{ text=decodeURIComponent(escape(atob(book.dataUrl.split(',')[1]))); }catch(e){ try{ text=atob(book.dataUrl.split(',')[1]); }catch{} }
+        // Strip any binary garbage — keep only printable ASCII/unicode
+        if(text) text=text.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F]/g,'').replace(/  +/g,' ').trim();
+
+
+      }
+    }
+    if(!text||text.trim().length<20) text=`This book could not be automatically narrated. The file "${title}" may be in a format that requires text extraction. Try uploading a TXT version for best results.`;
+  }
   else if(src==='gutenberg'){try{const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),10000);const data=(await(await fetch(`https://gutendex.com/books/${id}`,{signal:ctrl.signal})).json());const f=data.formats||{};const turl=f['text/plain; charset=utf-8']||f['text/plain']||'';if(turl){let raw=await(await fetch(turl,{signal:ctrl.signal})).text();const sm=['*** START OF','***START OF'],em=['*** END OF','***END OF'];let s=0,e=raw.length;for(const m of sm){const i=raw.indexOf(m);if(i!==-1){const nl=raw.indexOf('\n',i);s=nl!==-1?nl+1:i+m.length;break;}}for(const m of em){const i=raw.indexOf(m);if(i!==-1){e=i;break;}}text=raw.substring(s,e).replace(/\r\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();if(text.length>50000)text=text.substring(0,50000)+'\n\n[Showing first portion]';}}catch{}if(!text)text=`Now narrating "${title}" by ${author}.`;}
-  else{try{const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),6000);const meta=(await(await fetch(`https://archive.org/metadata/${id}`,{signal:ctrl.signal})).json()).metadata||{};const desc=meta.description||meta.notes||'';text=`${title}. ${author?'By '+author+'. ':''}${(Array.isArray(desc)?desc.join(' '):String(desc).replace(/<[^>]+>/g,' '))||'From the Internet Archive.'}`;}catch{text=`${title}. ${author?'By '+author+'.':''} From the Internet Archive.`;}}
+  else{
+    // Try to fetch actual readable text from Archive.org
+    try{
+      const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),8000);
+      const meta=(await(await fetch(`https://archive.org/metadata/${id}`,{signal:ctrl.signal})).json());
+      const files=(meta.files||[]);
+      // Look for plain text file first
+      const txtFile=files.find(f=>f.name&&(f.name.endsWith('.txt')||f.name.endsWith('_djvu.txt')));
+      if(txtFile){
+        const txtUrl=`https://archive.org/download/${id}/${txtFile.name}`;
+        const tr=await fetch(txtUrl,{signal:ctrl.signal});
+        if(tr.ok){
+          let raw=await tr.text();
+          raw=raw.replace(//g,'\n').replace(/\r\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+          text=raw.length>60000?raw.substring(0,60000)+'\n\n[Text continues...]':raw;
+        }
+      }
+      // Fallback to description if no text file
+      if(!text||text.length<50){
+        const m=meta.metadata||{};
+        const desc=m.description||m.notes||'';
+        const descText=(Array.isArray(desc)?desc.join(' '):String(desc)).replace(/<[^>]+>/g,' ').trim();
+        text=`${title}. ${author?'By '+author+'. ':''}${descText||'From the Internet Archive collection.'}`;
+      }
+    }catch(e){text=`${title}. ${author?'By '+author+'.':''} From the Internet Archive.`;}
+  }
   tts.fullText=text;tts.sentences=(text.match(/[^.!?]+[.!?]+/g)||[text]).filter(s=>s.trim().length>2);if(!tts.sentences.length)tts.sentences=[text];
   document.getElementById('narratePreview').textContent=text.substring(0,400)+(text.length>400?'...':'');
   document.getElementById('narrateStatus').textContent='Ready · '+tts.sentences.length+' sentences';
@@ -1313,6 +1358,46 @@ function fmtSecs(s) {
   return m + ':' + String(sec).padStart(2, '0');
 }
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+
+// ── PDF Text Extraction via pdf.js ──────────────────────────────────────────
+let _pdfJsLoaded = false;
+async function loadPdfJs(){
+  if(_pdfJsLoaded||window.pdfjsLib) return;
+  await new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload=()=>{
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      _pdfJsLoaded=true; resolve();
+    };
+    s.onerror=reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function extractPdfText(dataUrl){
+  await loadPdfJs();
+  // Convert dataUrl to ArrayBuffer
+  const base64=dataUrl.split(',')[1];
+  const binary=atob(base64);
+  const bytes=new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+
+  const pdf=await window.pdfjsLib.getDocument({data:bytes}).promise;
+  const numPages=pdf.numPages;
+  let fullText='';
+  // Extract up to 100 pages (or all pages)
+  const maxPages=Math.min(numPages,100);
+  for(let p=1;p<=maxPages;p++){
+    const page=await pdf.getPage(p);
+    const tc=await page.getTextContent();
+    const pageText=tc.items.map(i=>i.str).join(' ');
+    fullText+=pageText+'\n';
+    if(fullText.length>60000) break;
+  }
+  return fullText.trim();
+}
 
 // ============ INIT ============
 (function init(){
