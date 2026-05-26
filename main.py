@@ -19,13 +19,31 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)-8s  %(
 log = logging.getLogger("aurelius.api")
 
 app = FastAPI(title="Aurelius API", version="2.0.0")
+
+# ── CORS ──────────────────────────────────────────────────────────────────────
+# Pull allowed origins from environment so you never hard-code a domain.
+# On Render, set:
+#   ALLOWED_ORIGINS=https://your-app.vercel.app,https://www.yourcustomdomain.com
+# If the variable is missing we fall back to localhost only (safe default).
+
+_raw_origins = os.environ.get(
+    "ALLOWED_ORIGINS",
+    "http://localhost:3000,http://localhost:5173,http://127.0.0.1:5500"
+)
+ALLOWED_ORIGINS: list[str] = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+
+log.info(f"CORS allowed origins: {ALLOWED_ORIGINS}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=ALLOWED_ORIGINS,       # exact list — no wildcard in prod
+    allow_credentials=True,              # needed for Authorization header / cookies
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["*"],                 # Authorization, Content-Type, etc.
+    expose_headers=["Content-Length", "Content-Range"],
+    max_age=600,                         # preflight cache: 10 min
 )
+# ─────────────────────────────────────────────────────────────────────────────
 
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
@@ -92,6 +110,7 @@ def health():
         "google_secret_set": bool(os.environ.get("GOOGLE_CLIENT_SECRET")),
         "jwt_secret_set": bool(os.environ.get("JWT_SECRET")),
         "database_url_set": bool(os.environ.get("DATABASE_URL")),
+        "allowed_origins": ALLOWED_ORIGINS,
     }
 
 
@@ -359,7 +378,6 @@ async def gutenberg_import(data: GutenbergImport, background_tasks: BackgroundTa
     book_id = str(uuid.uuid4())
     log.info(f"Importing Gutenberg book #{data.gutenberg_id}: {data.title}")
 
-    # Download the plain text
     try:
         async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
             r = await client.get(data.text_url)
@@ -371,7 +389,6 @@ async def gutenberg_import(data: GutenbergImport, background_tasks: BackgroundTa
     if len(text_content) < 500:
         raise HTTPException(400, detail="Book text too short or empty")
 
-    # Save as a text file (we'll handle .txt in worker)
     txt_path = UPLOAD_DIR / f"{book_id}.txt"
     txt_path.write_text(text_content, encoding="utf-8", errors="ignore")
 
@@ -384,7 +401,6 @@ async def gutenberg_import(data: GutenbergImport, background_tasks: BackgroundTa
          f"{data.title}.txt", str(txt_path), now(), now())
     )
 
-    # Create job
     job_id = str(uuid.uuid4())
     execute(conn,
         """INSERT INTO jobs (id, book_id, status, progress, total, current_step, created_at)
@@ -416,7 +432,6 @@ async def archive_import(data: ArchiveImport, background_tasks: BackgroundTasks)
 
     log.info(f"Importing Archive item: {data.archive_id} — {data.title}")
 
-    # Get item metadata to find best text file
     meta_url = f"https://archive.org/metadata/{data.archive_id}"
     try:
         async with httpx.AsyncClient(timeout=30) as client:
@@ -426,7 +441,6 @@ async def archive_import(data: ArchiveImport, background_tasks: BackgroundTasks)
     except Exception as e:
         raise HTTPException(400, detail=f"Could not fetch Archive metadata: {e}")
 
-    # Find best text file — prefer plain text over other formats
     files = meta_json.get("files", [])
     text_url = None
     formats_priority = ["DjVuTXT", "Plain Text", "Stripped Text"]
@@ -439,7 +453,6 @@ async def archive_import(data: ArchiveImport, background_tasks: BackgroundTasks)
         if text_url:
             break
 
-    # Fallback: any .txt file
     if not text_url:
         for f in files:
             if f.get("name","").endswith(".txt") and "meta" not in f.get("name","").lower():
@@ -449,7 +462,6 @@ async def archive_import(data: ArchiveImport, background_tasks: BackgroundTasks)
     if not text_url:
         raise HTTPException(400, detail="No plain text file found for this item. Try a different edition.")
 
-    # Download text
     try:
         async with httpx.AsyncClient(timeout=120, follow_redirects=True) as client:
             r = await client.get(text_url)
@@ -502,7 +514,6 @@ class DMCAReport(BaseModel):
 
 @app.post("/api/dmca/report")
 async def dmca_report(data: DMCAReport, request: FastAPIRequest):
-    """Flag a book for DMCA review. Immediately hides it pending review."""
     conn = get_db()
     book = fetchone(conn, "SELECT * FROM books WHERE id = ?", (data.book_id,))
     if not book:
@@ -512,7 +523,6 @@ async def dmca_report(data: DMCAReport, request: FastAPIRequest):
     reporter_ip = request.client.host or "unknown"
     report_id   = str(uuid.uuid4())
 
-    # Check if already reported by this IP
     existing = fetchone(conn,
         "SELECT id FROM dmca_reports WHERE book_id = ? AND reporter_ip = ?",
         (data.book_id, reporter_ip))
@@ -525,7 +535,6 @@ async def dmca_report(data: DMCAReport, request: FastAPIRequest):
            VALUES (?, ?, ?, ?, 'pending', ?)""",
         (report_id, data.book_id, reporter_ip, data.reason[:1000], now()))
 
-    # Hide book immediately pending review
     execute(conn,
         "UPDATE books SET status = 'dmca_flagged', updated_at = ? WHERE id = ?",
         (now(), data.book_id))
@@ -537,7 +546,6 @@ async def dmca_report(data: DMCAReport, request: FastAPIRequest):
 
 @app.get("/api/dmca/reports")
 def list_dmca_reports():
-    """List all pending DMCA reports (admin view)."""
     conn = get_db()
     reports = fetchall(conn, """
         SELECT r.*, b.title as book_title, b.author as book_author
@@ -552,11 +560,6 @@ def list_dmca_reports():
 
 @app.post("/api/dmca/resolve/{report_id}")
 async def resolve_dmca(report_id: str, action: str = "dismiss"):
-    """
-    Resolve a DMCA report.
-    action='dismiss' → restore book, mark report dismissed
-    action='remove'  → permanently delete book and audio
-    """
     conn = get_db()
     report = fetchone(conn, "SELECT * FROM dmca_reports WHERE id = ?", (report_id,))
     if not report:
@@ -564,7 +567,6 @@ async def resolve_dmca(report_id: str, action: str = "dismiss"):
         raise HTTPException(404, detail="Report not found")
 
     if action == "remove":
-        # Permanently delete the book
         book_id = report["book_id"]
         chapters = fetchall(conn, "SELECT audio_path FROM chapters WHERE book_id = ?", (book_id,))
         for ch in chapters:
@@ -576,7 +578,6 @@ async def resolve_dmca(report_id: str, action: str = "dismiss"):
         execute(conn, "UPDATE dmca_reports SET status = 'removed' WHERE id = ?", (report_id,))
         log.info(f"DMCA: book {book_id} permanently removed")
     else:
-        # Dismiss — restore book
         execute(conn,
             "UPDATE books SET status = 'ready', updated_at = ? WHERE id = ?",
             (now(), report["book_id"]))
@@ -598,10 +599,8 @@ class BookRequestCreate(BaseModel):
 
 @app.post("/api/requests", status_code=201)
 async def create_request(data: BookRequestCreate, request: FastAPIRequest):
-    """Submit a book request."""
     conn = get_db()
 
-    # Check for duplicate (same title+author)
     existing = fetchone(conn,
         "SELECT id, votes FROM book_requests WHERE LOWER(title) = LOWER(?) AND LOWER(author) = LOWER(?)",
         (data.title.strip(), data.author.strip()))
@@ -618,7 +617,6 @@ async def create_request(data: BookRequestCreate, request: FastAPIRequest):
         (req_id, data.title.strip(), data.author.strip(), data.category,
          data.description, now(), now()))
 
-    # Auto-vote from requester
     voter_ip = request.client.host or "unknown"
     vote_id  = str(uuid.uuid4())
     try:
@@ -630,19 +628,11 @@ async def create_request(data: BookRequestCreate, request: FastAPIRequest):
 
     conn.close()
     log.info(f"Book requested: '{data.title}' by {data.author}")
-
-    # Auto-search Gutenberg in background
-    from worker import auto_source_request
-    background_tasks.add_task(
-        lambda: __import__('asyncio').run(auto_source_request(req_id, data.title, data.author))
-    )
-
     return {"message": "Request submitted!", "request_id": req_id}
 
 
 @app.get("/api/requests")
 def list_requests(status: str = "", sort: str = "votes"):
-    """List book requests sorted by votes or date."""
     conn  = get_db()
     query = "SELECT * FROM book_requests"
     params = []
@@ -661,7 +651,6 @@ def list_requests(status: str = "", sort: str = "votes"):
 
 @app.post("/api/requests/{req_id}/vote")
 async def vote_request(req_id: str, request: FastAPIRequest):
-    """Upvote a book request. One vote per IP per request."""
     voter_ip = request.client.host or "unknown"
     conn = get_db()
 
@@ -713,7 +702,6 @@ class GoogleAuthRequest(PydanticBase):
 
 @app.post("/auth/google")
 async def google_auth(data: GoogleAuthRequest):
-    """Verify Google ID token, create/update user, return JWT."""
     user_info = await verify_google_token(data.id_token)
 
     conn = get_db()
@@ -722,13 +710,11 @@ async def google_auth(data: GoogleAuthRequest):
         (user_info["google_id"],))
 
     if user:
-        # Update name/avatar if changed
         execute(conn,
             "UPDATE users SET name=?, avatar=?, updated_at=? WHERE google_id=?",
             (user_info["name"], user_info["avatar"], now(), user_info["google_id"]))
         user_id = user["id"]
     else:
-        # Create new user
         user_id = str(uuid.uuid4())
         execute(conn,
             """INSERT INTO users (id, google_id, email, name, avatar, created_at, updated_at)
@@ -758,17 +744,14 @@ async def google_auth(data: GoogleAuthRequest):
 
 @app.get("/auth/google/callback")
 async def google_oauth_callback(code: str = None, error: str = None):
-    """Exchange OAuth code for user token, redirect back to frontend."""
     import httpx
     from fastapi.responses import RedirectResponse
 
     if error:
         return RedirectResponse(url="/?auth_error=" + error)
-
     if not code:
         return RedirectResponse(url="/?auth_error=no_code")
 
-    # The redirect_uri must match exactly what was sent to Google
     redirect_uri = os.environ.get("APP_URL", "https://aurelius-qafo.onrender.com") + "/auth/google/callback"
 
     try:
@@ -830,18 +813,16 @@ async def google_oauth_callback(code: str = None, error: str = None):
 
 @app.get("/auth/me")
 def get_me(user: dict = Depends(get_current_user)):
-    """Return current user info from JWT."""
     return {"user": user}
 
 
 @app.get("/auth/logout")
 def logout():
-    """Client just deletes token — nothing to do server-side."""
     return {"message": "Logged out"}
 
 
 # =============================================================================
-#  PATCH BOOKS ENDPOINTS TO BE USER-SCOPED
+#  USER-SCOPED BOOK ENDPOINTS
 # =============================================================================
 
 @app.get("/api/my/books")
@@ -850,7 +831,6 @@ def my_books(
     status: str = "",
     user: dict = Depends(get_current_user)
 ):
-    """List books belonging to the current user only."""
     conn  = get_db()
     query = """
         SELECT b.*,
@@ -881,7 +861,6 @@ async def my_upload_book(
     category: str        = Form(default="Other"),
     user:     dict       = Depends(get_current_user),
 ):
-    """Upload a PDF to the current user's library."""
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(400, detail="Only PDF files are supported.")
 
@@ -913,7 +892,6 @@ async def my_gutenberg_import(
     background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
 ):
-    """Import a Gutenberg book into the current user's library."""
     import httpx
     book_id = str(uuid.uuid4())
     log.info(f"Gutenberg import by {user['email']}: {data.title}")
@@ -957,7 +935,6 @@ async def my_archive_import(
     background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
 ):
-    """Import an Archive.org item into the current user's library."""
     import httpx
     log.info(f"Archive import by {user['email']}: {data.archive_id}")
 
