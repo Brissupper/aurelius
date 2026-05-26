@@ -822,7 +822,7 @@ function renderMessages(){
 
 // ============ LIBRARY ============
 function handleUpload(event){const file=event.target.files[0];if(!file)return;const entry={id:Date.now(),title:file.name.replace(/\.[^.]+$/,''),author:'Uploaded',size:(file.size/1024/1024).toFixed(1)+' MB',type:file.name.split('.').pop().toUpperCase(),date:new Date().toLocaleDateString(),dataUrl:null};const reader=new FileReader();reader.onload=e=>{entry.dataUrl=e.target.result;uploadedBooks.unshift(entry);saveLibrary();renderLibrary();toast('Uploaded: '+entry.title,'success');};reader.readAsDataURL(file);event.target.value='';}
-function renderLibrary(){const grid=document.getElementById('libraryGrid'),count=document.getElementById('uploadedCount');count.textContent=uploadedBooks.length+' book'+(uploadedBooks.length!==1?'s':'');if(!uploadedBooks.length){grid.innerHTML='<div class="empty"><div class="ei">📚</div><p>No uploads yet.</p></div>';return;}grid.innerHTML=uploadedBooks.map(b=>`<div class="book-card"><div class="book-cover-placeholder">📄</div><div class="book-info"><div class="book-title">${escHtml(b.title)}</div><div class="book-author" style="margin-bottom:8px">${b.type} · ${b.size}</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${b.dataUrl?`<button class="btn btn-sm btn-primary" onclick="readUploaded(${b.id})">📖 Read</button>`:''}<button class="btn btn-sm btn-ghost" onclick="openNarration('${escJs(b.title)}','Uploaded','uploaded',${b.id},'${b.type||''}')">🎧 Listen</button><button class="btn btn-sm btn-ghost" onclick="removeUploaded(${b.id})">🗑️</button></div></div></div>`).join('');}
+function renderLibrary(){const grid=document.getElementById('libraryGrid'),count=document.getElementById('uploadedCount');count.textContent=uploadedBooks.length+' book'+(uploadedBooks.length!==1?'s':'');if(!uploadedBooks.length){grid.innerHTML='<div class="empty"><div class="ei">📚</div><p>No uploads yet.</p></div>';return;}grid.innerHTML=uploadedBooks.map(b=>`<div class="book-card"><div class="book-cover-placeholder">📄</div><div class="book-info"><div class="book-title">${escHtml(b.title)}</div><div class="book-author" style="margin-bottom:8px">${b.type} · ${b.size}</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${b.dataUrl?`<button class="btn btn-sm btn-primary" onclick="readUploaded(${b.id})">📖 Read</button>`:''}<button class="btn btn-sm btn-ghost" onclick="narrateUploaded(${b.id},'${escJs(b.title)}','${b.type||''}')">🎙️ Narrate</button><button class="btn btn-sm btn-ghost" onclick="openNarration('${escJs(b.title)}','Uploaded','uploaded',${b.id},'${b.type||''}')">🎧 Listen</button><button class="btn btn-sm btn-ghost" onclick="removeUploaded(${b.id})">🗑️</button></div></div></div>`).join('');}
 function readUploaded(id){const b=uploadedBooks.find(x=>x.id===id);if(!b||!b.dataUrl)return;if(b.type==='PDF'){document.getElementById('readerTitle').textContent=b.title;document.getElementById('readerFrame').src=b.dataUrl;document.getElementById('readerOpenLink').href=b.dataUrl;openModal('readerModal');}else{const w=window.open('','_blank');if(w)w.document.write(`<html><head><title>${escHtml(b.title)}</title><meta charset="UTF-8"><style>body{font-family:Georgia,serif;max-width:720px;margin:40px auto;padding:20px;line-height:1.8;}</style></head><body><h1>${escHtml(b.title)}</h1><pre style="white-space:pre-wrap">${escHtml(atob(b.dataUrl.split(',')[1]))}</pre></body></html>`);}}
 function removeUploaded(id){uploadedBooks=uploadedBooks.filter(b=>b.id!==id);saveLibrary();renderLibrary();}
 function clearLibrary(){if(confirm('Remove all uploaded books?')){uploadedBooks=[];saveLibrary();renderLibrary();toast('Library cleared','info');}}
@@ -912,8 +912,8 @@ function addFeatured(){const title=document.getElementById('fTitle').value.trim(
 function removeFeatured(id){const feat=getFeatured().filter(f=>f.id!==id);setFeatured(feat);toast('Removed','info');renderAdminFeaturedTab(document.getElementById('adminTabContent'));renderFeaturedBooks();}
 function renderAdminMsgTab(el){
   const users=Object.values(getUsers());const sent=getMessages().sort((a,b)=>new Date(b.sentAt)-new Date(a.sentAt));
-  el.innerHTML=`<div class="req-form" style="margin-bottom:20px;"><h3>✉️ Send Message to Users</h3><div class="form-group"><label>Send To</label><select id="adminMsgTo" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-family:'Lato',sans-serif;width:100%"><option value="all">📢 All Users</option>${users.map(u=>`<option value="${escHtml(u.email)}">${escHtml(u.name)} (${escHtml(u.email)})</option>`).join('')}</select></div><div class="form-group"><label>Subject *</label><input type="text" id="adminMsgSubject" placeholder="Message subject"></div><div class="form-group"><label>Message *</label><textarea id="adminMsgBody" placeholder="Write your message to users..."></textarea></div><div class="form-group"><label>Book Read URL (optional — adds a Read button in message)</label><input type="text" id="adminMsgBook" placeholder="https://archive.org/embed/..."></div><button class="btn btn-primary" onclick="sendAdminMsg()">✉️ Send Message</button></div>
-  <div class="section-hdr"><h2>Sent Messages (${sent.length})</h2></div>`+
+  el.innerHTML=`<div class="req-form" style="margin-bottom:20px;"><h3>✉️ Send Message to Users</h3><div class="form-group"><label>Send To</label><select id="adminMsgTo" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-family:'Lato',sans-serif;width:100%"><option value="all">📢 All Users</option>${users.map(u=>`<option value="${escHtml(u.email)}">${escHtml(u.name)} (${escHtml(u.email)})</option>`).join('')}</select></div><div class="form-group"><label>Subject *</label><input type="text" id="adminMsgSubject" placeholder="Message subject"></div><div class="form-group"><label>Message *</label><textarea id="adminMsgBody" placeholder="Write your message to users..."></textarea></div><div class="form-group"><label>Book Read URL (optional — adds a Read button in message)</label><input type="text" id="adminMsgBook" placeholder="https://archive.org/embed/..."></div><button class="btn btn-primary" onclick="sendAdminMsg()">✉️ Send Message</button></div>  <div class="section-hdr"><h2>Sent Messages (${sent.length})</h2></div>`+
+
   (sent.length?sent.map(m=>`<div class="admin-msg-sent"><div class="ams-hdr"><span>${m.to==='all'?'📢 All users':escHtml(m.to)}</span><span>${new Date(m.sentAt).toLocaleDateString()}</span></div><div class="ams-subject">${escHtml(m.subject)}</div><div class="ams-body">${escHtml(m.body)}</div></div>`).join(''):'<div class="empty" style="padding:30px 0"><div class="ei" style="font-size:2rem">✉️</div><p>No messages sent yet.</p></div>');
 }
 function sendAdminMsg(){const to=document.getElementById('adminMsgTo').value,sub=document.getElementById('adminMsgSubject').value.trim(),body=document.getElementById('adminMsgBody').value.trim(),bookUrl=document.getElementById('adminMsgBook').value.trim();if(!sub||!body){toast('Subject and message are required','error');return;}const msgs=getMessages();msgs.unshift({id:'msg_'+Date.now(),to,subject:sub,body,bookUrl:bookUrl||null,sentAt:new Date().toISOString(),readBy:[]});setMessages(msgs);toast('Message sent!','success');updateMsgBadge();renderAdminMsgTab(document.getElementById('adminTabContent'));}
@@ -971,30 +971,39 @@ async function openNarration(title,author,src,id,extra){
   }
   else if(src==='gutenberg'){try{const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),10000);const data=(await(await fetch(`https://gutendex.com/books/${id}`,{signal:ctrl.signal})).json());const f=data.formats||{};const turl=f['text/plain; charset=utf-8']||f['text/plain']||'';if(turl){let raw=await(await fetch(turl,{signal:ctrl.signal})).text();const sm=['*** START OF','***START OF'],em=['*** END OF','***END OF'];let s=0,e=raw.length;for(const m of sm){const i=raw.indexOf(m);if(i!==-1){const nl=raw.indexOf('\n',i);s=nl!==-1?nl+1:i+m.length;break;}}for(const m of em){const i=raw.indexOf(m);if(i!==-1){e=i;break;}}text=raw.substring(s,e).replace(/\r\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();if(text.length>50000)text=text.substring(0,50000)+'\n\n[Showing first portion]';}}catch{}if(!text)text=`Now narrating "${title}" by ${author}.`;}
   else{
-    // Try to fetch actual readable text from Archive.org
     try{
-      const ctrl=new AbortController(); setTimeout(()=>ctrl.abort(),8000);
-      const meta=(await(await fetch(`https://archive.org/metadata/${id}`,{signal:ctrl.signal})).json());
-      const files=(meta.files||[]);
-      // Look for plain text file first
-      const txtFile=files.find(f=>f.name&&(f.name.endsWith('.txt')||f.name.endsWith('_djvu.txt')));
+      const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),15000);
+      const meta=await(await fetch('https://archive.org/metadata/'+id,{signal:ctrl.signal})).json();
+      const files=meta.files||[];
+      const nl='\n';
+      const txtFile=files.find(f=>f.name&&f.name.endsWith('_djvu.txt'))
+                  ||files.find(f=>f.name&&f.name.endsWith('.txt')&&!f.name.includes('_meta'))
+                  ||files.find(f=>f.source==='derivative'&&f.name&&f.name.endsWith('.txt'));
       if(txtFile){
-        const txtUrl=`https://archive.org/download/${id}/${txtFile.name}`;
-        const tr=await fetch(txtUrl,{signal:ctrl.signal});
+        const tr=await fetch('https://archive.org/download/'+id+'/'+txtFile.name);
         if(tr.ok){
           let raw=await tr.text();
-          raw=raw.replace(//g,'\n').replace(/\r\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
-          text=raw.length>60000?raw.substring(0,60000)+'\n\n[Text continues...]':raw;
+          raw=raw.split('\f').join(nl).split('\r\n').join(nl);
+          while(raw.indexOf(nl+nl+nl)!==-1) raw=raw.split(nl+nl+nl).join(nl+nl);
+          raw=raw.trim();
+          text=raw.length>80000?raw.substring(0,80000)+nl+nl+'[Text truncated]':raw;
         }
       }
-      // Fallback to description if no text file
-      if(!text||text.length<50){
-        const m=meta.metadata||{};
-        const desc=m.description||m.notes||'';
-        const descText=(Array.isArray(desc)?desc.join(' '):String(desc)).replace(/<[^>]+>/g,' ').trim();
-        text=`${title}. ${author?'By '+author+'. ':''}${descText||'From the Internet Archive collection.'}`;
+      if(!text||text.length<100){
+        const tries=['https://archive.org/download/'+id+'/'+id+'_djvu.txt','https://archive.org/download/'+id+'/'+id+'.txt'];
+        for(const u of tries){
+          try{const tr2=await fetch(u);if(tr2.ok){let r2=await tr2.text();if(r2.length>200){r2=r2.split('\f').join('\n').split('\r\n').join('\n').trim();text=r2.length>80000?r2.substring(0,80000):r2;break;}}}catch(e2){}
+        }
       }
-    }catch(e){text=`${title}. ${author?'By '+author+'.':''} From the Internet Archive.`;}
+      if(!text||text.length<100){
+        const m=meta.metadata||{};const desc=m.description||m.notes||m.subject||'';
+        const dt=(Array.isArray(desc)?desc.join('. '):String(desc)).replace(/<[^>]+>/g,' ').trim();
+        if(dt.length>50)text=title+'. '+(author?'By '+author+'. ':'')+dt;
+      }
+    }catch(e){}
+    if(!text||text.length<20)text=title+'. '+(author?'By '+author+'.':'')+' From the Internet Archive.';
+
+
   }
   tts.fullText=text;tts.sentences=(text.match(/[^.!?]+[.!?]+/g)||[text]).filter(s=>s.trim().length>2);if(!tts.sentences.length)tts.sentences=[text];
   document.getElementById('narratePreview').textContent=text.substring(0,400)+(text.length>400?'...':'');
@@ -1027,6 +1036,107 @@ let npState = {
   bookAuthor: '',
   readyChapterUrl: null
 };
+
+
+// Narrate an uploaded book with full progress UI
+async function narrateUploaded(id, title, fileType) {
+  const book = uploadedBooks.find(b => b.id == id);
+  if (!book || !book.dataUrl) { toast('Book data not found', 'error'); return; }
+
+  npState.bookTitle = title;
+  npState.bookAuthor = 'Uploaded';
+  npState.bookId = id;
+  npState.readyChapterUrl = null;
+  npState._sentences = null;
+
+  // Show progress modal
+  document.getElementById('npBookTitle').textContent = title;
+  document.getElementById('npStatus').textContent = 'Reading your file...';
+  document.getElementById('npPct').textContent = '0%';
+  document.getElementById('npBar').style.width = '0%';
+  document.getElementById('npCircle').style.strokeDashoffset = '377';
+  document.getElementById('npChunks').textContent = '0/0';
+  document.getElementById('npElapsed').textContent = '0:00';
+  document.getElementById('npRemaining').textContent = '--:--';
+  document.getElementById('npStep').textContent = '';
+  document.getElementById('npDoneState').style.display = 'none';
+  document.getElementById('npTitle').textContent = '🎙️ Generating Audio...';
+  const mainDiv = document.querySelector('#narrateProgressModal .modal-body > div:first-child');
+  if (mainDiv) mainDiv.style.display = 'block';
+  openModal('narrateProgressModal');
+
+  npState.startTime = Date.now();
+  clearInterval(npState.elapsedTimer);
+  npState.elapsedTimer = setInterval(() => {
+    const secs = Math.floor((Date.now() - npState.startTime) / 1000);
+    document.getElementById('npElapsed').textContent = fmtSecs(secs);
+  }, 1000);
+
+  // Extract text based on file type
+  let text = '';
+  try {
+    const ft = (fileType || '').toUpperCase();
+    if (ft === 'PDF') {
+      document.getElementById('npStep').textContent = 'Loading PDF reader...';
+      updateNarrateProgress(5, 0, 1, 'Loading PDF reader...');
+      text = await extractPdfText(book.dataUrl);
+      updateNarrateProgress(20, 1, 1, 'PDF text extracted');
+    } else if (ft === 'TXT' || ft === 'MD') {
+      updateNarrateProgress(15, 1, 1, 'Reading text file...');
+      try { text = decodeURIComponent(escape(atob(book.dataUrl.split(',')[1]))); }
+      catch(e) { text = atob(book.dataUrl.split(',')[1]); }
+      updateNarrateProgress(20, 1, 1, 'Text file loaded');
+    } else {
+      // EPUB/MOBI/DOCX — best effort text extraction
+      updateNarrateProgress(10, 0, 1, 'Extracting text content...');
+      try {
+        let raw = atob(book.dataUrl.split(',')[1]);
+        // Extract readable text by removing binary/control chars
+        text = raw.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F]/g, '').replace(/  +/g, ' ').trim();
+        // For EPUB (which is a zip), try to find readable text chunks
+        if (text.length < 200 || ft === 'EPUB') {
+          text = `This is "${title}". The ${ft} format requires specialized extraction. For best narration results, please also upload a TXT version of this book.`;
+        }
+      } catch(e) {
+        text = `Unable to extract text from "${title}". Please upload a TXT or PDF version for narration.`;
+      }
+      updateNarrateProgress(20, 1, 1, 'Content extracted');
+    }
+  } catch(e) {
+    text = `Unable to read "${title}". The file may be corrupted or in an unsupported format.`;
+    updateNarrateProgress(20, 1, 1, 'Using fallback text');
+  }
+
+  if (!text || text.trim().length < 30) {
+    text = `Now narrating: ${title}. This book has been uploaded to your personal Aurelius library.`;
+  }
+
+  // Now run through the progress simulation with real text
+  document.getElementById('npStatus').textContent = 'Building audio segments...';
+  const sentences = (text.match(/[^.!?]+[.!?]+/g) || text.split(/\n+/).filter(l => l.trim().length > 10)).filter(s => s.trim().length > 5);
+  const total = Math.max(sentences.length, 1);
+
+  npState._sentences = sentences;
+  npState._voice = window.speechSynthesis.getVoices().find(v => v.lang.startsWith('en')) || window.speechSynthesis.getVoices()[0];
+
+  document.getElementById('npChunks').textContent = `0/${total}`;
+
+  // Simulate processing chunks with realistic timing
+  const numChunks = Math.max(Math.ceil(total / 20), 5);
+  for (let chunk = 0; chunk < numChunks; chunk++) {
+    if (!document.getElementById('narrateProgressModal').classList.contains('show')) return;
+    await sleep(Math.random() * 350 + 200);
+    const done = Math.min(Math.ceil((chunk + 1) * total / numChunks), total);
+    const pct = 20 + Math.round(((chunk + 1) / numChunks) * 80);
+    const stepLabels = ['Analysing text structure...','Splitting into segments...','Generating voice data...','Encoding audio chunks...','Optimising playback...','Finalising audio...'];
+    const stepLabel = stepLabels[Math.floor((chunk / numChunks) * stepLabels.length)] || 'Processing...';
+    updateNarrateProgress(Math.min(pct, 99), done, total, stepLabel);
+  }
+
+  clearInterval(npState.elapsedTimer);
+  updateNarrateProgress(100, total, total, 'Done!');
+  onNarrationComplete();
+}
 
 // Entry point — called from any Narrate button
 async function startNarrateFlow(bookId, title, author, readUrl, src) {
@@ -1191,11 +1301,71 @@ async function browserNarrationWithProgress(title, author, src, bookId) {
         text = raw.substring(s, e).replace(/\r\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
       }
     } else {
-      const ctrl = new AbortController(); setTimeout(() => ctrl.abort(), 6000);
-      const meta = await (await fetch(`https://archive.org/metadata/${bookId}`, {signal: ctrl.signal})).json();
-      const m = meta.metadata || {};
-      const desc = m.description || m.notes || '';
-      text = `${title}. By ${author}. ${Array.isArray(desc) ? desc.join(' ') : String(desc).replace(/<[^>]+>/g,' ')}`;
+      // Fetch actual book text from Archive.org
+      const ctrl = new AbortController(); setTimeout(() => ctrl.abort(), 15000);
+      try {
+        const meta = await (await fetch(`https://archive.org/metadata/${bookId}`, {signal: ctrl.signal})).json();
+        const files = meta.files || [];
+        // Priority: full text file > djvu text > description
+        const txtFile = files.find(f => f.name && f.name.endsWith('_djvu.txt'))
+                     || files.find(f => f.name && f.name.endsWith('.txt') && !f.name.includes('_meta'))
+                     || files.find(f => f.name && f.source === 'derivative' && f.name.endsWith('.txt'));
+        if (txtFile) {
+          const txtUrl = `https://archive.org/download/${bookId}/${txtFile.name}`;
+          const tr = await fetch(txtUrl);
+          if (tr.ok) {
+            let raw = await tr.text();
+            // Clean up djvu artifacts
+            raw=raw.replace(/\f/g,'\n').replace(/\r\n/g,'\n').replace(/\n{4,}/g,'\n\n').trim();
+
+
+
+
+
+
+            text = raw.length > 80000 ? raw.substring(0, 80000) + '[Text truncated for narration]' : raw;
+
+
+          }
+        }
+        // If no text file found, try fetching the plain text format directly
+        if (!text || text.length < 100) {
+          const m2 = meta.metadata || {};
+          // Try common text URL patterns
+          const tryUrls = [
+            `https://archive.org/download/${bookId}/${bookId}_djvu.txt`,
+            `https://archive.org/download/${bookId}/${bookId}.txt`,
+          ];
+          for (const u of tryUrls) {
+            try {
+              const tr2 = await fetch(u);
+              if (tr2.ok) {
+                let raw2 = await tr2.text();
+                if (raw2.length > 200) {
+                  raw2=raw2.replace(/\f/g,'\n').replace(/\r\n/g,'\n').replace(/\n{4,}/g,'\n\n').trim();
+
+
+
+
+
+
+                  text = raw2.length > 80000 ? raw2.substring(0, 80000) : raw2;
+                  break;
+                }
+              }
+            } catch(e2) {}
+          }
+        }
+        // Last resort: use description
+        if (!text || text.length < 100) {
+          const m3 = meta.metadata || {};
+          const desc = m3.description || m3.notes || m3.subject || '';
+          const descText = (Array.isArray(desc) ? desc.join('. ') : String(desc)).replace(/<[^>]+>/g,' ').trim();
+          if (descText.length > 50) {
+            text = `${title}. By ${author}. ${descText}`;
+          }
+        }
+      } catch(fetchErr) {}
     }
   } catch(e) {}
 
