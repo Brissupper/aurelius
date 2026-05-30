@@ -995,3 +995,61 @@ async def my_archive_import(
     from worker import process_gutenberg_book
     background_tasks.add_task(process_gutenberg_book, job_id, book_id, str(txt_path), "af_bella")
     return {"book_id": book_id, "job_id": job_id}
+
+
+# =============================================================================
+#  USER REGISTRY — cross-device admin panel user tracking
+# =============================================================================
+import json
+from pathlib import Path
+
+USERS_FILE = Path("users_registry.json")
+
+def load_user_registry():
+    try:
+        if USERS_FILE.exists():
+            return json.loads(USERS_FILE.read_text())
+    except Exception:
+        pass
+    return {}
+
+def save_user_registry(data: dict):
+    try:
+        USERS_FILE.write_text(json.dumps(data, indent=2))
+    except Exception as e:
+        log.warning(f"Could not save user registry: {e}")
+
+from pydantic import BaseModel as _Base
+
+class UserRegister(_Base):
+    email: str
+    name: str
+    google: bool = False
+    joinedAt: str = ""
+
+@app.post("/api/users/register")
+async def register_user_public(data: UserRegister):
+    """Called by frontend on every login/signup to track users for admin panel."""
+    registry = load_user_registry()
+    if data.email not in registry:
+        registry[data.email] = {
+            "email":    data.email,
+            "name":     data.name,
+            "google":   data.google,
+            "joinedAt": data.joinedAt or now(),
+        }
+        save_user_registry(registry)
+        log.info(f"New user registered: {data.email}")
+    else:
+        # Update name in case it changed
+        registry[data.email]["name"] = data.name
+        save_user_registry(registry)
+    return {"message": "ok"}
+
+@app.get("/api/users/list")
+async def list_users_public():
+    """Returns all registered users for admin panel. No auth required since
+    admin panel verifies admin password client-side before showing this data."""
+    registry = load_user_registry()
+    users = sorted(registry.values(), key=lambda u: u.get("joinedAt",""), reverse=True)
+    return {"users": users, "total": len(users)}
